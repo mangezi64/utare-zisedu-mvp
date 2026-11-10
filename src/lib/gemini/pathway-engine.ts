@@ -39,9 +39,42 @@ export function matchBestCoach(
   profile: CandidateProfile
 ): CoachProfile {
   const field = profile.fieldOfStudy.toLowerCase();
-  if (profile.primaryGoal === "Scale Grassroots Venture") {
-    return SEED_COACHES[3]; // Tendai Mutasa - SME Digitization
+  const goal = profile.primaryGoal;
+
+  if (
+    goal === "Vocational & Clean Energy Trades" ||
+    field.includes("solar") ||
+    field.includes("electrical") ||
+    field.includes("mechanic") ||
+    field.includes("artisan") ||
+    field.includes("welding") ||
+    field.includes("plumbing")
+  ) {
+    return SEED_COACHES[4]; // Eng. Brian Takawira - Solar & Clean Energy Trades
   }
+
+  if (
+    goal === "Creative, Media & Freelance Services" ||
+    goal === "Foundational Digital Skills & Micro-Tasking" ||
+    field.includes("graphic") ||
+    field.includes("design") ||
+    field.includes("media") ||
+    field.includes("video") ||
+    field.includes("creative") ||
+    field.includes("content")
+  ) {
+    return SEED_COACHES[5]; // Kudzai Sithole - Creative Media & Micro-Work
+  }
+
+  if (
+    goal === "Scale Grassroots Venture" ||
+    goal === "Agribusiness & Farm Commercialization" ||
+    field.includes("agri") ||
+    field.includes("farm")
+  ) {
+    return SEED_COACHES[3]; // Tendai Mutasa - SME Digitization & Agribusiness
+  }
+
   if (
     field.includes("computer") ||
     field.includes("software") ||
@@ -52,6 +85,7 @@ export function matchBestCoach(
   ) {
     return SEED_COACHES[1]; // Eng. Farai Ncube - Tech & Data
   }
+
   if (
     !profile.hasGlobalPaymentRail &&
     (field.includes("finance") ||
@@ -60,6 +94,7 @@ export function matchBestCoach(
   ) {
     return SEED_COACHES[2]; // Rudo Chikwanda - Fintech & Global Payments
   }
+
   return SEED_COACHES[0]; // Tariro Moyo - Global Remote Operations
 }
 
@@ -67,12 +102,18 @@ export function computeAssessmentScores(
   profile: CandidateProfile,
   quizAnswers: Record<string, number>
 ): SkillsAssessmentResult {
-  // Base domain score from qualification + quiz answers
+  // Base domain score from qualification/practical training + quiz answers
   const qualBonus =
     profile.highestQualification === "Masters Degree"
       ? 25
       : profile.highestQualification === "Bachelors Degree"
+      ? 22
+      : profile.highestQualification === "HND / Higher National Diploma"
       ? 20
+      : profile.highestQualification === "Vocational Trade Certificate (Artisan / Apprenticeship)"
+      ? 20
+      : profile.highestQualification === "National Diploma (ND) / TVET / Polytech"
+      ? 18
       : 15;
 
   const quizValues = Object.values(quizAnswers);
@@ -303,12 +344,31 @@ Return ONLY valid JSON matching this exact structure (no markdown code fences):
     profile.fieldOfStudy.toLowerCase().includes("math") ||
     profile.fieldOfStudy.toLowerCase().includes("it");
 
-  const recommendedTrack =
-    profile.primaryGoal === "Scale Grassroots Venture"
-      ? "Digitized Grassroots Enterprise & Working-Capital Readiness Track"
-      : isStem
-      ? "Global Technical Operations, AI QA & Automation Engineering Track"
-      : "International Digital Operations, Research Synthesis & Revenue Support Track";
+  let recommendedTrack =
+    "International Digital Operations, Research Synthesis & Revenue Support Track";
+  if (profile.primaryGoal === "Vocational & Clean Energy Trades") {
+    recommendedTrack =
+      "Clean Energy, Commercial Solar PV Design & Technical Trades Track";
+  } else if (profile.primaryGoal === "Creative, Media & Freelance Services") {
+    recommendedTrack =
+      "Global Creative Freelancing, UI/Media Design & International Client Track";
+  } else if (
+    profile.primaryGoal === "Foundational Digital Skills & Micro-Tasking"
+  ) {
+    recommendedTrack =
+      "Foundational Digital Literacy, AI Data Annotation & Community Hub Micro-Earning Track";
+  } else if (
+    profile.primaryGoal === "Agribusiness & Farm Commercialization"
+  ) {
+    recommendedTrack =
+      "Agribusiness Value-Chain Digitization, Direct Buyer Contracts & Micro-Capital Track";
+  } else if (profile.primaryGoal === "Scale Grassroots Venture") {
+    recommendedTrack =
+      "Digitized Grassroots Enterprise & Working-Capital Readiness Track";
+  } else if (isStem) {
+    recommendedTrack =
+      "Global Technical Operations, AI QA & Automation Engineering Track";
+  }
 
   const executiveDiagnosis = `${profile.fullName} holds a ${profile.highestQualification} in ${profile.fieldOfStudy} (Domain Score: ${assessment.domainCompetencyScore}/100), yet is currently ${profile.employmentStatus.toLowerCase()} earning ${profile.monthlyIncomeBracket}. The primary barrier to upward mobility is not academic capability, but last-mile infrastructure (${profile.hasDedicatedLaptop ? "has laptop" : "no dedicated laptop"}, ${profile.internetAccessType}) and translating academic credentials into verified global remote deliverables.`;
 

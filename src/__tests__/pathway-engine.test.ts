@@ -59,7 +59,7 @@ describe("Task #3 & #4: Partner Hub & Human Coach Matching", () => {
   });
 
   it("falls back to Harare node when city is unlisted", () => {
-    const fallbackHub = matchNearestHub("Masvingo");
+    const fallbackHub = matchNearestHub("Hwange");
     expect(fallbackHub.city).toBe("Harare");
   });
 
@@ -75,6 +75,27 @@ describe("Task #3 & #4: Partner Hub & Human Coach Matching", () => {
     };
     const coach = matchBestCoach(smeCandidate);
     expect(coach.fullName).toContain("Tendai Mutasa");
+  });
+
+  it("pairs Vocational / Solar Artisans with the Clean Energy Trades coach", () => {
+    const solarArtisan: CandidateProfile = {
+      ...SAMPLE_HARARE_CANDIDATE,
+      city: "Masvingo",
+      fieldOfStudy: "Electrical Power Engineering & Solar PV",
+      primaryGoal: "Vocational & Clean Energy Trades",
+    };
+    const coach = matchBestCoach(solarArtisan);
+    expect(coach.fullName).toContain("Brian Takawira");
+  });
+
+  it("pairs Creative & Media Freelancers with the Creative Media coach", () => {
+    const creative: CandidateProfile = {
+      ...SAMPLE_HARARE_CANDIDATE,
+      fieldOfStudy: "Motion Graphics & UI Branding",
+      primaryGoal: "Creative, Media & Freelance Services",
+    };
+    const coach = matchBestCoach(creative);
+    expect(coach.fullName).toContain("Kudzai Sithole");
   });
 });
 

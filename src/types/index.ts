@@ -3,17 +3,23 @@
 // =============================================================================
 
 export type QualificationLevel =
-  | "Bachelors Degree"
   | "Masters Degree"
-  | "HND / Tertiary Diploma"
-  | "Certificate / A-Level";
+  | "Bachelors Degree"
+  | "HND / Higher National Diploma"
+  | "National Diploma (ND) / TVET / Polytech"
+  | "Vocational Trade Certificate (Artisan / Apprenticeship)"
+  | "A-Level / High School Leaver"
+  | "O-Level / Secondary Leaver"
+  | "Self-Taught / Practical Experience";
 
 export type EmploymentStatus =
   | "Unemployed"
   | "Survival Gig (Misaligned)"
   | "Partially Aligned Role"
   | "Aligned Discipline Role"
-  | "Self-Employed / Grassroots SME";
+  | "Self-Employed / Grassroots SME"
+  | "Informal Trader / Vendor"
+  | "Independent Artisan / Tradesperson";
 
 export type IncomeBracket =
   | "$0 (Zero Income)"
@@ -23,14 +29,41 @@ export type IncomeBracket =
 
 export type PrimaryDevice =
   | "Smartphone Only"
+  | "Feature Phone / Shared Community Phone"
   | "Shared / Borrowed PC"
   | "Dedicated Laptop / PC";
 
 export type InternetAccessType =
+  | "WhatsApp Bundles Only"
   | "Mobile Data Bundles Only"
   | "Home Fiber / Wi-Fi"
   | "Starlink"
-  | "Intermittent / Cafe Only";
+  | "Intermittent / Cafe Only"
+  | "No Internet Access at Home";
+
+export type PrimaryGoal =
+  | "International Remote Work"
+  | "Local Formal Career"
+  | "Scale Grassroots Venture"
+  | "Vocational & Clean Energy Trades"
+  | "Creative, Media & Freelance Services"
+  | "Agribusiness & Farm Commercialization"
+  | "Foundational Digital Skills & Micro-Tasking";
+
+export type ZimbabweanCity =
+  | "Harare"
+  | "Bulawayo"
+  | "Mutare"
+  | "Gweru"
+  | "Masvingo"
+  | "Chinhoyi"
+  | "Bindura"
+  | "Marondera"
+  | "Kwekwe"
+  | "Victoria Falls"
+  | "Zvishavane"
+  | "Growth Point / Rural District"
+  | "Other";
 
 export type ReadinessTier =
   | "Market-Ready (Direct Placement)"
@@ -42,7 +75,7 @@ export interface CandidateProfile {
   fullName: string;
   email: string;
   phone: string;
-  city: "Harare" | "Bulawayo" | "Mutare" | "Gweru" | "Masvingo" | "Other";
+  city: ZimbabweanCity;
   highestQualification: QualificationLevel;
   fieldOfStudy: string;
   yearsExperience: number;
@@ -54,10 +87,7 @@ export interface CandidateProfile {
   internetAccessType: InternetAccessType;
   powerReliabilityHours: number;
   hasGlobalPaymentRail: boolean;
-  primaryGoal:
-    | "International Remote Work"
-    | "Local Formal Career"
-    | "Scale Grassroots Venture";
+  primaryGoal: PrimaryGoal;
   currentSkills: string[];
 }
 

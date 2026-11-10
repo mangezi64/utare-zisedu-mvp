@@ -23,7 +23,7 @@ import {
 
 const PRESET_PERSONAS: { label: string; profile: CandidateProfile }[] = [
   {
-    label: "Chipo (BSc Economics, Unemployed, Smartphone Only, Harare)",
+    label: "Chipo (BSc Economics, Unemployed, Harare)",
     profile: {
       fullName: "Chipo Nyamande",
       email: "chipo.nyamande@example.co.zw",
@@ -70,14 +70,14 @@ const PRESET_PERSONAS: { label: string; profile: CandidateProfile }[] = [
     },
   },
   {
-    label: "Nyasha (HND Agribusiness, Self-Employed SME, Mutare)",
+    label: "Nyasha (HND Agribusiness, SME Founder, Mutare)",
     profile: {
       fullName: "Nyasha Mutekede",
       email: "nyasha.mutekede@example.co.zw",
       phone: "+263 78 301 4490",
       city: "Mutare",
-      highestQualification: "HND / Tertiary Diploma",
-      fieldOfStudy: "Agribusiness & Supply Chain Management",
+      highestQualification: "HND / Higher National Diploma",
+      fieldOfStudy: "Agribusiness & Horticulture Value Chain",
       yearsExperience: 3,
       employmentStatus: "Self-Employed / Grassroots SME",
       monthlyIncomeBracket: "$151 - $300 / mo",
@@ -86,11 +86,89 @@ const PRESET_PERSONAS: { label: string; profile: CandidateProfile }[] = [
       internetAccessType: "Mobile Data Bundles Only",
       powerReliabilityHours: 4,
       hasGlobalPaymentRail: false,
-      primaryGoal: "Scale Grassroots Venture",
+      primaryGoal: "Agribusiness & Farm Commercialization",
       currentSkills: [
         "Produce Sourcing",
         "WhatsApp Sales",
         "Basic Bookkeeping",
+      ],
+    },
+  },
+  {
+    label: "Simba (TVET Solar & Electrical Artisan, Masvingo)",
+    profile: {
+      fullName: "Simbarashe Chitepo",
+      email: "simba.solar@example.co.zw",
+      phone: "+263 77 412 8899",
+      city: "Masvingo",
+      highestQualification:
+        "Vocational Trade Certificate (Artisan / Apprenticeship)",
+      fieldOfStudy: "Electrical Power Engineering & Solar PV Installation",
+      yearsExperience: 3,
+      employmentStatus: "Independent Artisan / Tradesperson",
+      monthlyIncomeBracket: "$151 - $300 / mo",
+      hasDedicatedLaptop: false,
+      primaryDevice: "Smartphone Only",
+      internetAccessType: "Mobile Data Bundles Only",
+      powerReliabilityHours: 6,
+      hasGlobalPaymentRail: false,
+      primaryGoal: "Vocational & Clean Energy Trades",
+      currentSkills: [
+        "Solar PV Inverter Wiring",
+        "Single-Phase Circuits",
+        "System Sizing",
+        "Battery Maintenance",
+      ],
+    },
+  },
+  {
+    label: "Kudzai (O-Level School Leaver, Micro-Work, Chinhoyi)",
+    profile: {
+      fullName: "Kudzai Marufu",
+      email: "kudzai.marufu@example.co.zw",
+      phone: "+263 71 882 1144",
+      city: "Chinhoyi",
+      highestQualification: "O-Level / Secondary Leaver",
+      fieldOfStudy: "General Secondary Sciences & English (O-Levels)",
+      yearsExperience: 0,
+      employmentStatus: "Unemployed",
+      monthlyIncomeBracket: "$0 (Zero Income)",
+      hasDedicatedLaptop: false,
+      primaryDevice: "Smartphone Only",
+      internetAccessType: "WhatsApp Bundles Only",
+      powerReliabilityHours: 4,
+      hasGlobalPaymentRail: false,
+      primaryGoal: "Foundational Digital Skills & Micro-Tasking",
+      currentSkills: [
+        "Fast Smartphone Typing",
+        "Audio Transcription",
+        "Shona/English Translation",
+      ],
+    },
+  },
+  {
+    label: "Vongai (Self-Taught Motion Graphics & UI, Gweru)",
+    profile: {
+      fullName: "Vongai Mupandawana",
+      email: "vongai.design@example.co.zw",
+      phone: "+263 78 555 7711",
+      city: "Gweru",
+      highestQualification: "Self-Taught / Practical Experience",
+      fieldOfStudy: "Digital Media, Motion Graphics & Visual Branding",
+      yearsExperience: 2,
+      employmentStatus: "Survival Gig (Misaligned)",
+      monthlyIncomeBracket: "$1 - $150 / mo",
+      hasDedicatedLaptop: true,
+      primaryDevice: "Dedicated Laptop / PC",
+      internetAccessType: "Mobile Data Bundles Only",
+      powerReliabilityHours: 5,
+      hasGlobalPaymentRail: false,
+      primaryGoal: "Creative, Media & Freelance Services",
+      currentSkills: [
+        "Adobe Photoshop",
+        "CapCut & Premiere Pro",
+        "Figma UI Basics",
+        "Social Media Ads",
       ],
     },
   },
@@ -240,12 +318,22 @@ export default function AssessmentAndPathwayPage() {
                   <option value="Mutare">Mutare</option>
                   <option value="Gweru">Gweru</option>
                   <option value="Masvingo">Masvingo</option>
+                  <option value="Chinhoyi">Chinhoyi</option>
+                  <option value="Bindura">Bindura</option>
+                  <option value="Marondera">Marondera</option>
+                  <option value="Kwekwe">Kwekwe</option>
+                  <option value="Victoria Falls">Victoria Falls</option>
+                  <option value="Zvishavane">Zvishavane</option>
+                  <option value="Growth Point / Rural District">
+                    Growth Point / Rural District
+                  </option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Highest Tertiary Qualification
+                  Highest Qualification / Education
                 </label>
                 <select
                   value={profile.highestQualification}
@@ -259,12 +347,24 @@ export default function AssessmentAndPathwayPage() {
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 >
                   <option value="Bachelors Degree">Bachelors Degree</option>
-                  <option value="Masters Degree">Masters Degree</option>
-                  <option value="HND / Tertiary Diploma">
-                    HND / Tertiary Diploma
+                  <option value="Masters Degree">Masters Degree / Postgrad</option>
+                  <option value="HND / Higher National Diploma">
+                    HND / Higher National Diploma
                   </option>
-                  <option value="Certificate / A-Level">
-                    Certificate / A-Level
+                  <option value="National Diploma (ND) / TVET / Polytech">
+                    National Diploma (ND) / TVET / Polytech
+                  </option>
+                  <option value="Vocational Trade Certificate (Artisan / Apprenticeship)">
+                    Vocational Trade Certificate (Artisan / Apprenticeship)
+                  </option>
+                  <option value="A-Level / High School Leaver">
+                    A-Level / High School Leaver
+                  </option>
+                  <option value="O-Level / Secondary Leaver">
+                    O-Level / Secondary Leaver
+                  </option>
+                  <option value="Self-Taught / Practical Experience">
+                    Self-Taught / Practical Experience
                   </option>
                 </select>
               </div>
@@ -306,11 +406,17 @@ export default function AssessmentAndPathwayPage() {
                   <option value="Partially Aligned Role">
                     Partially Aligned Role (46.2% cohort)
                   </option>
+                  <option value="Aligned Discipline Role">
+                    Aligned Discipline Role (15.4% cohort)
+                  </option>
                   <option value="Self-Employed / Grassroots SME">
                     Self-Employed / Grassroots SME
                   </option>
-                  <option value="Aligned Discipline Role">
-                    Aligned Discipline Role (15.4% cohort)
+                  <option value="Informal Trader / Vendor">
+                    Informal Trader / Vendor
+                  </option>
+                  <option value="Independent Artisan / Tradesperson">
+                    Independent Artisan / Tradesperson
                   </option>
                 </select>
               </div>
@@ -413,6 +519,9 @@ export default function AssessmentAndPathwayPage() {
                   <option value="Smartphone Only">
                     Smartphone Only (Needs Hub Workstation)
                   </option>
+                  <option value="Feature Phone / Shared Community Phone">
+                    Feature Phone / Shared Community Phone
+                  </option>
                   <option value="Shared / Borrowed PC">
                     Shared / Borrowed PC
                   </option>
@@ -437,6 +546,9 @@ export default function AssessmentAndPathwayPage() {
                   }
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 >
+                  <option value="WhatsApp Bundles Only">
+                    WhatsApp Bundles Only (Lowest Data)
+                  </option>
                   <option value="Mobile Data Bundles Only">
                     Mobile Data Bundles Only
                   </option>
@@ -445,6 +557,9 @@ export default function AssessmentAndPathwayPage() {
                   </option>
                   <option value="Home Fiber / Wi-Fi">Home Fiber / Wi-Fi</option>
                   <option value="Starlink">Starlink</option>
+                  <option value="No Internet Access at Home">
+                    No Internet Access at Home
+                  </option>
                 </select>
               </div>
 
@@ -483,13 +598,25 @@ export default function AssessmentAndPathwayPage() {
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 >
                   <option value="International Remote Work">
-                    International Remote Work (47.8% Track)
+                    International Remote Work (USD Global Contracts)
+                  </option>
+                  <option value="Local Formal Career">
+                    Local Formal Discipline Career
                   </option>
                   <option value="Scale Grassroots Venture">
                     Scale Grassroots SME Venture
                   </option>
-                  <option value="Local Formal Career">
-                    Local Formal Discipline Career
+                  <option value="Vocational & Clean Energy Trades">
+                    Vocational & Clean Energy Trades (Solar, Electrical)
+                  </option>
+                  <option value="Creative, Media & Freelance Services">
+                    Creative, Media & Freelance Services (Design, Video)
+                  </option>
+                  <option value="Agribusiness & Farm Commercialization">
+                    Agribusiness & Farm Commercialization
+                  </option>
+                  <option value="Foundational Digital Skills & Micro-Tasking">
+                    Foundational Digital Skills & Micro-Tasking
                   </option>
                 </select>
               </div>
