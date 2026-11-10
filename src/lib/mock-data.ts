@@ -1,0 +1,199 @@
+// =============================================================================
+// UTARE ZIMEDU AI — Survey Metrics & Zimbabwe Ecosystem Seed Data
+// =============================================================================
+// Grounded in the UTARE User Journey & Economic Mobility Survey (N = 23)
+// =============================================================================
+
+import { CoachProfile, InnovationHub, RemoteJob } from "@/types";
+
+export const SURVEY_BENCHMARKS = [
+  {
+    metric: "82.6%",
+    label: "Hold University Degrees",
+    detail: "91.3% hold tertiary credentials, yet degrees no longer guarantee mobility.",
+  },
+  {
+    metric: "43.5%",
+    label: "Currently Unemployed",
+    detail: "56.5% earn <= $300/month, with 30.4% earning $0 monthly income.",
+  },
+  {
+    metric: "84.6%",
+    label: "In Misaligned Survival Gigs",
+    detail: "Only 15.4% of working respondents operate within their trained discipline.",
+  },
+  {
+    metric: "73.9%",
+    label: "Lack Reliable Broadband",
+    detail: "86.4% are locked out of global payment rails & 100% of surveyed SMEs lack a dedicated PC.",
+  },
+];
+
+export const SEED_INNOVATION_HUBS: InnovationHub[] = [
+  {
+    id: "hub-hre-01",
+    name: "Impact Hub Harare — Utare Node",
+    city: "Harare",
+    address: "142 Kwame Nkrumah Ave, Avenues, Harare",
+    hasSolarBackup: true,
+    internetProvider: "Starlink Business + Liquid Fiber Redundancy",
+    avgSpeedMbps: 185,
+    availableWorkstations: 28,
+    laptopLoanAvailable: true,
+    dailyPassUsd: 0,
+    utarePartnerSubsidized: true,
+    contactEmail: "harare-hub@utare-zimedu.org",
+    operatingHours: "07:30 - 19:00 (Mon - Sat)",
+  },
+  {
+    id: "hub-byo-01",
+    name: "Bulawayo Digital Innovation & Remote Lab",
+    city: "Bulawayo",
+    address: "88 Fife Street, Central Business District, Bulawayo",
+    hasSolarBackup: true,
+    internetProvider: "Starlink High-Performance + TelOne Fiber",
+    avgSpeedMbps: 145,
+    availableWorkstations: 20,
+    laptopLoanAvailable: true,
+    dailyPassUsd: 0,
+    utarePartnerSubsidized: true,
+    contactEmail: "bulawayo-hub@utare-zimedu.org",
+    operatingHours: "08:00 - 18:00 (Mon - Sat)",
+  },
+  {
+    id: "hub-mut-01",
+    name: "Manicaland Tech & Enterprise Hub",
+    city: "Mutare",
+    address: "24 Herbert Chitepo Street, Mutare",
+    hasSolarBackup: true,
+    internetProvider: "Starlink Enterprise + Solar Microgrid",
+    avgSpeedMbps: 150,
+    availableWorkstations: 14,
+    laptopLoanAvailable: true,
+    dailyPassUsd: 0,
+    utarePartnerSubsidized: true,
+    contactEmail: "mutare-hub@utare-zimedu.org",
+    operatingHours: "08:00 - 17:30 (Mon - Sat)",
+  },
+  {
+    id: "hub-gwe-01",
+    name: "Midlands Graduate Co-Working Foundry",
+    city: "Gweru",
+    address: "11 Seventh Street, Gweru",
+    hasSolarBackup: true,
+    internetProvider: "Liquid Fiber + 10kVA Solar Inverter",
+    avgSpeedMbps: 110,
+    availableWorkstations: 12,
+    laptopLoanAvailable: false,
+    dailyPassUsd: 0,
+    utarePartnerSubsidized: true,
+    contactEmail: "gweru-hub@utare-zimedu.org",
+    operatingHours: "08:00 - 17:00 (Mon - Fri)",
+  },
+];
+
+export const SEED_COACHES: CoachProfile[] = [
+  {
+    id: "coach-01",
+    fullName: "Tariro Moyo",
+    title: "Senior Global Remote Operations Lead",
+    organization: "ZimRemote Collective",
+    specialtyTrack: "Digital Operations & Executive Revenue Support",
+    bio: "Transitioned 120+ Zimbabwean Commerce, Humanities, and Social Science graduates out of survival gigs into $900–$1,800/mo international remote operations roles.",
+    city: "Harare",
+    availableSlotsWeekly: 8,
+    calBookingLink: "https://cal.com/utare-tariro",
+  },
+  {
+    id: "coach-02",
+    fullName: "Eng. Farai Ncube",
+    title: "Principal Full-Stack & AI Data Architect",
+    organization: "Diaspora Tech Bridge",
+    specialtyTrack: "Remote Software Engineering, Data Analytics & AI QA",
+    bio: "Mentors STEM, Computer Science, and Engineering graduates on portfolio verification, GitHub workflows, and passing global technical assessments.",
+    city: "Bulawayo",
+    availableSlotsWeekly: 6,
+    calBookingLink: "https://cal.com/utare-farai",
+  },
+  {
+    id: "coach-03",
+    fullName: "Rudo Chikwanda",
+    title: "Cross-Border Fintech & Freelance Strategist",
+    organization: "AfriPay Advisory",
+    specialtyTrack: "Fintech, Global Payment Rails & Financial Research",
+    bio: "Specializes in helping Zimbabwean remote workers overcome the 86.4% payment rail lockout via compliant Deel, Payoneer, Wise, and USD Nostro settlement structures.",
+    city: "Harare",
+    availableSlotsWeekly: 10,
+    calBookingLink: "https://cal.com/utare-rudo",
+  },
+  {
+    id: "coach-04",
+    fullName: "Tendai Mutasa",
+    title: "SME Digitization & Venture Scale Coach",
+    organization: "Mutare Enterprise Foundry",
+    specialtyTrack: "Grassroots Entrepreneurship & SME Digitization",
+    bio: "Helps smartphone-dependent business owners adopt hub workstations, automate inventory/accounting, and unlock working capital.",
+    city: "Mutare",
+    availableSlotsWeekly: 7,
+    calBookingLink: "https://cal.com/utare-tendai",
+  },
+];
+
+export const SEED_REMOTE_JOBS: RemoteJob[] = [
+  {
+    id: "job-01",
+    title: "AI Training & Domain Data Analyst (STEM / Finance / Humanities)",
+    company: "GlobalScale AI Partners (Verified)",
+    category: "AI & Data Operations",
+    compensationUsdMonthly: "$800 – $1,400 / mo",
+    supportedPaymentRails: ["Payoneer", "Deel", "USD Wire (Nostro)"],
+    requiredSkills: ["Analytical Writing", "Research Synthesis", "Data Evaluation", "English Fluency"],
+    minReadinessTier: "Bridge-Ready (Hub + Rapid Upskilling)",
+    isAsyncFriendly: true,
+    description:
+      "Evaluate and benchmark domain-specific LLM outputs in Finance, Economics, Engineering, or Law. 100% asynchronous schedule ideal for candidates working from Utare Partner Hubs.",
+    applicationUrl: "#apply-job-01",
+  },
+  {
+    id: "job-02",
+    title: "Remote Operations & Client Success Associate (EMEA Timezone)",
+    company: "FinBridge Cloud UK",
+    category: "Digital Operations & Support",
+    compensationUsdMonthly: "$950 – $1,300 / mo",
+    supportedPaymentRails: ["Deel", "Wise", "Payoneer"],
+    requiredSkills: ["CRM Management", "Async Communication", "Spreadsheet Modeling", "Process Documentation"],
+    minReadinessTier: "Market-Ready (Direct Placement)",
+    isAsyncFriendly: false,
+    description:
+      "Full-time remote operations specialist supporting UK/EU B2B SaaS clients. Zimbabwe CAT timezone (GMT+2) provides direct overlap with European business hours.",
+    applicationUrl: "#apply-job-02",
+  },
+  {
+    id: "job-03",
+    title: "Junior Full-Stack / Automation Engineer (Next.js & Python)",
+    company: "Savannah Distributed Labs",
+    category: "Software & Automation",
+    compensationUsdMonthly: "$1,200 – $2,000 / mo",
+    supportedPaymentRails: ["Deel", "USDC / Crypto Rail", "USD Nostro"],
+    requiredSkills: ["TypeScript", "React / Next.js", "SQL / Supabase", "API Integration"],
+    minReadinessTier: "Market-Ready (Direct Placement)",
+    isAsyncFriendly: true,
+    description:
+      "Build internal workflow automation and customer portals for distributed startups. Degree in CS/Engineering or verified Utare competency portfolio accepted in lieu of 3-year local experience.",
+    applicationUrl: "#apply-job-03",
+  },
+  {
+    id: "job-04",
+    title: "B2B Market Research & Grant Writing Specialist",
+    company: "ImpactVentures Africa-EU",
+    category: "Research & Strategy",
+    compensationUsdMonthly: "$750 – $1,100 / mo",
+    supportedPaymentRails: ["Payoneer", "Deel", "EcoCash / InnBucks Partner Rail"],
+    requiredSkills: ["Quantitative Survey Analysis", "Report Writing", "Proposal Structuring", "Excel / BI"],
+    minReadinessTier: "Bridge-Ready (Hub + Rapid Upskilling)",
+    isAsyncFriendly: true,
+    description:
+      "Leverage your university research training to produce market intelligence briefs and donor funding proposals for pan-African climate and agri-tech enterprises.",
+    applicationUrl: "#apply-job-04",
+  },
+];

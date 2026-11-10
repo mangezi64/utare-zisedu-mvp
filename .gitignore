@@ -1,0 +1,38 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Next.js build output
+/.next/
+/out/
+/build
+
+# Production & runtime
+dist/
+
+# Environment variables (NEVER commit real secrets)
+.env
+.env*.local
+
+# Logs & debugging
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS & Editor files
+.DS_Store
+*.pem
+Thumbs.db
+.idea/
+*.swp
+*.swo
+
+# Vercel / Supabase local
+.vercel
+.supabase
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts

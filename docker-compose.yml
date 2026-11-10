@@ -1,0 +1,38 @@
+# =============================================================================
+# UTARE ZIMEDU AI — Docker Compose Configuration
+# =============================================================================
+# Usage:
+#   docker compose up --build        # Start in foreground with live logs
+#   docker compose up -d --build     # Start in detached background mode
+#   docker compose down              # Stop containers
+# =============================================================================
+
+services:
+  web:
+    container_name: utare-zimedu-web
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount local workspace into container for instant live code reloading
+      - .:/app
+      # Isolate container node_modules & .next build cache in named volumes
+      # so host OS binaries (Mac/Windows/Linux) never conflict
+      - utare_node_modules:/app/node_modules
+      - utare_next_cache:/app/.next
+    env_file:
+      - path: .env.local
+        required: false
+      - path: .env
+        required: false
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: unless-stopped
+
+volumes:
+  utare_node_modules:
+  utare_next_cache:
