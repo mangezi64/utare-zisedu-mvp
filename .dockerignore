@@ -1,5 +1,6 @@
 # Ignore host node_modules and build artifacts so the container builds cleanly across OSes
 node_modules
+package-lock.json
 .next
 out
 dist
