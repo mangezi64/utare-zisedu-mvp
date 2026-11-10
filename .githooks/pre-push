@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Automatically runs local CI verification inside the Docker container before pushing
+exec ./scripts/pre-push-ci-check.sh
