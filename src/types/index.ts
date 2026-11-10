@@ -171,3 +171,84 @@ export interface RemoteJob {
   description: string;
   applicationUrl: string;
 }
+
+// =============================================================================
+// CV & Application Letter Studio
+// =============================================================================
+// Facts (employers, dates, institutions) always come from the candidate.
+// The AI only rewrites wording and ordering — it must never invent history.
+
+export interface WorkHistoryEntry {
+  role: string;
+  organization: string;
+  location?: string;
+  startDate: string; // e.g. "Mar 2022"
+  endDate: string; // e.g. "Present"
+  /** Raw notes in the candidate's own words; the writer turns these into bullets. */
+  notes: string;
+}
+
+export interface EducationEntry {
+  qualification: string;
+  institution: string;
+  year: string;
+  details?: string;
+}
+
+export interface CvSourceDetails {
+  headline?: string;
+  linkedinOrPortfolio?: string;
+  workHistory: WorkHistoryEntry[];
+  education: EducationEntry[];
+  projects: { name: string; notes: string }[];
+  certifications: string[];
+  languages: string[];
+  /** Short free-text the candidate writes about themselves; tone reference for the writer. */
+  aboutMe?: string;
+}
+
+export interface TargetRole {
+  title: string;
+  company: string;
+  description: string;
+  requiredSkills: string[];
+}
+
+export interface GeneratedCv {
+  fullName: string;
+  headline: string;
+  contactLine: string;
+  summary: string;
+  coreSkills: string[];
+  experience: {
+    role: string;
+    organization: string;
+    location?: string;
+    dates: string;
+    bullets: string[];
+  }[];
+  projects: { name: string; bullets: string[] }[];
+  education: { qualification: string; institution: string; year: string; details?: string }[];
+  certifications: string[];
+  languages: string[];
+  generatedBy: "gemini-live" | "utare-deterministic-engine";
+}
+
+export interface GeneratedCoverLetter {
+  fullName: string;
+  contactLine: string;
+  date: string;
+  recipient: string;
+  subject: string;
+  greeting: string;
+  paragraphs: string[];
+  signOff: string;
+  generatedBy: "gemini-live" | "utare-deterministic-engine";
+}
+
+export interface StyleReport {
+  score: number; // 0-100, higher = more human
+  flaggedPhrases: string[];
+  avgSentenceLength: number;
+  notes: string[];
+}
