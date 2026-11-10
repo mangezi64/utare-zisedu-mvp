@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZIMEDU AI — Unified Persistent Data Store (Local JSON + Supabase Sync)
+// UTARE ZISEDU AI — Unified Persistent Data Store (Local JSON + Supabase Sync)
 // =============================================================================
 // Provides an out-of-the-box end-to-end stateful backend for all 5 MVP modules.
 // - Automatically persists to `.data/utare-store.json` so data survives page

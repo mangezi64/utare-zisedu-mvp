@@ -66,7 +66,7 @@ export default function RemoteJobsPage() {
       job.company
     }'s ${job.category} team. Verified competency in ${job.requiredSkills.join(
       ", "
-    )}. Operating from an Utare ZIMEDU Partner Innovation Hub with 100% solar power redundancy, 150+ Mbps Starlink connectivity, and pre-verified ${job.supportedPaymentRails.join(
+    )}. Operating from an Utare ZISEDU Partner Innovation Hub with 100% solar power redundancy, 150+ Mbps Starlink connectivity, and pre-verified ${job.supportedPaymentRails.join(
       " / "
     )} cross-border contractor billing in GMT+2 (EMEA overlap).`;
   }

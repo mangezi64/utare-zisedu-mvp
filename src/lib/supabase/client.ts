@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZIMEDU AI — Supabase Client Configuration
+// UTARE ZISEDU AI — Supabase Client Configuration
 // =============================================================================
 // Gracefully connects to Supabase when NEXT_PUBLIC_SUPABASE_URL and
 // NEXT_PUBLIC_SUPABASE_ANON_KEY are configured in .env.local.

@@ -74,7 +74,7 @@ describe("End-to-End Connected Store Lifecycle (Tasks #1 -> #5)", () => {
       laptopLoanAvailable: true,
       dailyPassUsd: 0,
       utarePartnerSubsidized: true,
-      contactEmail: "masvingo@utare-zimedu.org",
+      contactEmail: "masvingo@utare-zisedu.org",
       operatingHours: "08:00 - 18:00",
     });
     expect(enlistedHub.city).toBe("Masvingo");

@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZIMEDU AI — Survey Metrics & Zimbabwe Ecosystem Seed Data
+// UTARE ZISEDU AI — Survey Metrics & Zimbabwe Ecosystem Seed Data
 // =============================================================================
 // Grounded in the UTARE User Journey & Economic Mobility Survey (N = 23)
 // =============================================================================
@@ -42,7 +42,7 @@ export const SEED_INNOVATION_HUBS: InnovationHub[] = [
     laptopLoanAvailable: true,
     dailyPassUsd: 0,
     utarePartnerSubsidized: true,
-    contactEmail: "harare-hub@utare-zimedu.org",
+    contactEmail: "harare-hub@utare-zisedu.org",
     operatingHours: "07:30 - 19:00 (Mon - Sat)",
   },
   {
@@ -57,7 +57,7 @@ export const SEED_INNOVATION_HUBS: InnovationHub[] = [
     laptopLoanAvailable: true,
     dailyPassUsd: 0,
     utarePartnerSubsidized: true,
-    contactEmail: "bulawayo-hub@utare-zimedu.org",
+    contactEmail: "bulawayo-hub@utare-zisedu.org",
     operatingHours: "08:00 - 18:00 (Mon - Sat)",
   },
   {
@@ -72,7 +72,7 @@ export const SEED_INNOVATION_HUBS: InnovationHub[] = [
     laptopLoanAvailable: true,
     dailyPassUsd: 0,
     utarePartnerSubsidized: true,
-    contactEmail: "mutare-hub@utare-zimedu.org",
+    contactEmail: "mutare-hub@utare-zisedu.org",
     operatingHours: "08:00 - 17:30 (Mon - Sat)",
   },
   {
@@ -87,7 +87,7 @@ export const SEED_INNOVATION_HUBS: InnovationHub[] = [
     laptopLoanAvailable: false,
     dailyPassUsd: 0,
     utarePartnerSubsidized: true,
-    contactEmail: "gweru-hub@utare-zimedu.org",
+    contactEmail: "gweru-hub@utare-zisedu.org",
     operatingHours: "08:00 - 17:00 (Mon - Fri)",
   },
 ];

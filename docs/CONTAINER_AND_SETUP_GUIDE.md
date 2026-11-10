@@ -1,6 +1,6 @@
 # Container & Setup Guide (Docker Compose & Dev Containers)
 
-This guide explains how every member of the **UTARE ZIMEDU AI** team can run the application with an identical environment—regardless of whether you use **macOS**, **Windows**, or **Linux**.
+This guide explains how every member of the **UTARE ZISEDU AI** team can run the application with an identical environment—regardless of whether you use **macOS**, **Windows**, or **Linux**.
 
 ---
 

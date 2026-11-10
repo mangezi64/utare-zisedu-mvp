@@ -3,7 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
-  title: "UTARE ZIMEDU AI — Economic Mobility Bridge for Zimbabwe",
+  title: "UTARE ZISEDU AI — Economic Mobility Bridge for Zimbabwe",
   description:
     "Converting dormant Zimbabwean tertiary talent into productive global & local earners by bridging last-mile hardware, competency verification, AI upskilling, and human coaching.",
 };
@@ -22,7 +22,7 @@ export default function RootLayout({
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
             <div>
               <span className="font-semibold text-slate-800">
-                UTARE ZIMEDU AI MVP
+                UTARE ZISEDU AI MVP
               </span>{" "}
               — Built with Next.js, Supabase & Google Gemini AI.
             </div>

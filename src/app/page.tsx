@@ -24,7 +24,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden rounded-3xl bg-slate-900 px-6 py-12 text-white shadow-xl sm:px-12 sm:py-16">
         <div className="max-w-3xl space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3.5 py-1 text-xs font-semibold text-emerald-300">
-            <span>UTARE ZIMEDU AI — Economic Mobility Ecosystem</span>
+            <span>UTARE ZISEDU AI — Economic Mobility Ecosystem</span>
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl leading-tight">
             Bridging Zimbabwe’s{" "}
@@ -36,7 +36,7 @@ export default function HomePage() {
             While <strong>82.6%</strong> of surveyed Zimbabwean talent hold
             university degrees, <strong>43.5%</strong> remain unemployed and{" "}
             <strong>84.6%</strong> of workers are trapped in misaligned survival
-            gigs. Utare ZIMEDU AI converts dormant tertiary credentials into
+            gigs. Utare ZISEDU AI converts dormant tertiary credentials into
             global and local earning power through AI career pathways, human
             coaching, and solar-powered local innovation hubs.
           </p>

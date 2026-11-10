@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZIMEDU AI — Task #3: Gemini AI Career Pathway & Coach Pairing Engine
+// UTARE ZISEDU AI — Task #3: Gemini AI Career Pathway & Coach Pairing Engine
 // =============================================================================
 // Author: Stewart Mangezi (Task #3 Lead)
 //
@@ -191,7 +191,7 @@ export async function generateAICareerPathway(
     try {
       const ai = new GoogleGenAI({ apiKey });
       const prompt = `
-You are the UTARE ZIMEDU AI Economic Mobility Engine for Zimbabwe.
+You are the UTARE ZISEDU AI Economic Mobility Engine for Zimbabwe.
 Analyze the following Zimbabwean candidate profile and diagnostic assessment:
 
 Candidate Profile:
@@ -405,7 +405,7 @@ Return ONLY valid JSON matching this exact structure (no markdown code fences):
       : "Step 1: Open a zero-balance USD Individual Nostro account using your national ID and Utare Hub proof-of-enrollment. Step 2: Register on Deel and Payoneer using your passport/ID so international employers can pay you via compliant USD ACH/Wire without PayPal receive restrictions.",
     tailoredResumeSummary: `Analytical and execution-focused ${profile.highestQualification} graduate in ${profile.fieldOfStudy} based in ${profile.city}, Zimbabwe (GMT+2 / EMEA overlap). Proven ability to synthesize complex domain data, manage asynchronous digital workflows, and deliver high-accuracy outputs(${
       profile.currentSkills.join(", ") || "Research, Operations & Data Analysis"
-    }). Backed by Utare ZIMEDU AI Partner Hub infrastructure with 100% solar power redundancy and high-speed Starlink connectivity for uninterrupted global remote collaboration.`,
+    }). Backed by Utare ZISEDU AI Partner Hub infrastructure with 100% solar power redundancy and high-speed Starlink connectivity for uninterrupted global remote collaboration.`,
     generatedBy: "utare-deterministic-engine",
   };
 }

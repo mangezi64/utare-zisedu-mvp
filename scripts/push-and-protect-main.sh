@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# UTARE ZIMEDU AI — GitHub Personal Repo Push & Branch Protection Setup
+# UTARE ZISEDU AI — GitHub Personal Repo Push & Branch Protection Setup
 # =============================================================================
 # 1. Ensures GitHub CLI (gh) is authenticated as your personal account: mangezi64
 # 2. Creates https://github.com/mangezi64/utare-zisedu-mvp (if not yet created)
@@ -20,7 +20,7 @@ REPO_NAME="utare-zisedu-mvp"
 FULL_REPO="${GH_USER}/${REPO_NAME}"
 
 echo "=================================================================="
-echo " UTARE ZIMEDU AI — GitHub Setup & Superuser Branch Protection"
+echo " UTARE ZISEDU AI — GitHub Setup & Superuser Branch Protection"
 echo " Target Account: https://github.com/${GH_USER}"
 echo "=================================================================="
 
@@ -44,7 +44,7 @@ if ! gh repo view "${FULL_REPO}" >/dev/null 2>&1; then
   echo "-> Creating repository https://github.com/${FULL_REPO}..."
   gh repo create "${FULL_REPO}" \
     --public \
-    --description "UTARE ZIMEDU AI — Economic Mobility Bridge for Zimbabwean Tertiary Talent (Next.js + Supabase + Gemini AI)" \
+    --description "UTARE ZISEDU AI — Economic Mobility Bridge for Zimbabwean Tertiary Talent (Next.js + Supabase + Gemini AI)" \
     --source=. \
     --remote=origin \
     --push

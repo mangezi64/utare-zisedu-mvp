@@ -39,7 +39,7 @@ export default function Navbar() {
           </div>
           <div>
             <span className="text-lg font-bold tracking-tight text-slate-900">
-              UTARE <span className="text-emerald-700">ZIMEDU AI</span>
+              UTARE <span className="text-emerald-700">ZISEDU AI</span>
             </span>
             <p className="text-xs text-slate-500">
               Zimbabwe Economic Mobility & Remote Bridge

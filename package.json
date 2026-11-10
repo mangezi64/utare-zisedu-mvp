@@ -2,7 +2,7 @@
   "name": "utare-zisedu-mvp",
   "version": "0.1.0",
   "private": true,
-  "description": "UTARE ZIMEDU AI — Economic Mobility Bridge for Zimbabwean Tertiary Talent (Next.js + Supabase + Gemini AI)",
+  "description": "UTARE ZISEDU AI — Economic Mobility Bridge for Zimbabwean Tertiary Talent (Next.js + Supabase + Gemini AI)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

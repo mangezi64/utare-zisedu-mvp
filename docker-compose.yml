@@ -1,5 +1,5 @@
 # =============================================================================
-# UTARE ZIMEDU AI — Docker Compose Configuration
+# UTARE ZISEDU AI — Docker Compose Configuration
 # =============================================================================
 # Usage:
 #   docker compose up --build        # Start in foreground with live logs
@@ -9,7 +9,7 @@
 
 services:
   web:
-    container_name: utare-zimedu-web
+    container_name: utare-zisedu-web
     build:
       context: .
       dockerfile: Dockerfile.dev

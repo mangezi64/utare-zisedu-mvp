@@ -1,12 +1,12 @@
 {
-  "name": "Utare ZIMEDU AI Dev Container",
+  "name": "Utare ZISEDU AI Dev Container",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "web",
   "workspaceFolder": "/app",
   "forwardPorts": [3000],
   "portsAttributes": {
     "3000": {
-      "label": "Utare ZIMEDU AI (Next.js)",
+      "label": "Utare ZISEDU AI (Next.js)",
       "onAutoForward": "notify"
     }
   },

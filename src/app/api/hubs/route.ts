@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       laptopLoanAvailable: Boolean(body.laptopLoanAvailable ?? false),
       dailyPassUsd: Number(body.dailyPassUsd || 0),
       utarePartnerSubsidized: true,
-      contactEmail: body.contactEmail || "partners@utare-zimedu.org",
+      contactEmail: body.contactEmail || "partners@utare-zisedu.org",
       operatingHours: body.operatingHours || "08:00 - 18:00 (Mon - Sat)",
     });
 

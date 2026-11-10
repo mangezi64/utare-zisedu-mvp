@@ -1,5 +1,5 @@
 # =============================================================================
-# UTARE ZIMEDU AI — Development Container (Node 20 LTS on Alpine)
+# UTARE ZISEDU AI — Development Container (Node 20 LTS on Alpine)
 # =============================================================================
 # Ensures every team member (macOS, Windows WSL2, Linux) runs the exact same
 # Node.js & npm versions with instant hot-reloading.
