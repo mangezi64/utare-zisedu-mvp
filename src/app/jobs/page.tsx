@@ -52,9 +52,9 @@ export default function RemoteJobsPage() {
         p.fieldOfStudy
       } (${p.city}, Zimbabwe | GMT+2 EMEA overlap). Applying for ${
         job.title
-      } at ${job.company}. Verified competencies in ${[
-        ...new Set([...p.currentSkills.slice(0, 3), ...job.requiredSkills]),
-      ].join(", ")}. Backed by ${
+      } at ${job.company}. Verified competencies in ${Array.from(
+        new Set([...p.currentSkills.slice(0, 3), ...job.requiredSkills])
+      ).join(", ")}. Backed by ${
         hub.name
       } with 100% solar backup, ${
         hub.avgSpeedMbps
