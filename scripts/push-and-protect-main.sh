@@ -44,14 +44,11 @@ if ! gh repo view "${FULL_REPO}" >/dev/null 2>&1; then
   echo "-> Creating repository https://github.com/${FULL_REPO}..."
   gh repo create "${FULL_REPO}" \
     --public \
-    --description "UTARE ZISEDU AI — Economic Mobility Bridge for Zimbabwean Tertiary Talent (Next.js + Supabase + Gemini AI)" \
-    --source=. \
-    --remote=origin \
-    --push
-else
-  echo "-> Repository https://github.com/${FULL_REPO} already exists. Pushing main..."
-  git push -u origin main
+    --description "UTARE ZISEDU AI — Economic Mobility Bridge for Zimbabwean Tertiary Talent (Next.js + Supabase + Gemini AI)"
 fi
+
+echo "-> Pushing main branch to https://github.com/${FULL_REPO}..."
+git push -u origin main
 
 # 4. Apply Branch Protection on `main` with Superuser bypass for mangezi64
 echo "-> Applying Branch Protection Rules on 'main' (PR + CI required for team; Superuser direct-merge enabled for ${GH_USER})..."
