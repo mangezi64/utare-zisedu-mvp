@@ -2,17 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, Cpu, Building2, Briefcase, Sparkles } from "lucide-react";
+import {
+  Compass,
+  Cpu,
+  Building2,
+  Briefcase,
+  Sparkles,
+  Route,
+} from "lucide-react";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Overview & Strategy", icon: Compass },
+  { href: "/", label: "Overview", icon: Compass },
   {
     href: "/assessment",
-    label: "AI Intake, Assessment & Coaching",
+    label: "1. Intake & Diagnostic",
     icon: Cpu,
   },
-  { href: "/hubs", label: "Partner Hub Directory", icon: Building2 },
-  { href: "/jobs", label: "Verified Remote Jobs", icon: Briefcase },
+  {
+    href: "/pathway",
+    label: "2. AI Pathway & Coach",
+    icon: Route,
+  },
+  { href: "/hubs", label: "3. Partner Hubs", icon: Building2 },
+  { href: "/jobs", label: "4. Remote Jobs & CV", icon: Briefcase },
 ];
 
 export default function Navbar() {
@@ -35,7 +47,7 @@ export default function Navbar() {
           </div>
         </Link>
 
-        <nav className="hidden md:flex md:items-center md:gap-1">
+        <nav className="hidden lg:flex lg:items-center lg:gap-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
@@ -43,7 +55,7 @@ export default function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-colors ${
                   active
                     ? "bg-emerald-50 text-emerald-800"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -67,7 +79,7 @@ export default function Navbar() {
       </div>
 
       {/* Mobile navigation bar */}
-      <div className="flex overflow-x-auto border-t border-slate-100 px-4 py-2 md:hidden">
+      <div className="flex overflow-x-auto border-t border-slate-100 px-4 py-2 lg:hidden">
         {NAV_ITEMS.map((item) => {
           const active = pathname === item.href;
           return (

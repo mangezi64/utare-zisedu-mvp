@@ -5,6 +5,27 @@ import {
 } from "@/lib/gemini/pathway-engine";
 import { CandidateProfile } from "@/types";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
+import {
+  readStore,
+  saveCandidateEndToEnd,
+  updateCandidateProgress,
+} from "@/lib/store";
+
+export async function GET() {
+  const state = readStore();
+  const activeCandidate =
+    state.candidates.find((c) => c.id === state.activeCandidateId) ||
+    state.candidates[0] ||
+    null;
+
+  return NextResponse.json({
+    activeCandidate,
+    totalCandidates: state.candidates.length,
+    totalApplications: state.applications.length,
+    totalHubs: state.hubs.length,
+    candidates: state.candidates,
+  });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,8 +51,11 @@ export async function POST(req: NextRequest) {
     // 2. Generate AI Career Pathway + Human Coach Pairing + Hub Match
     const pathway = await generateAICareerPathway(profile, assessment);
 
-    // 3. Persist to Supabase if credentials are configured in .env.local
-    let savedToDatabase = false;
+    // 3. Persist to Unified End-to-End Store
+    const savedRecord = saveCandidateEndToEnd(profile, assessment, pathway);
+
+    // 4. Also sync to Supabase if cloud credentials are configured in .env.local
+    let savedToSupabase = false;
     if (isSupabaseConfigured && supabase) {
       try {
         const { data: candidateRow, error: candidateErr } = await supabase
@@ -60,22 +84,52 @@ export async function POST(req: NextRequest) {
           .single();
 
         if (!candidateErr && candidateRow?.id) {
-          savedToDatabase = true;
+          savedToSupabase = true;
         }
       } catch (dbErr) {
-        console.warn("[Supabase Persistence Non-Fatal Warning]:", dbErr);
+        console.warn("[Supabase Sync Non-Fatal Warning]:", dbErr);
       }
     }
 
     return NextResponse.json({
+      record: savedRecord,
       assessment,
       pathway,
-      savedToDatabase,
+      savedToDatabase: true,
+      savedToSupabase,
     });
   } catch (error) {
-    console.error("[API /api/pathway Error]:", error);
+    console.error("[API /api/pathway POST Error]:", error);
     return NextResponse.json(
       { error: "Failed to generate career pathway." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const updated = updateCandidateProgress({
+      candidateId: body.candidateId,
+      toggleMilestonePhase: body.toggleMilestonePhase,
+      confirmCoaching: body.confirmCoaching,
+      coachingPreferredDate: body.coachingPreferredDate,
+      bookHubId: body.bookHubId,
+    });
+
+    if (!updated) {
+      return NextResponse.json(
+        { error: "No active candidate profile found to update." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ record: updated });
+  } catch (error) {
+    console.error("[API /api/pathway PATCH Error]:", error);
+    return NextResponse.json(
+      { error: "Failed to update candidate pathway progress." },
       { status: 500 }
     );
   }

@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SEED_INNOVATION_HUBS } from "@/lib/mock-data";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
+import { addHubToStore, readStore } from "@/lib/store";
 
 export async function GET() {
+  const state = readStore();
+  const activeCandidate =
+    state.candidates.find((c) => c.id === state.activeCandidateId) ||
+    state.candidates[0] ||
+    null;
+
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase
       .from("innovation_hubs")
@@ -10,13 +16,18 @@ export async function GET() {
       .order("city", { ascending: true });
 
     if (!error && data && data.length > 0) {
-      return NextResponse.json({ hubs: data, source: "supabase" });
+      return NextResponse.json({
+        hubs: data,
+        activeCandidate,
+        source: "supabase",
+      });
     }
   }
 
   return NextResponse.json({
-    hubs: SEED_INNOVATION_HUBS,
-    source: "seed-fallback",
+    hubs: state.hubs,
+    activeCandidate,
+    source: "connected-store",
   });
 }
 
@@ -30,7 +41,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const newHub = {
+    const newHub = addHubToStore({
       id: `hub-${Date.now()}`,
       name: body.name,
       city: body.city,
@@ -44,7 +55,7 @@ export async function POST(req: NextRequest) {
       utarePartnerSubsidized: true,
       contactEmail: body.contactEmail || "partners@utare-zimedu.org",
       operatingHours: body.operatingHours || "08:00 - 18:00 (Mon - Sat)",
-    };
+    });
 
     return NextResponse.json({ hub: newHub, status: "enlisted" });
   } catch (error) {

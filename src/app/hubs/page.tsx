@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SEED_INNOVATION_HUBS } from "@/lib/mock-data";
 import { InnovationHub } from "@/types";
+import { StoredCandidateRecord } from "@/lib/store";
 import {
-  Building2,
   Wifi,
   Zap,
   Laptop,
@@ -15,8 +15,11 @@ import {
 
 export default function HubsDirectoryPage() {
   const [hubs, setHubs] = useState<InnovationHub[]>(SEED_INNOVATION_HUBS);
+  const [activeCandidate, setActiveCandidate] =
+    useState<StoredCandidateRecord | null>(null);
   const [selectedCity, setSelectedCity] = useState<string>("All");
   const [showEnlistForm, setShowEnlistForm] = useState(false);
+  const [bookingHubId, setBookingHubId] = useState<string | null>(null);
 
   const [newHub, setNewHub] = useState({
     name: "",
@@ -29,7 +32,17 @@ export default function HubsDirectoryPage() {
     contactEmail: "",
   });
 
-  const cities = ["All", "Harare", "Bulawayo", "Mutare", "Gweru"];
+  useEffect(() => {
+    fetch("/api/hubs")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.hubs) setHubs(data.hubs);
+        if (data.activeCandidate) setActiveCandidate(data.activeCandidate);
+      })
+      .catch(() => {});
+  }, []);
+
+  const cities = ["All", "Harare", "Bulawayo", "Mutare", "Gweru", "Masvingo"];
   const filteredHubs =
     selectedCity === "All"
       ? hubs
@@ -56,6 +69,23 @@ export default function HubsDirectoryPage() {
         laptopLoanAvailable: true,
         contactEmail: "",
       });
+    }
+  }
+
+  async function handleReserveWorkstation(hubId: string) {
+    setBookingHubId(hubId);
+    try {
+      const res = await fetch("/api/pathway", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookHubId: hubId }),
+      });
+      const data = await res.json();
+      if (data.record) {
+        setActiveCandidate(data.record);
+      }
+    } finally {
+      setBookingHubId(null);
     }
   }
 
@@ -86,6 +116,27 @@ export default function HubsDirectoryPage() {
           {showEnlistForm ? "Close Enlistment Form" : "Enlist New Partner Hub"}
         </button>
       </div>
+
+      {/* Active Candidate Hub Match Banner */}
+      {activeCandidate && (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="text-xs text-slate-700">
+            <span className="font-bold text-emerald-900">
+              Active Candidate ({activeCandidate.profile.fullName} —{" "}
+              {activeCandidate.profile.city}):
+            </span>{" "}
+            Matched to{" "}
+            <strong>{activeCandidate.pathway.recommendedHub.name}</strong> for
+            solar power & high-speed connectivity.
+          </div>
+          {activeCandidate.bookedHubDesk && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Desk Reserved at{" "}
+              {activeCandidate.bookedHubDesk.hubName}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Enlistment Form Modal/Drawer */}
       {showEnlistForm && (
@@ -235,68 +286,91 @@ export default function HubsDirectoryPage() {
 
       {/* Hub Cards Grid */}
       <div className="grid gap-6 md:grid-cols-2">
-        {filteredHubs.map((hub) => (
-          <div
-            key={hub.id}
-            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
-                  <MapPin className="h-3.5 w-3.5" /> {hub.city}
+        {filteredHubs.map((hub) => {
+          const isRecommended =
+            activeCandidate?.pathway.recommendedHub.id === hub.id;
+          const isBooked = activeCandidate?.bookedHubDesk?.hubId === hub.id;
+
+          return (
+            <div
+              key={hub.id}
+              className={`rounded-2xl border bg-white p-6 shadow-sm space-y-4 ${
+                isRecommended
+                  ? "border-2 border-emerald-600"
+                  : "border-slate-200"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
+                    <MapPin className="h-3.5 w-3.5" /> {hub.city}
+                  </span>
+                  <h3 className="text-lg font-bold text-slate-900 mt-0.5">
+                    {hub.name}
+                  </h3>
+                  <p className="text-xs text-slate-500">{hub.address}</p>
+                </div>
+                <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[11px] font-bold text-emerald-800">
+                  {isRecommended ? "Recommended for You" : "Utare Partner Pass"}
                 </span>
-                <h3 className="text-lg font-bold text-slate-900 mt-0.5">
-                  {hub.name}
-                </h3>
-                <p className="text-xs text-slate-500">{hub.address}</p>
               </div>
-              <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[11px] font-bold text-emerald-800">
-                Utare Partner Pass
-              </span>
-            </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl bg-slate-50 p-3">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
-                  <Wifi className="h-4 w-4 text-emerald-600" />
-                  {hub.avgSpeedMbps} Mbps
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-xl bg-slate-50 p-3">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                    <Wifi className="h-4 w-4 text-emerald-600" />
+                    {hub.avgSpeedMbps} Mbps
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    {hub.internetProvider}
+                  </p>
                 </div>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  {hub.internetProvider}
-                </p>
+
+                <div className="rounded-xl bg-slate-50 p-3">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                    <Zap className="h-4 w-4 text-amber-600" />
+                    {hub.hasSolarBackup ? "100% Solar" : "Grid Only"}
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Uninterrupted Power
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-slate-50 p-3">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                    <Laptop className="h-4 w-4 text-blue-600" />
+                    {hub.availableWorkstations} Desks
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    {hub.laptopLoanAvailable
+                      ? "PC Loan Available"
+                      : "Bring Own Device"}
+                  </p>
+                </div>
               </div>
 
-              <div className="rounded-xl bg-slate-50 p-3">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
-                  <Zap className="h-4 w-4 text-amber-600" />
-                  {hub.hasSolarBackup ? "100% Solar" : "Grid Only"}
-                </div>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Uninterrupted Power
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-3">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
-                  <Laptop className="h-4 w-4 text-blue-600" />
-                  {hub.availableWorkstations} Desks
-                </div>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  {hub.laptopLoanAvailable
-                    ? "PC Loan Available"
-                    : "Bring Own Device"}
-                </p>
+              <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
+                <span>Hours: {hub.operatingHours}</span>
+                {activeCandidate && (
+                  <button
+                    type="button"
+                    disabled={isBooked || bookingHubId === hub.id}
+                    onClick={() => handleReserveWorkstation(hub.id)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                      isBooked
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-slate-900 text-white hover:bg-slate-800"
+                    }`}
+                  >
+                    {isBooked
+                      ? "✓ Workstation Reserved"
+                      : "Reserve Workstation Desk"}
+                  </button>
+                )}
               </div>
             </div>
-
-            <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
-              <span>Hours: {hub.operatingHours}</span>
-              <span className="font-semibold text-slate-700">
-                {hub.contactEmail}
-              </span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

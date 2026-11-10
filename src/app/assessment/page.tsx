@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   AICareerPathway,
   CandidateProfile,
@@ -601,6 +602,20 @@ export default function AssessmentAndPathwayPage() {
               <span className="rounded-full bg-emerald-500/20 border border-emerald-400/40 px-4 py-1.5 text-xs font-bold text-emerald-300">
                 Readiness Tier: {result.assessment.readinessTier}
               </span>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-emerald-950/60 border border-emerald-500/30 p-4">
+              <div className="text-xs text-emerald-200">
+                ✓ Profile, Assessment, AI Pathway, Coach Pairing & Hub Match
+                saved to your connected workspace!
+              </div>
+              <Link
+                href="/pathway"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-emerald-400"
+              >
+                Open Interactive Pathway & Coaching Tracker{" "}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
 
             <p className="text-sm text-slate-300 leading-relaxed">

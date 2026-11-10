@@ -29,9 +29,10 @@ Thumbs.db
 *.swp
 *.swo
 
-# Vercel / Supabase local
+# Vercel / Supabase / Local Store
 .vercel
 .supabase
+.data/
 
 # TypeScript
 *.tsbuildinfo
