@@ -40,19 +40,32 @@ export default function HomePage() {
             global and local earning power through AI career pathways, human
             coaching, and solar-powered local innovation hubs.
           </p>
-          <div className="flex flex-wrap gap-4 pt-2">
+          <div className="flex flex-wrap gap-3 pt-2">
             <Link
               href="/assessment"
               className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3.5 text-sm font-bold text-slate-950 shadow-sm transition hover:bg-emerald-400"
             >
-              Launch Candidate AI Assessment & Coaching Bridge
+              Start Candidate Diagnostic & Roadmap
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/hubs"
+              href="/opportunities"
               className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
-              Explore Partner Innovation Hubs ({SEED_INNOVATION_HUBS.length})
+              Browse Verified Opportunities
+            </Link>
+            <Link
+              href="/employers"
+              className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/60 px-5 py-3.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-900/80"
+            >
+              Hire Zimbabwean Talent
+            </Link>
+            <Link
+              href="/demo/index.html"
+              target="_blank"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3.5 text-xs font-medium text-slate-300 transition hover:text-white"
+            >
+              Launch Static Demo (Walkthrough) ↗
             </Link>
           </div>
         </div>

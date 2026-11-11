@@ -13,15 +13,20 @@ import {
   AICareerPathway,
   CandidateProfile,
   CoachProfile,
+  ContactMessage,
+  EmployerRegistration,
   InnovationHub,
   RemoteJob,
   SkillsAssessmentResult,
+  SkillsCourse,
 } from "@/types";
 import {
   SEED_COACHES,
   SEED_INNOVATION_HUBS,
   SEED_REMOTE_JOBS,
+  SEED_SKILLS_COURSES,
 } from "@/lib/mock-data";
+import { query } from "@/lib/db";
 
 export interface StoredCandidateRecord {
   id: string;
@@ -57,6 +62,9 @@ export interface UtareDatabaseState {
   coaches: CoachProfile[];
   jobs: RemoteJob[];
   applications: JobApplicationRecord[];
+  employerRegistrations: EmployerRegistration[];
+  skillsCourses: SkillsCourse[];
+  contactMessages: ContactMessage[];
 }
 
 const DATA_DIR = path.join(process.cwd(), ".data");
@@ -70,6 +78,9 @@ function createInitialState(): UtareDatabaseState {
     coaches: [...SEED_COACHES],
     jobs: [...SEED_REMOTE_JOBS],
     applications: [],
+    employerRegistrations: [],
+    skillsCourses: [...SEED_SKILLS_COURSES],
+    contactMessages: [],
   };
 }
 
@@ -363,4 +374,78 @@ export function submitJobApplicationToStore(params: {
   state.applications.unshift(appRecord);
   writeStore(state);
   return appRecord;
+}
+
+export function saveEmployerRegistration(
+  reg: Omit<EmployerRegistration, "id" | "createdAt">
+): EmployerRegistration {
+  const state = readStore();
+  const record: EmployerRegistration = {
+    ...reg,
+    id: `emp-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+
+  if (!state.employerRegistrations) state.employerRegistrations = [];
+  state.employerRegistrations.unshift(record);
+  writeStore(state);
+
+  // Async sync to containerized PostgreSQL
+  query(
+    `INSERT INTO public.employer_registrations (company_name, contact_person, email, website, industry, roles_interested, hiring_model, estimated_hires, timezone_overlap_needed, additional_notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    [
+      record.companyName,
+      record.contactPerson,
+      record.email,
+      record.website || "",
+      record.industry || "Technology",
+      record.rolesInterested || [],
+      record.hiringModel || "100% Remote Contract",
+      record.estimatedHires || 1,
+      record.timezoneOverlapNeeded || "CAT (GMT+2)",
+      record.additionalNotes || "",
+    ]
+  ).catch(() => {});
+
+  return record;
+}
+
+export function getEmployerRegistrations(): EmployerRegistration[] {
+  const state = readStore();
+  return state.employerRegistrations || [];
+}
+
+export function saveContactMessage(
+  msg: Omit<ContactMessage, "id" | "createdAt">
+): ContactMessage {
+  const state = readStore();
+  const record: ContactMessage = {
+    ...msg,
+    id: `msg-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+
+  if (!state.contactMessages) state.contactMessages = [];
+  state.contactMessages.unshift(record);
+  writeStore(state);
+
+  // Async sync to containerized PostgreSQL
+  query(
+    `INSERT INTO public.contact_messages (name, email, subject, message, inquiry_type)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [record.name, record.email, record.subject, record.message, record.inquiryType || "General"]
+  ).catch(() => {});
+
+  return record;
+}
+
+export function getContactMessages(): ContactMessage[] {
+  const state = readStore();
+  return state.contactMessages || [];
+}
+
+export function getSkillsCourses(): SkillsCourse[] {
+  const state = readStore();
+  return state.skillsCourses || [...SEED_SKILLS_COURSES];
 }

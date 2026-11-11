@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ViewModeProvider } from "@/lib/view-mode-context";
@@ -21,21 +22,25 @@ export default function RootLayout({
           <Navbar />
           <main className="flex-1">{children}</main>
           <footer className="border-t border-slate-200 bg-white py-8 mt-16">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-              <div>
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+              <div className="text-center md:text-left">
                 <span className="font-semibold text-slate-800">
-                  UTARE ZISEDU AI MVP
+                  UTARE ZISEDU AI
                 </span>{" "}
-                — Built with Next.js, Supabase & Google Gemini AI.
+                — Zimbabwe Economic Mobility & Remote Bridge
               </div>
-              <div className="flex flex-wrap gap-4">
-                <span>Task #1-2: Intake & Diagnostic</span>
+              <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-medium text-slate-600">
+                <Link href="/about" className="hover:text-emerald-700">About Us</Link>
                 <span>•</span>
-                <span>Task #3: AI Pathway & Coach Pairing</span>
+                <Link href="/how-it-works" className="hover:text-emerald-700">How It Works</Link>
                 <span>•</span>
-                <span>Task #4: Partner Hub Network</span>
+                <Link href="/opportunities" className="hover:text-emerald-700">Opportunities</Link>
                 <span>•</span>
-                <span>Task #5: Verified Remote Jobs</span>
+                <Link href="/skills" className="hover:text-emerald-700">Skills Courses</Link>
+                <span>•</span>
+                <Link href="/employers" className="hover:text-emerald-700">For Employers</Link>
+                <span>•</span>
+                <Link href="/contact" className="hover:text-emerald-700">Contact</Link>
               </div>
             </div>
           </footer>
