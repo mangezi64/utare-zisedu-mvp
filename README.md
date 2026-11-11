@@ -32,62 +32,106 @@ git clone https://github.com/mangezi64/utare-zisedu-mvp.git
 cd utare-zisedu-mvp
 ```
 
-### Step 2: Create Your Local Environment File
+### Step 2: Create Your Local Environment File & Background Gemini Key
 ```bash
 cp .env.example .env.local
 ```
+To enable live **Google Gemini 2.5** models in the background (keeping API keys hidden from end-user candidates), edit `.env.local`:
+```bash
+GEMINI_API_KEY="AIzaSyYourKeyHere"
+GEMINI_MODEL="gemini-2.5-flash"
+```
 *(Note: The app includes a built-in **Zimbabwe Survey Seed & Deterministic Fallback Engine**, so it runs 100% out-of-the-box even before you paste live `GEMINI_API_KEY` or `SUPABASE` credentials into `.env.local`!)*
 
-### Step 3: Start the Container
+### Step 3: Start the Container & Enable Pre-Push CI Hooks
 ```bash
-docker compose up --build
+docker compose up -d --build
+make install-hooks
 ```
-*(Or simply run `make up` on macOS/Linux).*
-
 Open **[http://localhost:3000](http://localhost:3000)** in your browser. Any code changes you save in `src/` will hot-reload automatically inside the container.
 
 ---
 
-## 3. Repository Architecture & File Documentation
+## 3. Core Platform Capabilities (Candidate View vs. Admin Console)
+
+### A. Candidate Experience (`Candidate View`)
+- **My Workspace & Account (`/account`):** Candidates create and save their personal profile, view their readiness score, track their 90-day AI upskilling milestones, view their subsidized **Partner Innovation Hub** pass (100% solar backup, Starlink, PC loans), and monitor their submitted job applications.
+- **Smart Intake & Diagnostic (`/assessment`):** Evaluates academic credentials alongside last-mile infrastructure constraints across 6 Zimbabwean demographic archetypes.
+- **Grounded ATS CV & Application Letter Studio (`/jobs`):**
+  - Generates structured, ATS-friendly CVs and formal Zimbabwean business application letters grounded strictly in candidate facts (zero fabricated employers or dates).
+  - **Anti-AI-Slop Humanizer (`src/lib/documents/humanizer.ts`):** Strips 45+ AI clichés and scores every document from `0–100` for natural human tone.
+  - **One-Click Downloads:** Export ready-to-send **Word (`.docx`)** files, **A4 Print/PDF**, or plain text.
+  - **Clean End-User UI:** API keys, model pickers, and multi-user demo switchers are hidden in Candidate View.
+
+### B. Facilitator & Admin Operations Console (`/admin`)
+Switch to **`Admin Console`** in the top navigation bar to access:
+- **Partner Hub Enlistment (`/api/admin/hubs`):** Enlist and manage co-working hubs across Harare, Bulawayo, Mutare, Gweru, Masvingo, and Chinhoyi.
+- **AI Job Discovery & Approval Pipeline (`/api/admin/jobs`):** Run AI remote job discovery or add jobs manually/via link; review `Pending Review` roles and click **Approve & Publish** to make them visible to candidates.
+- **Registered Candidates Cohort (`/api/admin/candidates`):** Inspect all candidate intakes, readiness tiers, hardware deficits, and applications.
+- **Live Gemini AI Diagnostics (`/api/ai/status`):** Test live model latency and switch between `gemini-2.5-flash` and `gemini-2.5-pro`.
+
+---
+
+## 4. Repository Architecture & File Documentation
 
 ```text
 utare-zisedu-mvp/
 ├── .devcontainer/
 │   └── devcontainer.json          # 1-click "Reopen in Container" config for VS Code / Cursor
+├── .githooks/
+│   └── pre-push                   # Automatic local 5-gate CI check before every git push
+├── scripts/
+│   ├── pre-push-ci-check.sh       # Runs ESLint, Typecheck, Vitest (20 tests) & Next.js build in Docker
+│   └── safe-pr-merge.sh           # Runs local CI + remote GitHub Actions check before merging a PR
 ├── Dockerfile.dev                 # Development container (Node 20 LTS Alpine + hot-reload polling)
 ├── Dockerfile                     # Multi-stage production container build
 ├── docker-compose.yml             # Orchestrates the web container & isolated node_modules volume
-├── Makefile                       # Shortcuts: make up, make down, make logs, make shell
+├── Makefile                       # Shortcuts: make up, make ci-local, make safe-merge, make install-hooks
 ├── .env.example                   # Template for Gemini AI & Supabase environment variables
 ├── supabase/
 │   └── schema.sql                 # Full PostgreSQL schema + Zimbabwe Hubs & Coaches seed data
-├── docs/
-│   ├── CONTAINER_AND_SETUP_GUIDE.md     # Detailed Docker & local setup guide for all OSes
-│   ├── ARCHITECTURE_AND_TEAM_GUIDE.md   # Deep-dive into every module & team task boundaries
-│   └── GITHUB_PERSONAL_ACCOUNT_GUIDE.md # Personal GitHub (mangezi64) vs Odyssey account isolation
 └── src/
+    ├── __tests__/                 # 5 Vitest suites (20 automated unit & integration tests)
     ├── types/
-    │   └── index.ts               # Core TypeScript interfaces for all 5 MVP modules
+    │   └── index.ts               # Core TypeScript interfaces for all platform modules
     ├── lib/
-    │   ├── mock-data.ts           # Empirical survey benchmarks, Zimbabwe hubs, coaches & jobs
-    │   ├── supabase/
-    │   │   └── client.ts          # Supabase client with graceful offline/seed fallback
-    │   └── gemini/
-    │       └── pathway-engine.ts  # Task #3: Gemini AI Career Pathway + Coach & Hub Matching Engine
+    │   ├── store.ts               # Persistent JSON + Supabase data store for candidates, hubs & jobs
+    │   ├── view-mode-context.tsx  # Global Candidate View vs. Admin Console state provider
+    │   ├── mock-data.ts           # Empirical survey benchmarks, 6 archetypes, hubs, coaches & jobs
+    │   ├── gemini/
+    │   │   ├── client.ts          # Shared live Gemini 2.5 JSON schema client with timeout & fallback
+    │   │   └── pathway-engine.ts  # AI Career Pathway + Coach & Hub Matching Engine
+    │   └── documents/
+    │       ├── humanizer.ts       # Anti-AI-Slop humanizer & 0-100 style audit scorer
+    │       ├── cv-writer.ts       # Grounded ATS CV generator
+    │       ├── cover-letter-writer.ts # Grounded Zimbabwean business application letter writer
+    │       └── docx-export.ts     # Word (.docx) binary exporter
     ├── components/
-    │   └── Navbar.tsx             # Responsive top navigation bar
+    │   └── Navbar.tsx             # Responsive navbar with Candidate View / Admin Console switcher
     └── app/
         ├── page.tsx               # Executive Overview & Empirical Survey Dashboard
-        ├── assessment/
-        │   └── page.tsx           # Tasks #1, #2 & #3: Smart Intake, Diagnostic & AI Coach Pairing
-        ├── hubs/
-        │   └── page.tsx           # Task #4: Partner Innovation Hub Directory & Enlistment Form
-        ├── jobs/
-        │   └── page.tsx           # Task #5: Verified Remote Jobs & AI Resume Tailoring Studio
-        └── api/
-            ├── pathway/route.ts   # POST endpoint for diagnostic scoring & Gemini AI pathway generation
-            └── hubs/route.ts      # GET/POST endpoint for listing & enlisting Partner Hubs
+        ├── account/page.tsx       # Candidate Workspace: Profile, Hub Pass, Milestones & Applications
+        ├── admin/page.tsx         # Admin Console: Hub Enlistment, AI Job Approval & Cohort Directory
+        ├── assessment/page.tsx    # Smart Intake, Diagnostic & AI Coach Pairing
+        ├── pathway/page.tsx       # Interactive 90-Day AI Career Roadmap & Mentor Booking
+        ├── hubs/page.tsx          # Partner Innovation Hub Directory
+        ├── jobs/page.tsx          # Verified Remote Jobs + ATS CV & Application Letter Studio
+        └── api/                   # REST API routes (/api/auth/profile, /api/admin/*, /api/documents, etc.)
 ```
+
+---
+
+## 5. Local CI & Safe PR Merge Workflow for Contributors
+
+To guarantee `main` never breaks on merge:
+- **Run full CI locally inside Docker:**
+  ```bash
+  make ci-local
+  ```
+- **Verify local CI + GitHub Actions and merge your PR safely:**
+  ```bash
+  make safe-merge
+  ```
 
 ---
 
