@@ -391,19 +391,32 @@ function contactPage() {
   );
 }
 function infoPage(title) {
+  const routeMap = {
+    "Intake & Diagnostic": { url: "/assessment", label: "Launch Live 6-Factor Assessment", desc: "Take the empirical readiness diagnostic that tests English, digital literacy, internet speed, device ownership, power availability, and work experience." },
+    "AI Pathway & Coach": { url: "/pathway", label: "Open Live AI Career Coach", desc: "Generate a custom 90-day upskilling roadmap powered by Google Gemini 2.5 and pair with a verified Zimbabwean mentor." },
+    "Partner Hubs": { url: "/hubs", label: "Explore Partner Hub Directory", desc: "Find co-working spaces across Harare, Bulawayo, Mutare, Gweru, and Masvingo with Starlink connectivity and backup solar power." },
+    "Remote Jobs & CV": { url: "/jobs", label: "Open ATS CV & Cover Letter Studio", desc: "Generate grounded, ATS-compliant CVs and Zimbabwean business letters stripped of AI slop with 1-click Word (.docx) export." },
+  };
+  const live = routeMap[title];
+  const cta = live ? `<div style="margin-top: 20px; padding: 20px; background: #eaf5f0; border-radius: 12px; border: 1px solid #c2e2d4;">
+    <div style="font-weight: 700; font-size: 13px; color: #004d40; margin-bottom: 6px;">Connected to Live Next.js Backend</div>
+    <p style="margin: 0 0 16px 0; color: #2e4a3d; font-size: 11px; line-height: 1.6;">${live.desc}</p>
+    <a href="${live.url}" class="button button-green" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">${live.label} ${icons.arrow}</a>
+  </div>` : "";
+
   return shell(
-    `${pageHero("UTARE PLATFORM", title, "This section is planned as part of the shared UTARE journey. It is linked here so the navigation is ready as the team’s pages become available.")}<section class="content-section"><div class="notice-band">${icons.spark}<div><b>Section preview</b><p>This route is a lightweight navigation preview, not a replacement for the detailed feature being developed by your teammate.</p></div></div>${button("Return to Overview", "/overview", "button button-green")}</section>`,
+    `${pageHero("UTARE PLATFORM", title, "This section is live on our Next.js backend with containerized PostgreSQL database persistence and background AI execution.")}<section class="content-section"><div class="notice-band">${icons.spark}<div><b>Live Feature Available</b><p>You can run this feature directly on the platform with full backend functionality.</p></div></div>${cta}<div style="margin-top: 20px;">${button("Return to Overview", "/overview", "button")}</div></section>`,
   );
 }
 function settingsPage() {
   return shell(
-    `${pageHero("ACCOUNT SETTINGS", "Your demonstration account", "The login on this site is frontend-only and stores its state in this browser.")}<section class="content-section"><div class="notice-band">${icons.check}<div><b>Demo session active</b><p>Sign out from the profile menu to end this browser demonstration session.</p></div></div></section>`,
+    `${pageHero("ACCOUNT SETTINGS", "Your demonstration account", "The login on this site is frontend-only and stores its state in this browser.")}<section class="content-section"><div class="notice-band">${icons.check}<div><b>Demo session active</b><p>Sign out from the profile menu to end this browser demonstration session.</p></div></div><div style="margin-top: 20px;"><a href="/account" class="button button-green" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">Go to Full Candidate Workspace ${icons.arrow}</a></div></section>`,
   );
 }
 function profilePage() {
   const user = currentUser() || {};
   return shell(
-    `${pageHero("MY PROFILE", "Your demonstration profile", "This profile preview is linked to the sample account in this browser.")}<section class="content-section"><article class="dashboard-card profile-preview"><div class="profile-preview-avatar">${avatar(user.name || "Demo Candidate")}</div><div><span class="eyebrow">DEMONSTRATION ACCOUNT</span><h2>${escapeHtml(user.name || "Demo Candidate")}</h2><p>${escapeHtml(user.email || "demo@utaresizedu.ai")}</p><p class="content-disclaimer">No profile data is sent to a server or stored beyond this browser demonstration session.</p></div></article>${button("Open dashboard", "/dashboard", "button button-green")}</section>`,
+    `${pageHero("MY PROFILE", "Candidate Workspace & Profile", "Manage your profile, matched hub pass, and track live job applications.")}<section class="content-section"><article class="dashboard-card profile-preview"><div class="profile-preview-avatar">${avatar(user.name || "Demo Candidate")}</div><div><span class="eyebrow">CANDIDATE WORKSPACE</span><h2>${escapeHtml(user.name || "Demo Candidate")}</h2><p>${escapeHtml(user.email || "demo@utaresizedu.ai")}</p><p class="content-disclaimer">Connected to containerized PostgreSQL database (utare_db). Candidate view hides developer API keys.</p></div></article><div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;"><a href="/account" class="button button-green" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">Open Candidate Workspace ${icons.arrow}</a><a href="/admin" class="button" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">Facilitator Admin Console ${icons.arrow}</a></div></section>`,
     "",
   );
 }
@@ -589,10 +602,85 @@ function bindInteractions() {
       btn.addEventListener("click", () => showCourseModal(btn.dataset.course)),
     );
   document.querySelectorAll(".local-form").forEach((f) =>
-    f.addEventListener("submit", (e) => {
+    f.addEventListener("submit", async (e) => {
       e.preventDefault();
-      f.querySelector(".form-feedback").textContent = f.dataset.success;
-      f.reset();
+      const feedback = f.querySelector(".form-feedback");
+      const submitBtn = f.querySelector('button[type="submit"]');
+      const originalText = submitBtn ? submitBtn.innerHTML : "";
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting to database...";
+      }
+
+      const isEmployer = f.elements.organisation !== undefined;
+      const isContact = f.elements.topic !== undefined;
+
+      try {
+        if (isEmployer) {
+          const org = f.elements.organisation ? f.elements.organisation.value : "";
+          const email = f.elements.email ? f.elements.email.value : "";
+          const interest = f.elements.interest ? f.elements.interest.value : "";
+          const details = f.elements.details ? f.elements.details.value : "";
+
+          const res = await fetch("/api/employers", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              companyName: org,
+              contactPerson: org,
+              email: email,
+              industry: interest,
+              rolesNeeded: details,
+              estimatedHires: 1,
+              remoteType: "Fully Remote",
+              message: details,
+            }),
+          });
+          const data = await res.json();
+          if (feedback) {
+            feedback.style.color = "#00875a";
+            feedback.textContent = `✓ Employer interest saved to PostgreSQL! Ref #${data.registration?.id || "EMP-" + Date.now()}`;
+          }
+          f.reset();
+        } else if (isContact) {
+          const name = f.elements.name ? f.elements.name.value : "";
+          const email = f.elements.email ? f.elements.email.value : "";
+          const topic = f.elements.topic ? f.elements.topic.value : "";
+          const message = f.elements.message ? f.elements.message.value : "";
+
+          const res = await fetch("/api/contact", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name,
+              email,
+              category: topic,
+              message,
+            }),
+          });
+          const data = await res.json();
+          if (feedback) {
+            feedback.style.color = "#00875a";
+            feedback.textContent = `✓ Message saved to PostgreSQL! Ticket #${data.messageRecord?.id || "MSG-" + Date.now()}`;
+          }
+          f.reset();
+        } else {
+          if (feedback) feedback.textContent = f.dataset.success;
+          f.reset();
+        }
+      } catch (err) {
+        // Fallback for opening via file:// protocol without active web server
+        if (feedback) {
+          feedback.style.color = "";
+          feedback.textContent = f.dataset.success;
+        }
+        f.reset();
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      }
     }),
   );
   document.querySelectorAll('a[href^="#"]').forEach((a) =>

@@ -18,42 +18,59 @@ In Zimbabwe, high academic qualification no longer translates into economic mobi
 
 ---
 
-## 2. Containerized Quick Start (Runs Identically on Mac, Windows & Linux)
+## 2. Two Seamless Ways to Run & Demo the Platform
 
-We use **Docker Compose** with two services:
-1. **`web`**: Next.js 14 frontend and API server (Port `3000`).
-2. **`db`**: Containerized PostgreSQL 16 Alpine database with pre-seeded Zimbabwe hubs, coaches, and curriculum (Port `5432`).
+### Option A: Full Next.js Platform with Containerized PostgreSQL Database (Recommended)
 
-### Prerequisites
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
-- Git installed.
+Runs identically across macOS, Windows (WSL2), and Linux using Docker Compose with zero host environment pollution:
+- **`web`**: Next.js 14 frontend, dynamic routes, and REST API server (Port `3000`).
+- **`db`**: Containerized PostgreSQL 16 Alpine database with pre-seeded Zimbabwe hubs, coaches, and curriculum (Port `5432`).
 
-### Step 1: Clone the Repository
+#### Step 1: Clone the Repository
 ```bash
 git clone https://github.com/mangezi64/utare-zisedu-mvp.git
 cd utare-zisedu-mvp
 ```
 
-### Step 2: Create Your Local Environment File & Background Gemini Key
+#### Step 2: Configure Your Local Environment & Gemini Key
 ```bash
 cp .env.example .env.local
 ```
-To enable live **Google Gemini 2.5** models in the background (keeping API keys hidden from end-user candidates), edit `.env.local`:
+To enable live **Google Gemini 2.5** in the background (keeping keys hidden from end-user candidates), edit `.env.local`:
 ```bash
-GEMINI_API_KEY="AIzaSyYourKeyHere"
+GEMINI_API_KEY="AIzaSyYourActualKeyHere"
 GEMINI_MODEL="gemini-2.5-flash"
 DATABASE_URL="postgresql://utare_user:utare_password@db:5432/utare_db"
 ```
-*(Note: The app includes a built-in **Zimbabwe Survey Seed & Deterministic Fallback Engine**, so it runs 100% out-of-the-box even before you paste live `GEMINI_API_KEY` credentials into `.env.local`!)*
+*(Note: The platform includes a built-in **Zimbabwe Survey Seed & Deterministic Fallback Engine**, so it runs 100% out-of-the-box even before you paste live `GEMINI_API_KEY` credentials!)*
 
-### Step 3: Start the Containers & Enable Pre-Push CI Hooks
+#### Step 3: Start the Containers & Enable Pre-Push CI Hooks
 ```bash
 docker compose up -d --build
 make install-hooks
 ```
-- Open **[http://localhost:3000](http://localhost:3000)** in your browser for the full Next.js platform with PostgreSQL persistence.
-- Open **[http://localhost:3000/demo/index.html](http://localhost:3000/demo/index.html)** for the standalone frontend prototype preserved from `design/demo-app/`.
-Any code changes you save in `src/` will hot-reload automatically inside the container.
+- Open **[http://localhost:3000](http://localhost:3000)** in your browser for the full Next.js platform.
+- Open **[http://localhost:3000/demo/index.html](http://localhost:3000/demo/index.html)** for the connected frontend walkthrough.
+
+---
+
+### Option B: Standalone Frontend Walkthrough Demonstration
+
+Open `index.html` in any modern browser without needing a build step or package installation. The walkthrough uses responsive client-side routing:
+
+- `#/` — Login demonstration
+- `#/overview` — Homepage & Problem Context
+- `#/dashboard` — Candidate main dashboard
+- `#/about` — About Us & Mission
+- `#/how-it-works` — 4-Stage Candidate Journey
+- `#/opportunities` — 4-Way filterable remote opportunities
+- `#/skills` — Modular skills development pathways
+- `#/employers` — For Employers (submits to live `/api/employers` & PostgreSQL when server is active)
+- `#/contact` — Contact & Hub Inquiries (submits to live `/api/contact` & PostgreSQL when server is active)
+
+#### Demonstration Credentials
+- **Email:** `demo@utaresizedu.ai`
+- **Password:** `Demo123!`
 
 ---
 
@@ -62,8 +79,8 @@ Any code changes you save in `src/` will hot-reload automatically inside the con
 ### A. Candidate Experience (`Candidate View`)
 - **Executive Overview (`/`):** Live empirical data from the 23-respondent survey, core value proposition, and mobility stages.
 - **Smart Intake & Diagnostic (`/assessment`):** 6-factor readiness assessment evaluating English proficiency, digital literacy, internet access, device ownership, electricity availability, and work experience. Classifies into 3 clear tiers:
-  - 🟢 **Remote Ready** (Direct placement)
-  - 🟡 **Needs Upskilling** (Targeted certifications & software bridges)
+  - 🟢 **Remote Ready** (Direct placement track)
+  - 🟡 **Needs Upskilling** (Targeted micro-credentials & software bridges)
   - 🔴 **Needs Infrastructure Support** (Partner hub placement & hardware subsidy)
 - **Opportunities (`/opportunities`):** Remote job vacancies with 4-way filtering by Category (Data, Operations, Marketing, Finance, Customer Support, Software), Industry, Level (Entry, Mid, Experienced), and Arrangement (Remote, Hybrid, Onsite).
 - **Skills Development (`/skills`):** Modular upskilling curriculum across Virtual Assistance, Digital Operations, Data Analytics, and Customer Support.
@@ -105,8 +122,11 @@ utare-zisedu-mvp/
 ├── .env.example                   # Template for Gemini AI & PostgreSQL environment variables
 ├── supabase/
 │   └── schema.sql                 # Full PostgreSQL schema with 9 tables + Zimbabwe Hubs & Coaches seed data
+├── index.html                     # Standalone frontend walkthrough entry point
+├── app.js                         # Walkthrough client logic connected to Next.js REST API
+├── styles.css                     # Responsive styling for standalone walkthrough
 ├── design/
-│   └── demo-app/                  # Contributor static HTML/JS/CSS frontend walkthrough files
+│   └── demo-app/                  # Preserved original contributor design files
 ├── public/
 │   └── demo/                      # Static demo hosted at http://localhost:3000/demo/index.html
 └── src/
@@ -161,7 +181,7 @@ To guarantee `main` never breaks on merge:
 
 ---
 
-## 4. Team Task Assignments & Module Ownership
+## 6. Team Task Assignments & Module Ownership
 
 | Team Member | Assigned Tasks | Primary Files / Directories |
 | :--- | :--- | :--- |
@@ -172,7 +192,7 @@ To guarantee `main` never breaks on merge:
 
 ---
 
-## 5. Detailed Documentation Links
+## 7. Detailed Documentation Links
 
 - **[Container & Setup Guide](docs/CONTAINER_AND_SETUP_GUIDE.md)** — How to run, debug, and manage the Docker environment on macOS, Windows (WSL2), and Linux.
 - **[Architecture & Team Development Guide](docs/ARCHITECTURE_AND_TEAM_GUIDE.md)** — How each file works, how Supabase & Gemini AI connect, and our Git branching workflow.
