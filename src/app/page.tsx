@@ -71,12 +71,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Empirical Survey Benchmarks (N = 23) */}
+      {/* Empirical Survey Benchmarks */}
       <section className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
           <div>
             <h2 className="text-xl font-bold text-slate-900">
-              Empirical Grounding: UTARE Mobility Survey ($N = 23$)
+              Empirical Research Grounding: UTARE Mobility Survey
             </h2>
             <p className="text-sm text-slate-600">
               Why traditional job boards fail Zimbabwean graduates—and what our

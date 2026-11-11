@@ -130,7 +130,7 @@ export default function AssessmentAndPathwayPage() {
         <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/50 p-4 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-900">
-              🛠️ Facilitator Console: Quick-Load Demographic Archetypes (N=23 Survey):
+              🛠️ Facilitator Console: Quick-Load Demographic Archetypes:
             </span>
             <span className="text-[11px] font-medium text-amber-800">
               Hidden from candidate view

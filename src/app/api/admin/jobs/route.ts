@@ -78,6 +78,17 @@ const SAMPLE_AI_DISCOVERIES: Omit<RemoteJob, "id">[] = [
   },
 ];
 
+function isAuthorizedAdmin(req: NextRequest): boolean {
+  const role =
+    req.headers.get("x-utare-role") || req.nextUrl.searchParams.get("role");
+  const email =
+    req.headers.get("x-utare-email") || req.nextUrl.searchParams.get("email");
+  return (
+    role === "admin" ||
+    Boolean(email && email.toLowerCase().includes("admin@utare.co.zw"))
+  );
+}
+
 export async function GET() {
   const state = readStore();
   return NextResponse.json({
@@ -87,6 +98,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!isAuthorizedAdmin(req)) {
+    return NextResponse.json(
+      { error: "Unauthorized. Admin/Facilitator privileges required." },
+      { status: 401 }
+    );
+  }
   try {
     const body = await req.json();
 
@@ -253,6 +270,12 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  if (!isAuthorizedAdmin(req)) {
+    return NextResponse.json(
+      { error: "Unauthorized. Admin/Facilitator privileges required." },
+      { status: 401 }
+    );
+  }
   try {
     const body = await req.json();
     const { jobId, status } = body;
@@ -294,6 +317,12 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  if (!isAuthorizedAdmin(req)) {
+    return NextResponse.json(
+      { error: "Unauthorized. Admin/Facilitator privileges required." },
+      { status: 401 }
+    );
+  }
   try {
     const jobId = req.nextUrl.searchParams.get("id");
     if (!jobId) {

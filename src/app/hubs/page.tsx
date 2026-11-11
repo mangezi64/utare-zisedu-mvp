@@ -13,8 +13,10 @@ import {
   PlusCircle,
   CheckCircle2,
 } from "lucide-react";
+import { useViewMode } from "@/lib/view-mode-context";
 
 export default function HubsDirectoryPage() {
+  const { user, isAuthenticated } = useViewMode();
   const [hubs, setHubs] = useState<InnovationHub[]>(SEED_INNOVATION_HUBS);
   const [activeCandidate, setActiveCandidate] =
     useState<StoredCandidateRecord | null>(null);
@@ -34,14 +36,21 @@ export default function HubsDirectoryPage() {
   });
 
   useEffect(() => {
-    fetch("/api/hubs")
+    const url = user?.email
+      ? `/api/hubs?email=${encodeURIComponent(user.email)}`
+      : "/api/hubs";
+    fetch(url)
       .then((r) => r.json())
       .then((data) => {
         if (data.hubs) setHubs(data.hubs);
-        if (data.activeCandidate) setActiveCandidate(data.activeCandidate);
+        if (data.activeCandidate) {
+          setActiveCandidate(data.activeCandidate);
+        } else {
+          setActiveCandidate(null);
+        }
       })
       .catch(() => {});
-  }, []);
+  }, [user, isAuthenticated]);
 
   const cities = ["All", ...Array.from(new Set(hubs.map((h) => h.city)))];
   const filteredHubs =

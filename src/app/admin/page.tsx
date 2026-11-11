@@ -103,12 +103,16 @@ export default function AdminConsolePage() {
   async function loadAllData() {
     setLoading(true);
     try {
+      const adminHeaders = {
+        "x-utare-role": "admin",
+        "x-utare-email": "admin@utare.co.zw",
+      };
       const [hubsRes, jobsRes, candRes, aiRes, empRes] = await Promise.all([
-        fetch("/api/admin/hubs").then((r) => r.json()),
-        fetch("/api/jobs?all=1").then((r) => r.json()),
-        fetch("/api/admin/candidates").then((r) => r.json()),
+        fetch("/api/admin/hubs", { headers: adminHeaders }).then((r) => r.json()),
+        fetch("/api/jobs?all=1&role=admin", { headers: adminHeaders }).then((r) => r.json()),
+        fetch("/api/admin/candidates?role=admin", { headers: adminHeaders }).then((r) => r.json()),
         fetch("/api/ai/status").then((r) => r.json()),
-        fetch("/api/employers").then((r) => r.json()).catch(() => ({ employers: [] })),
+        fetch("/api/employers?role=admin", { headers: adminHeaders }).then((r) => r.json()).catch(() => ({ employers: [] })),
       ]);
 
       if (hubsRes.hubs) setHubs(hubsRes.hubs);
@@ -128,8 +132,12 @@ export default function AdminConsolePage() {
   }
 
   useEffect(() => {
-    loadAllData();
-  }, []);
+    if (isAdmin) {
+      loadAllData();
+    } else {
+      setLoading(false);
+    }
+  }, [isAdmin]);
 
   // Hub Actions
   async function handleCreateHub(e: React.FormEvent) {
@@ -138,7 +146,11 @@ export default function AdminConsolePage() {
     try {
       const res = await fetch("/api/admin/hubs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-utare-role": "admin",
+          "x-utare-email": "admin@utare.co.zw",
+        },
         body: JSON.stringify(hubForm),
       });
       const data = await res.json();
@@ -169,7 +181,13 @@ export default function AdminConsolePage() {
   async function handleDeleteHub(id: string, name: string) {
     if (!confirm(`Are you sure you want to unlist ${name}?`)) return;
     try {
-      const res = await fetch(`/api/admin/hubs?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/hubs?id=${id}`, {
+        method: "DELETE",
+        headers: {
+          "x-utare-role": "admin",
+          "x-utare-email": "admin@utare.co.zw",
+        },
+      });
       if (res.ok) {
         setHubs(hubs.filter((h) => h.id !== id));
         notify(`Hub "${name}" unlisted.`);
@@ -184,7 +202,11 @@ export default function AdminConsolePage() {
     try {
       const res = await fetch("/api/admin/jobs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-utare-role": "admin",
+          "x-utare-email": "admin@utare.co.zw",
+        },
         body: JSON.stringify(jobForm),
       });
       const data = await res.json();
@@ -216,7 +238,11 @@ export default function AdminConsolePage() {
     try {
       const res = await fetch("/api/admin/jobs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-utare-role": "admin",
+          "x-utare-email": "admin@utare.co.zw",
+        },
         body: JSON.stringify({ action: "discover" }),
       });
       const data = await res.json();
@@ -233,7 +259,11 @@ export default function AdminConsolePage() {
     try {
       const res = await fetch("/api/admin/jobs", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-utare-role": "admin",
+          "x-utare-email": "admin@utare.co.zw",
+        },
         body: JSON.stringify({ jobId, status }),
       });
       const data = await res.json();
@@ -247,7 +277,13 @@ export default function AdminConsolePage() {
   async function handleDeleteJob(id: string) {
     if (!confirm("Are you sure you want to remove this job listing?")) return;
     try {
-      const res = await fetch(`/api/admin/jobs?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/jobs?id=${id}`, {
+        method: "DELETE",
+        headers: {
+          "x-utare-role": "admin",
+          "x-utare-email": "admin@utare.co.zw",
+        },
+      });
       if (res.ok) {
         setJobs(jobs.filter((j) => j.id !== id));
         notify("Job listing removed.");

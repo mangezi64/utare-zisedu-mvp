@@ -79,7 +79,11 @@ export default function CandidateAccountPage() {
       })
       .catch(() => {});
 
-    fetch("/api/jobs")
+    const jobsUrl = user?.email
+      ? `/api/jobs?email=${encodeURIComponent(user.email)}`
+      : "/api/jobs";
+
+    fetch(jobsUrl)
       .then((r) => r.json())
       .then((data) => {
         if (data.applications) {
@@ -87,7 +91,8 @@ export default function CandidateAccountPage() {
             const userApps = data.applications.filter(
               (a: JobApplicationRecord) =>
                 (user.name && a.candidateName.toLowerCase() === user.name.toLowerCase()) ||
-                (user.id && a.candidateId === user.id)
+                (user.id && a.candidateId === user.id) ||
+                (user.email && a.candidateId === user.email)
             );
             setApplications(userApps);
           } else {

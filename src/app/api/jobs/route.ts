@@ -1,34 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readStore, submitJobApplicationToStore } from "@/lib/store";
+import { findCandidateByEmail, readStore, submitJobApplicationToStore } from "@/lib/store";
 
 export async function GET(req: NextRequest) {
   const state = readStore();
   const emailParam = req.nextUrl.searchParams.get("email");
   const showAll = req.nextUrl.searchParams.get("all") === "1";
+  const roleParam =
+    req.headers.get("x-utare-role") || req.nextUrl.searchParams.get("role");
+  const isAdmin = roleParam === "admin";
 
   let activeCandidate = null;
   if (emailParam) {
-    activeCandidate = state.candidates.find(
-      (c) => c.profile.email.trim().toLowerCase() === emailParam.trim().toLowerCase()
-    );
-  }
-  if (!activeCandidate) {
-    activeCandidate =
-      state.candidates.find((c) => c.id === state.activeCandidateId) ||
-      state.candidates[0] ||
-      null;
+    activeCandidate = findCandidateByEmail(emailParam);
   }
 
-  // Regular candidate users see only approved jobs; admins can pass ?all=1
-  const jobs = showAll
-    ? state.jobs
-    : state.jobs.filter(
-        (j) => j.status !== "pending_review" && j.status !== "archived"
-      );
+  // Regular candidate users see only approved jobs; admins see all jobs
+  const jobs =
+    showAll && isAdmin
+      ? state.jobs
+      : state.jobs.filter(
+          (j) => j.status !== "pending_review" && j.status !== "archived"
+        );
+
+  // Return applications strictly scoped to the requesting candidate or authorized admin
+  let applications: typeof state.applications = [];
+  if (showAll && isAdmin) {
+    applications = state.applications;
+  } else if (activeCandidate) {
+    applications = state.applications.filter(
+      (a) =>
+        a.candidateId === activeCandidate.id ||
+        (a.candidateName &&
+          activeCandidate.profile.fullName &&
+          a.candidateName.toLowerCase() ===
+            activeCandidate.profile.fullName.toLowerCase())
+    );
+  }
 
   return NextResponse.json({
     jobs,
-    applications: state.applications,
+    applications,
     activeCandidate,
   });
 }

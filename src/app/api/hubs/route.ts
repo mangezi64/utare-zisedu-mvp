@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
-import { addHubToStore, readStore } from "@/lib/store";
+import { addHubToStore, findCandidateByEmail, readStore } from "@/lib/store";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const state = readStore();
-  const activeCandidate =
-    state.candidates.find((c) => c.id === state.activeCandidateId) ||
-    state.candidates[0] ||
-    null;
+  const emailParam = req.nextUrl.searchParams.get("email");
+  const activeCandidate = emailParam ? findCandidateByEmail(emailParam) : null;
 
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase
