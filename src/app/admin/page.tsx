@@ -45,7 +45,7 @@ const ZIMBABWE_CITIES: ZimbabweanCity[] = [
 ];
 
 export default function AdminConsolePage() {
-  const { isAdmin, setMode } = useViewMode();
+  const { isAdmin, loginAsAdmin, setMode } = useViewMode();
   const [activeTab, setActiveTab] = useState<
     "hubs" | "jobs" | "candidates" | "employers" | "ai"
   >("jobs");
@@ -302,6 +302,35 @@ export default function AdminConsolePage() {
   });
 
   const pendingJobCount = jobs.filter((j) => j.status === "pending_review").length;
+
+  if (!isAdmin) {
+    return (
+      <div className="mx-auto max-w-lg py-20 px-4 text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-800 shadow-sm">
+          <Shield className="h-8 w-8" />
+        </div>
+        <h1 className="text-2xl font-bold text-slate-900">Facilitator Access Required</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          The Admin Console is reserved for evaluators, partners, and facilitators to approve jobs, enlist partner hubs, and review candidate cohorts.
+        </p>
+        <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+          <button
+            type="button"
+            onClick={loginAsAdmin}
+            className="rounded-xl bg-amber-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-amber-700 transition"
+          >
+            Sign In as Facilitator / Admin
+          </button>
+          <Link
+            href="/"
+            className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+          >
+            Return to Public Website
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { CandidateProfile, ZimbabweanCity } from "@/types";
 import { JobApplicationRecord, StoredCandidateRecord } from "@/lib/store";
+import { useViewMode } from "@/lib/view-mode-context";
 
 const ZIMBABWE_CITIES: ZimbabweanCity[] = [
   "Harare",
@@ -58,6 +59,7 @@ const DEFAULT_PROFILE: CandidateProfile = {
 };
 
 export default function CandidateAccountPage() {
+  const { user, isAuthenticated } = useViewMode();
   const [candidate, setCandidate] = useState<StoredCandidateRecord | null>(null);
   const [profile, setProfile] = useState<CandidateProfile>(DEFAULT_PROFILE);
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
@@ -66,12 +68,25 @@ export default function CandidateAccountPage() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/auth/profile")
+    const url = user?.email
+      ? `/api/auth/profile?email=${encodeURIComponent(user.email)}`
+      : "/api/auth/profile";
+
+    fetch(url)
       .then((r) => r.json())
       .then((data) => {
         if (data.candidate) {
           setCandidate(data.candidate);
           setProfile(data.candidate.profile);
+        } else if (user) {
+          setProfile((prev) => ({
+            ...prev,
+            fullName: user.name || prev.fullName,
+            email: user.email || prev.email,
+            city: (user.city as ZimbabweanCity) || prev.city,
+            highestQualification: (user.qualification as any) || prev.highestQualification,
+            fieldOfStudy: user.fieldOfStudy || prev.fieldOfStudy,
+          }));
         }
       })
       .catch(() => {});
@@ -80,11 +95,23 @@ export default function CandidateAccountPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.applications) {
-          setApplications(data.applications);
+          // Filter applications for current user if email exists
+          if (user?.email) {
+            const userApps = data.applications.filter(
+              (a: JobApplicationRecord) =>
+                a.candidateName === user.name ||
+                a.candidateId === user.id ||
+                !data.candidate ||
+                a.candidateId === data.candidate?.id
+            );
+            setApplications(userApps.length > 0 ? userApps : data.applications);
+          } else {
+            setApplications(data.applications);
+          }
         }
       })
       .catch(() => {});
-  }, []);
+  }, [user]);
 
   async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();

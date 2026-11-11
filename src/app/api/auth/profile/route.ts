@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const profile = body.profile as CandidateProfile;
+    const profile = (body.profile || body) as CandidateProfile;
 
     if (!profile || !profile.fullName || !profile.email) {
       return NextResponse.json(

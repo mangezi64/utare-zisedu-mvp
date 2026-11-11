@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { PRESET_PERSONAS, SEED_REMOTE_JOBS } from "@/lib/mock-data";
 import { useViewMode } from "@/lib/view-mode-context";
 import {
@@ -52,7 +53,7 @@ const FALLBACK_CANDIDATE_PROFILE: CandidateProfile = {
 };
 
 export default function RemoteJobsPage() {
-  const { isAdmin } = useViewMode();
+  const { user, isAuthenticated, isAdmin } = useViewMode();
   const [jobs, setJobs] = useState<RemoteJob[]>(SEED_REMOTE_JOBS);
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
   const [activeCandidate, setActiveCandidate] =
@@ -224,6 +225,7 @@ export default function RemoteJobsPage() {
         body: JSON.stringify({
           jobId: activeJob.id,
           tailoredResumePitch: generatedDocs.cv.summary,
+          candidateId: user?.id || activeCandidate?.id,
         }),
       });
       const data = await res.json();
@@ -266,6 +268,28 @@ export default function RemoteJobsPage() {
             AI clichés and instant <strong>Word (.docx)</strong> &{" "}
             <strong>PDF</strong> export.
           </p>
+
+          {isAuthenticated && user ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs text-emerald-900 mt-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0" />
+                <span>Signed in as <strong>{user.name}</strong> ({user.email}). Generated CVs and applications are recorded under your candidate account.</span>
+              </div>
+              <Link href="/account" className="font-bold underline text-emerald-800 hover:text-emerald-900 shrink-0">
+                My Workspace →
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-slate-100 border border-slate-200 px-4 py-2.5 text-xs text-slate-700 mt-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-slate-500 shrink-0" />
+                <span>Browsing studio as visitor. Sign in or create an account to save tailored CVs and track your applications.</span>
+              </div>
+              <Link href="/login" className="font-bold text-emerald-700 hover:underline shrink-0">
+                Sign In / Register →
+              </Link>
+            </div>
+          )}
         </div>
 
         {isAdmin ? (

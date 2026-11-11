@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useViewMode } from "@/lib/view-mode-context";
 import {
@@ -25,10 +25,23 @@ import {
 import { PRESET_PERSONAS } from "@/lib/mock-data";
 
 export default function AssessmentAndPathwayPage() {
-  const { isAdmin } = useViewMode();
+  const { user, isAdmin } = useViewMode();
   const [profile, setProfile] = useState<CandidateProfile>(
     PRESET_PERSONAS[0].profile
   );
+
+  useEffect(() => {
+    if (user && user.role === "candidate") {
+      setProfile((prev) => ({
+        ...prev,
+        fullName: user.name || prev.fullName,
+        email: user.email || prev.email,
+        city: (user.city as any) || prev.city,
+        highestQualification: (user.qualification as any) || prev.highestQualification,
+        fieldOfStudy: user.fieldOfStudy || prev.fieldOfStudy,
+      }));
+    }
+  }, [user]);
   const [skillInput, setSkillInput] = useState("");
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({
     clientComms: 85,

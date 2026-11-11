@@ -85,6 +85,7 @@ describe("End-to-End Connected Store Lifecycle (Tasks #1 -> #5)", () => {
     const appRecord = submitJobApplicationToStore({
       jobId: targetJob.id,
       tailoredResumePitch: pathway.tailoredResumeSummary,
+      candidateId: saved.id,
     });
 
     expect(appRecord).not.toBeNull();

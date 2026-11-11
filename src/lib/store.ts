@@ -371,18 +371,20 @@ export function registerOrUpdateCandidate(profile: CandidateProfile): StoredCand
 export function submitJobApplicationToStore(params: {
   jobId: string;
   tailoredResumePitch: string;
+  candidateId?: string;
 }): JobApplicationRecord | null {
   const state = readStore();
   const job = state.jobs.find((j) => j.id === params.jobId);
   if (!job) return null;
 
-  const activeCandidate = state.candidates.find(
-    (c) => c.id === state.activeCandidateId
-  );
+  const targetId = params.candidateId || state.activeCandidateId;
+  const activeCandidate = targetId
+    ? state.candidates.find((c) => c.id === targetId)
+    : (state.candidates[0] || null);
 
   const appRecord: JobApplicationRecord = {
     id: `app-${Date.now()}`,
-    candidateId: activeCandidate?.id || "guest-candidate",
+    candidateId: activeCandidate?.id || targetId || "guest-candidate",
     candidateName: activeCandidate?.profile.fullName || "Utare Candidate",
     jobId: job.id,
     jobTitle: job.title,

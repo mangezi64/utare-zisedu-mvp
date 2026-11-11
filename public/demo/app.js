@@ -225,7 +225,7 @@ function avatar(name = "UT") {
 
 function header(active) {
   const user = currentUser();
-  return `<header class="site-header"><div class="header-inner">${brand()}<button class="mobile-menu" aria-label="Toggle navigation" aria-expanded="false">${icons.menu}</button><nav class="main-nav" aria-label="Main navigation">${paths.map(([label, href]) => link(label, href, active === href ? "active" : "")).join("")}</nav><div class="header-end">${user ? `<div class="profile-menu"><button class="profile-trigger" aria-expanded="false">${avatar(user.name || user.email)}<span>${escapeHtml(user.name || "Demo User")}</span><span class="chevron">⌄</span></button><div class="profile-dropdown"><a href="#/profile">My Profile</a><a href="#/settings">Settings</a><button class="logout">Log Out</button></div></div>` : link("Sign in", "/", "signin-link")}</div></div></header>`;
+  return `<header class="site-header"><div class="header-inner">${brand()}<button class="mobile-menu" aria-label="Toggle navigation" aria-expanded="false">${icons.menu}</button><nav class="main-nav" aria-label="Main navigation">${paths.map(([label, href]) => link(label, href, active === href ? "active" : "")).join("")}</nav><div class="header-end">${user ? `<div class="profile-menu"><button class="profile-trigger" aria-expanded="false">${avatar(user.name || user.email)}<span>${escapeHtml(user.name || "Candidate")}</span><span class="chevron">⌄</span></button><div class="profile-dropdown"><a href="#/dashboard">My Dashboard</a><a href="/account" style="color: #00875a; font-weight: 600;">Candidate Workspace ↗</a>${user.role === "admin" ? `<a href="/admin" style="color: #b45309; font-weight: 600;">Admin Console ↗</a>` : ""}<a href="#/profile">Profile Info</a><button class="logout">Sign Out</button></div></div>` : `<div style="display: flex; gap: 8px;"><a href="#/" class="button" style="padding: 6px 12px; font-size: 10px;">Sign In</a><a href="#/?action=register" class="button button-green" style="padding: 6px 12px; font-size: 10px;">Create Account</a></div>`}</div></div></header>`;
 }
 function footer() {
   return `<footer class="footer"><div class="footer-top">${brand(true)}<p>Connecting Zimbabwean talent with pathways to sustainable economic opportunity.</p><div class="footer-links"><a href="#/about">About</a><a href="#/how-it-works">How it works</a><a href="#/opportunities">Opportunities</a><a href="#/contact">Contact</a></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} UTARE ZISEDU AI</span><span>Zimbabwe Economic Mobility &amp; Remote Bridge</span></div></footer>`;
@@ -241,7 +241,49 @@ function sectionHeading(kicker, title, text = "") {
 }
 
 function loginPage() {
-  return `<main class="login-page"><section class="login-visual"><div class="login-visual-inner">${brand(true)}<div class="login-copy"><span class="eyebrow eyebrow-light">ECONOMIC MOBILITY, WITH POSSIBILITY</span><h1>Bridging Zimbabwe's Credentials to <em>Economic Opportunity.</em></h1><p>Helping Zimbabwean talent access career pathways, develop relevant skills and connect to opportunities beyond geographical boundaries.</p><div class="visual-graphic" aria-hidden="true"><div class="graphic-orbit orbit-a"></div><div class="graphic-orbit orbit-b"></div><div class="graphic-core">${icons.hub}</div><span class="graphic-node node-a">${icons.book}</span><span class="graphic-node node-b">${icons.briefcase}</span><span class="graphic-node node-c">${icons.users}</span><div class="graphic-caption"><span class="pulse"></span> Talent, skills &amp; opportunity in motion</div></div></div><div class="login-footnote">A demonstration platform for Zimbabwe's economic mobility ecosystem.</div></div></section><section class="login-form-side"><div class="login-form-wrap"><div class="mobile-brand">${brand()}</div><span class="eyebrow">WELCOME TO YOUR NEXT STEP</span><h2>Welcome back</h2><p class="login-intro">Sign in to continue exploring your pathway.</p><div class="demo-note"><b>Frontend demonstration</b><span>Use the demo credentials shown below. No account service is connected.</span></div><form id="login-form" class="form-stack" novalidate><label class="field"><span>Email or username</span><input name="email" type="text" autocomplete="username" placeholder="you@example.com" required aria-describedby="login-error" /></label><label class="field"><span>Password</span><span class="password-wrap"><input name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required /><button type="button" class="password-toggle" aria-label="Show password">${icons.eye}</button></span></label><div class="form-options"><label class="check-label"><input type="checkbox" name="remember" checked /><span>Remember me</span></label><button type="button" class="text-button forgot-link">Forgot password?</button></div><p class="form-error" id="login-error" role="alert"></p><button class="button button-wide" type="submit">Sign In ${icons.arrow}</button></form><div class="credential-box"><span>DEMO ACCESS</span><code>demo@utaresizedu.ai</code><code>Demo123!</code></div><p class="auth-disclaimer">Demonstration login only. Do not enter personal or sensitive information.</p></div></section></main>`;
+  return `<main class="login-page"><section class="login-visual"><div class="login-visual-inner">${brand(true)}<div class="login-copy"><span class="eyebrow eyebrow-light">ECONOMIC MOBILITY, WITH POSSIBILITY</span><h1>Bridging Zimbabwe's Credentials to <em>Economic Opportunity.</em></h1><p>Helping Zimbabwean talent access career pathways, develop relevant skills and connect to opportunities beyond geographical boundaries.</p><div class="visual-graphic" aria-hidden="true"><div class="graphic-orbit orbit-a"></div><div class="graphic-orbit orbit-b"></div><div class="graphic-core">${icons.hub}</div><span class="graphic-node node-a">${icons.book}</span><span class="graphic-node node-b">${icons.briefcase}</span><span class="graphic-node node-c">${icons.users}</span><div class="graphic-caption"><span class="pulse"></span> Talent, skills &amp; opportunity in motion</div></div></div><div class="login-footnote">Connected to containerized PostgreSQL database (utare_db).</div></div></section><section class="login-form-side"><div class="login-form-wrap"><div class="mobile-brand">${brand()}</div>
+  <div style="display: flex; gap: 8px; margin-bottom: 20px; background: #eaf0ed; padding: 4px; border-radius: 8px;">
+    <button type="button" id="tab-btn-login" class="button button-green" style="flex: 1; padding: 8px; font-size: 11px;">Candidate Sign In</button>
+    <button type="button" id="tab-btn-register" class="button" style="flex: 1; padding: 8px; font-size: 11px; background: white; color: #334155;">Create Account</button>
+  </div>
+
+  <div id="login-section">
+    <span class="eyebrow">WELCOME TO YOUR NEXT STEP</span>
+    <h2>Sign in to continue</h2>
+    <p class="login-intro">Access your candidate diagnostic, AI roadmap, and remote jobs.</p>
+    <form id="login-form" class="form-stack" novalidate>
+      <label class="field"><span>Email address</span><input name="email" type="email" autocomplete="username" placeholder="you@example.com" required aria-describedby="login-error" /></label>
+      <label class="field"><span>Password</span><span class="password-wrap"><input name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required /><button type="button" class="password-toggle" aria-label="Show password">${icons.eye}</button></span></label>
+      <div class="form-options"><label class="check-label"><input type="checkbox" name="remember" checked /><span>Remember me</span></label><button type="button" class="text-button forgot-link">Forgot password?</button></div>
+      <p class="form-error" id="login-error" role="alert"></p>
+      <button class="button button-wide" type="submit">Sign In ${icons.arrow}</button>
+    </form>
+    <div style="margin-top: 18px; padding: 14px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
+      <div style="font-size: 10px; font-weight: 800; color: #475569; margin-bottom: 8px; letter-spacing: 0.5px;">FAST 1-CLICK DEMO ACCESS</div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <button type="button" id="btn-quick-candidate" class="button button-green" style="font-size: 10px; padding: 8px 12px; justify-content: flex-start; gap: 6px;">${icons.users} Sign In as Candidate (Tatenda Moyo)</button>
+        <button type="button" id="btn-quick-admin" class="button" style="font-size: 10px; padding: 8px 12px; justify-content: flex-start; gap: 6px; background: #fef3c7; color: #78350f; border-color: #fde68a;">${icons.spark} Sign In as Facilitator / Admin Portal</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="register-section" style="display: none;">
+    <span class="eyebrow">START YOUR CANDIDATE BRIDGE</span>
+    <h2>Create your account</h2>
+    <p class="login-intro">Register to save your profile, take the readiness assessment, and apply for remote work.</p>
+    <form id="register-form" class="form-stack" novalidate>
+      <label class="field"><span>Full name</span><input name="name" type="text" placeholder="e.g. Farai Nyoni" required /></label>
+      <label class="field"><span>Email address</span><input name="email" type="email" placeholder="farai@example.com" required /></label>
+      <label class="field"><span>Password</span><input name="password" type="password" placeholder="Create password" required /></label>
+      <label class="field"><span>City / Location</span><select name="city"><option value="Harare">Harare</option><option value="Bulawayo">Bulawayo</option><option value="Mutare">Mutare</option><option value="Gweru">Gweru</option><option value="Masvingo">Masvingo</option><option value="Chinhoyi">Chinhoyi</option></select></label>
+      <label class="field"><span>Highest Qualification</span><select name="qualification"><option value="Bachelors Degree">Bachelors Degree</option><option value="Higher National Diploma (HND)">Higher National Diploma</option><option value="Masters Degree">Masters Degree</option><option value="National Diploma">National Diploma</option><option value="A-Level Certificate">A-Level Certificate</option></select></label>
+      <p class="form-error" id="register-error" role="alert"></p>
+      <p class="form-feedback" id="register-success" style="color: #00875a; font-size: 11px;"></p>
+      <button class="button button-wide button-green" type="submit">Create Account &amp; Start Bridge ${icons.arrow}</button>
+    </form>
+  </div>
+
+  </div></section></main>`;
 }
 
 function overviewPage() {
@@ -442,12 +484,13 @@ function readProgress() {
 function render() {
   const p = route();
   const user = currentUser();
-  if (p !== "/" && !user) {
+  const privateRoutes = ["/dashboard", "/settings", "/profile"];
+  if (privateRoutes.includes(p) && !user) {
     go("/");
     return;
   }
   if (p === "/" && user) {
-    go("/overview");
+    go("/dashboard");
     return;
   }
   const view =
@@ -476,6 +519,139 @@ function render() {
   bindInteractions();
 }
 function bindInteractions() {
+  // Tab toggling on Login / Register
+  const tabLoginBtn = document.querySelector("#tab-btn-login");
+  const tabRegBtn = document.querySelector("#tab-btn-register");
+  const loginSection = document.querySelector("#login-section");
+  const regSection = document.querySelector("#register-section");
+
+  const showTab = (tab) => {
+    if (!loginSection || !regSection) return;
+    if (tab === "register") {
+      loginSection.style.display = "none";
+      regSection.style.display = "block";
+      tabRegBtn?.classList.add("button-green");
+      tabRegBtn?.style.setProperty("background", "");
+      tabRegBtn?.style.setProperty("color", "");
+      tabLoginBtn?.classList.remove("button-green");
+      tabLoginBtn?.style.setProperty("background", "white");
+      tabLoginBtn?.style.setProperty("color", "#334155");
+    } else {
+      loginSection.style.display = "block";
+      regSection.style.display = "none";
+      tabLoginBtn?.classList.add("button-green");
+      tabLoginBtn?.style.setProperty("background", "");
+      tabLoginBtn?.style.setProperty("color", "");
+      tabRegBtn?.classList.remove("button-green");
+      tabRegBtn?.style.setProperty("background", "white");
+      tabRegBtn?.style.setProperty("color", "#334155");
+    }
+  };
+
+  tabLoginBtn?.addEventListener("click", () => showTab("login"));
+  tabRegBtn?.addEventListener("click", () => showTab("register"));
+
+  if (window.location.hash.includes("action=register")) {
+    showTab("register");
+  }
+
+  // 1-Click Fast Login Buttons
+  document.querySelector("#btn-quick-candidate")?.addEventListener("click", () => {
+    const candidateObj = {
+      id: "cand-tatenda-01",
+      name: "Tatenda Moyo",
+      email: "demo@utaresizedu.ai",
+      qualification: "BSc Computer Science",
+      city: "Harare",
+      role: "candidate",
+    };
+    localStorage.setItem(AUTH_KEY, JSON.stringify(candidateObj));
+    localStorage.setItem("utare_view_mode", "user");
+    go("/dashboard");
+  });
+
+  document.querySelector("#btn-quick-admin")?.addEventListener("click", () => {
+    const adminObj = {
+      id: "admin-stewart-01",
+      name: "Stewart Mangezi (Facilitator Lead)",
+      email: "admin@utare.co.zw",
+      role: "admin",
+    };
+    localStorage.setItem(AUTH_KEY, JSON.stringify(adminObj));
+    localStorage.setItem("utare_view_mode", "admin");
+    go("/dashboard");
+  });
+
+  // Candidate Registration Form
+  const regForm = document.querySelector("#register-form");
+  if (regForm) {
+    regForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const err = document.querySelector("#register-error");
+      const succ = document.querySelector("#register-success");
+      const submitBtn = regForm.querySelector('button[type="submit"]');
+      const data = new FormData(regForm);
+      const name = String(data.get("name") || "").trim();
+      const email = String(data.get("email") || "").trim().toLowerCase();
+      const password = String(data.get("password") || "").trim();
+      const city = String(data.get("city") || "Harare");
+      const qualification = String(data.get("qualification") || "Bachelors Degree");
+
+      if (!name || !email || !password) {
+        if (err) err.textContent = "Please fill in all required fields.";
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Saving candidate profile to database...";
+      }
+
+      const candidateObj = {
+        id: `cand-${Date.now()}`,
+        name,
+        email,
+        qualification,
+        city,
+        role: "candidate",
+      };
+
+      try {
+        await fetch("/api/auth/profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: name,
+            email: email,
+            city: city,
+            highestQualification: qualification,
+            fieldOfStudy: "General Degree / Technical",
+            yearsExperience: 1,
+            employmentStatus: "Seeking Remote Employment",
+            monthlyIncomeBracket: "$0 - No Income",
+            hasDedicatedLaptop: true,
+            primaryDevice: "Dedicated Laptop / PC",
+            internetAccessType: "Home Wi-Fi Broadband",
+            powerReliabilityHours: 8,
+            hasGlobalPaymentRail: false,
+            primaryGoal: "International Remote Work",
+            currentSkills: ["Digital Literacy", "English Communication"],
+          }),
+        });
+      } catch (e) {
+        console.warn("Offline registration fallback:", e);
+      }
+
+      localStorage.setItem(AUTH_KEY, JSON.stringify(candidateObj));
+      localStorage.setItem("utare_view_mode", "user");
+      if (succ) succ.textContent = `✓ Account created! Welcome, ${name}. Loading your workspace...`;
+      setTimeout(() => {
+        go("/dashboard");
+      }, 700);
+    });
+  }
+
+  // Login Form
   const form = document.querySelector("#login-form");
   if (form) {
     const error = document.querySelector("#login-error");
@@ -487,30 +663,28 @@ function bindInteractions() {
           .toLowerCase(),
         password = String(data.get("password") || "");
       if (!email || !password) {
-        error.textContent = "Enter your email and password to continue.";
+        if (error) error.textContent = "Enter your email and password to continue.";
         return;
       }
-      if (
-        email !== DEMO_CREDENTIALS.email ||
-        password !== DEMO_CREDENTIALS.password
-      ) {
-        error.textContent =
-          "Those demo details don’t match. Check the credentials shown below and try again.";
-        return;
-      }
-      localStorage.setItem(
-        AUTH_KEY,
-        JSON.stringify({
-          email,
-          name: "Demo Candidate",
-          remember: data.has("remember"),
-        }),
-      );
-      go("/overview");
+
+      const isAdminEmail = email.includes("admin") || email === "admin@utare.co.zw";
+      const userName = isAdminEmail ? "Stewart Mangezi (Admin)" : (email.split("@")[0].replace(".", " "));
+      const userRole = isAdminEmail ? "admin" : "candidate";
+
+      const userObj = {
+        email,
+        name: userName.charAt(0).toUpperCase() + userName.slice(1),
+        role: userRole,
+        remember: data.has("remember"),
+      };
+
+      localStorage.setItem(AUTH_KEY, JSON.stringify(userObj));
+      localStorage.setItem("utare_view_mode", isAdminEmail ? "admin" : "user");
+      go("/dashboard");
     });
     document
       .querySelector(".password-toggle")
-      .addEventListener("click", (e) => {
+      ?.addEventListener("click", (e) => {
         const input = form.elements.password;
         const show = input.type === "password";
         input.type = show ? "text" : "password";
@@ -519,9 +693,8 @@ function bindInteractions() {
           show ? "Hide password" : "Show password",
         );
       });
-    document.querySelector(".forgot-link").addEventListener("click", () => {
-      error.textContent =
-        "Password recovery is a frontend placeholder. Use the demo credentials shown below.";
+    document.querySelector(".forgot-link")?.addEventListener("click", () => {
+      if (error) error.textContent = "Password recovery is a demo placeholder. Use any password or the 1-click buttons above.";
     });
   }
   const mobile = document.querySelector(".mobile-menu");

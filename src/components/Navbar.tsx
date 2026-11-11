@@ -11,11 +11,24 @@ import {
   Route,
   User,
   Shield,
-  SlidersHorizontal,
   BookOpen,
   Globe,
+  LogIn,
+  LogOut,
+  Info,
+  HelpCircle,
 } from "lucide-react";
 import { useViewMode } from "@/lib/view-mode-context";
+
+const PUBLIC_NAV_ITEMS = [
+  { href: "/", label: "Overview", icon: Compass },
+  { href: "/about", label: "About", icon: Info },
+  { href: "/how-it-works", label: "How It Works", icon: HelpCircle },
+  { href: "/opportunities", label: "Opportunities", icon: Briefcase },
+  { href: "/skills", label: "Skills", icon: BookOpen },
+  { href: "/hubs", label: "Hubs", icon: Building2 },
+  { href: "/employers", label: "For Employers", icon: Globe },
+];
 
 const CANDIDATE_NAV_ITEMS = [
   { href: "/", label: "Overview", icon: Compass },
@@ -24,9 +37,7 @@ const CANDIDATE_NAV_ITEMS = [
   { href: "/opportunities", label: "Opportunities", icon: Briefcase },
   { href: "/skills", label: "Skills", icon: BookOpen },
   { href: "/hubs", label: "Hubs", icon: Building2 },
-  { href: "/employers", label: "Employers", icon: Globe },
   { href: "/account", label: "My Workspace", icon: User },
-  { href: "/demo/index.html", label: "Demo Site", icon: Sparkles },
 ];
 
 const ADMIN_NAV_ITEMS = [
@@ -34,19 +45,24 @@ const ADMIN_NAV_ITEMS = [
   { href: "/admin", label: "Admin Console", icon: Shield },
   { href: "/opportunities", label: "Opportunities", icon: Briefcase },
   { href: "/hubs", label: "Partner Hubs", icon: Building2 },
-  { href: "/employers", label: "Employers", icon: Globe },
+  { href: "/employers", label: "Employer Inquiries", icon: Globe },
   { href: "/assessment", label: "Intake Simulator", icon: Cpu },
-  { href: "/demo/index.html", label: "Demo Site", icon: Sparkles },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { mode, isAdmin, toggleMode } = useViewMode();
-  const navItems = isAdmin ? ADMIN_NAV_ITEMS : CANDIDATE_NAV_ITEMS;
+  const { user, isAuthenticated, isAdmin, isCandidate, logout } = useViewMode();
+
+  const navItems = isAdmin
+    ? ADMIN_NAV_ITEMS
+    : isAuthenticated
+    ? CANDIDATE_NAV_ITEMS
+    : PUBLIC_NAV_ITEMS;
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+        {/* Brand */}
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-sm">
             <Sparkles className="h-5 w-5" />
@@ -61,6 +77,7 @@ export default function Navbar() {
           </div>
         </Link>
 
+        {/* Navigation items */}
         <nav className="hidden lg:flex lg:items-center lg:gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -82,51 +99,75 @@ export default function Navbar() {
           })}
         </nav>
 
+        {/* Right side authentication & account actions */}
         <div className="flex items-center gap-2.5">
-          {/* Mode Switcher: Candidate User vs Admin / Evaluator Console */}
-          <button
-            type="button"
-            onClick={toggleMode}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
-              isAdmin
-                ? "border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 shadow-sm"
-                : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
-            }`}
-            title="Toggle between Candidate View (single user) and Admin/Facilitator Console"
-          >
-            {isAdmin ? (
-              <>
-                <Shield className="h-3.5 w-3.5 text-amber-700" />
-                <span className="font-bold">Admin Console</span>
-                <span className="rounded bg-amber-200/80 px-1 py-0.2 text-[10px] font-extrabold text-amber-900">
-                  Exit
-                </span>
-              </>
-            ) : (
-              <>
-                <User className="h-3.5 w-3.5 text-emerald-700" />
-                <span>Candidate View</span>
-                <span className="text-[10px] font-normal text-slate-400">
-                  / Admin
-                </span>
-              </>
-            )}
-          </button>
-
           {isAdmin ? (
-            <Link
-              href="/admin"
-              className="rounded-lg bg-amber-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-amber-700 sm:text-sm"
-            >
-              Admin Operations
-            </Link>
+            /* Logged in as Admin */
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-900 shadow-sm">
+                <Shield className="h-3.5 w-3.5 text-amber-700" />
+                <span className="hidden sm:inline">Admin:</span>
+                <span>{user?.name?.split(" ")[0] || "Facilitator"}</span>
+              </span>
+              <Link
+                href="/admin"
+                className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-amber-700"
+              >
+                Admin Console
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                title="Sign Out"
+                className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-slate-600 hover:bg-slate-100 transition"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          ) : isCandidate && user ? (
+            /* Logged in as Candidate */
+            <div className="flex items-center gap-2">
+              <Link
+                href="/account"
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/80 px-2.5 py-1.5 text-xs font-semibold text-emerald-900 hover:bg-emerald-100 transition shadow-sm"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-700 text-[10px] font-bold text-white">
+                  {user.name.slice(0, 2).toUpperCase()}
+                </div>
+                <span className="hidden sm:inline font-bold">{user.name}</span>
+              </Link>
+              <Link
+                href="/account"
+                className="rounded-lg bg-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-800"
+              >
+                My Workspace
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                title="Sign Out"
+                className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-slate-600 hover:bg-slate-100 transition"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
           ) : (
-            <Link
-              href="/account"
-              className="rounded-lg bg-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-800 sm:text-sm"
-            >
-              My Workspace
-            </Link>
+            /* Public Visitor (Not logged in) */
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm"
+              >
+                <LogIn className="h-3.5 w-3.5 text-slate-500" />
+                Sign In
+              </Link>
+              <Link
+                href="/login?tab=register"
+                className="rounded-lg bg-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-800"
+              >
+                Get Started
+              </Link>
+            </div>
           )}
         </div>
       </div>
@@ -150,9 +191,10 @@ export default function Navbar() {
           );
         })}
       </div>
+
       {isAdmin && (
         <div className="border-t border-amber-200 bg-amber-50/95 px-4 py-1 text-center text-[11px] font-semibold text-amber-900">
-          🛠️ Facilitator & Admin Console Active — Multi-persona demo loaders and AI diagnostics are enabled for evaluation.
+          🛠️ Facilitator &amp; Admin Console Active — Hub enlistment, job approvals &amp; candidate management enabled.
         </div>
       )}
     </header>

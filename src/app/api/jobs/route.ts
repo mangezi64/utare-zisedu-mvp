@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     const application = submitJobApplicationToStore({
       jobId: body.jobId,
       tailoredResumePitch: body.tailoredResumePitch,
+      candidateId: body.candidateId,
     });
 
     if (!application) {
