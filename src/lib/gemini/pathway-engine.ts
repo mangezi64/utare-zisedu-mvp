@@ -29,10 +29,10 @@ import { SEED_COACHES, SEED_INNOVATION_HUBS } from "@/lib/mock-data";
 
 export function matchNearestHub(city: string): InnovationHub {
   const normalized = city.trim().toLowerCase();
-  const match = SEED_INNOVATION_HUBS.find(
+  const directMatch = SEED_INNOVATION_HUBS.find(
     (h) => h.city.toLowerCase() === normalized
   );
-  return match || SEED_INNOVATION_HUBS[0];
+  return directMatch || SEED_INNOVATION_HUBS[0];
 }
 
 export function matchBestCoach(
@@ -372,7 +372,13 @@ Return ONLY valid JSON matching this exact structure (no markdown code fences):
 
   const executiveDiagnosis = `${profile.fullName} holds a ${profile.highestQualification} in ${profile.fieldOfStudy} (Domain Score: ${assessment.domainCompetencyScore}/100), yet is currently ${profile.employmentStatus.toLowerCase()} earning ${profile.monthlyIncomeBracket}. The primary barrier to upward mobility is not academic capability, but last-mile infrastructure (${profile.hasDedicatedLaptop ? "has laptop" : "no dedicated laptop"}, ${profile.internetAccessType}) and translating academic credentials into verified global remote deliverables.`;
 
-  const infrastructureBridgePlan = !profile.hasDedicatedLaptop
+  const isDiaspora =
+    profile.city.toLowerCase().includes("abroad") ||
+    profile.city.toLowerCase().includes("diaspora");
+
+  const infrastructureBridgePlan = isDiaspora
+    ? `Diaspora Remote Track (${profile.city}): Candidate is based internationally with self-provided workstation infrastructure. Full cloud access is active for skills diagnostic assessments, AI career roadmaps, grounded ATS CV tailoring, and international remote job matching. Physical partner hubs (${recommendedHub.name} in Harare, plus Bulawayo, Mutare, Gweru, Masvingo) remain accessible whenever visiting Zimbabwe.`
+    : !profile.hasDedicatedLaptop
     ? `Priority Hardware & Power Bridge: Enroll at ${recommendedHub.name} (${recommendedHub.address}) for subsidized workstation loan access, 100% solar backup during ZESA load-shedding, and ${recommendedHub.avgSpeedMbps} Mbps Starlink connectivity.`
     : `Connectivity & Power Continuity: Utilize ${recommendedHub.name} (${recommendedHub.city}) during peak client overlap hours and ZESA outages to guarantee 99.9% uptime on ${recommendedHub.internetProvider}.`;
 

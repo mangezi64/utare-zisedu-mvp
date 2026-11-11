@@ -27,22 +27,7 @@ import {
 import { EmployerRegistration, InnovationHub, RemoteJob, ZimbabweanCity } from "@/types";
 import { JobApplicationRecord, StoredCandidateRecord } from "@/lib/store";
 import { useViewMode } from "@/lib/view-mode-context";
-
-const ZIMBABWE_CITIES: ZimbabweanCity[] = [
-  "Harare",
-  "Bulawayo",
-  "Mutare",
-  "Gweru",
-  "Masvingo",
-  "Chinhoyi",
-  "Bindura",
-  "Marondera",
-  "Kwekwe",
-  "Victoria Falls",
-  "Zvishavane",
-  "Growth Point / Rural District",
-  "Other",
-];
+import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
 
 export default function AdminConsolePage() {
   const { isAdmin, loginAsAdmin, setMode } = useViewMode();
@@ -920,22 +905,14 @@ export default function AdminConsolePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    City / Province *
-                  </label>
-                  <select
+                  <ZimbabweCitySelect
                     value={hubForm.city}
-                    onChange={(e) =>
-                      setHubForm({ ...hubForm, city: e.target.value as ZimbabweanCity })
+                    onChange={(city) =>
+                      setHubForm({ ...hubForm, city })
                     }
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                  >
-                    {ZIMBABWE_CITIES.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
+                    label="City / Town / Growth Point in Zimbabwe *"
+                    allowAbroad={false}
+                  />
                 </div>
               </div>
 

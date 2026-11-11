@@ -275,7 +275,8 @@ function loginPage() {
       <label class="field"><span>Full name</span><input name="name" type="text" placeholder="e.g. Farai Nyoni" required /></label>
       <label class="field"><span>Email address</span><input name="email" type="email" placeholder="farai@example.com" required /></label>
       <label class="field"><span>Password</span><input name="password" type="password" placeholder="Create password" required /></label>
-      <label class="field"><span>City / Location</span><select name="city"><option value="Harare">Harare</option><option value="Bulawayo">Bulawayo</option><option value="Mutare">Mutare</option><option value="Gweru">Gweru</option><option value="Masvingo">Masvingo</option><option value="Chinhoyi">Chinhoyi</option></select></label>
+      <label class="field"><span>City / Location</span><select name="city" id="reg-city-select"><optgroup label="Major Cities &amp; Metropolitan Hubs"><option value="Harare">Harare</option><option value="Bulawayo">Bulawayo</option><option value="Chitungwiza">Chitungwiza</option><option value="Mutare">Mutare</option><option value="Gweru">Gweru</option><option value="Epworth">Epworth</option><option value="Kwekwe">Kwekwe</option><option value="Kadoma">Kadoma</option><option value="Masvingo">Masvingo</option><option value="Chinhoyi">Chinhoyi</option><option value="Norton">Norton</option><option value="Marondera">Marondera</option><option value="Ruwa">Ruwa</option><option value="Chegutu">Chegutu</option><option value="Zvishavane">Zvishavane</option><option value="Bindura">Bindura</option><option value="Beitbridge">Beitbridge</option><option value="Redcliff">Redcliff</option><option value="Victoria Falls">Victoria Falls</option><option value="Hwange">Hwange</option><option value="Rusape">Rusape</option><option value="Chiredzi">Chiredzi</option><option value="Kariba">Kariba</option><option value="Karoi">Karoi</option><option value="Gokwe">Gokwe</option><option value="Chipinge">Chipinge</option><option value="Shurugwi">Shurugwi</option><option value="Gwanda">Gwanda</option></optgroup><optgroup label="Towns &amp; Urban Centres"><option value="Banket">Banket</option><option value="Bikita">Bikita</option><option value="Binga">Binga</option><option value="Buhera">Buhera</option><option value="Centenary">Centenary</option><option value="Chakari">Chakari</option><option value="Chimanimani">Chimanimani</option><option value="Chirundu">Chirundu</option><option value="Chivhu">Chivhu</option><option value="Colleen Bawn">Colleen Bawn</option><option value="Concession">Concession</option><option value="Dete">Dete</option><option value="Dorowa">Dorowa</option><option value="Esigodini">Esigodini</option><option value="Filabusi">Filabusi</option><option value="Glendale">Glendale</option><option value="Goromonzi">Goromonzi</option><option value="Guruve">Guruve</option><option value="Gutu">Gutu</option><option value="Hauna">Hauna</option><option value="Headlands">Headlands</option><option value="Hwedza (Wedza)">Hwedza (Wedza)</option><option value="Insiza">Insiza</option><option value="Kamativi">Kamativi</option><option value="Kotwa">Kotwa</option><option value="Lalapanzi">Lalapanzi</option><option value="Lupane">Lupane</option><option value="Macheke">Macheke</option><option value="Madziwa">Madziwa</option><option value="Magunje">Magunje</option><option value="Maphisa">Maphisa</option><option value="Marange">Marange</option><option value="Mashava">Mashava</option><option value="Matobo">Matobo</option><option value="Mazowe">Mazowe</option><option value="Mberengwa">Mberengwa</option><option value="Mhangura">Mhangura</option><option value="Mount Darwin">Mount Darwin</option><option value="Mubaira">Mubaira</option><option value="Mupandawana">Mupandawana</option><option value="Murambinda">Murambinda</option><option value="Murehwa">Murehwa</option><option value="Mutoko">Mutoko</option><option value="Mvuma">Mvuma</option><option value="Mvurwi">Mvurwi</option><option value="Mwenezi">Mwenezi</option><option value="Nkayi">Nkayi</option><option value="Nyabira">Nyabira</option><option value="Nyamapanda">Nyamapanda</option><option value="Nyanga">Nyanga</option><option value="Nyika">Nyika</option><option value="Penhalonga">Penhalonga</option><option value="Plumtree">Plumtree</option><option value="Raffingora">Raffingora</option><option value="Renco Mine">Renco Mine</option><option value="Sadza">Sadza</option><option value="Sanyati">Sanyati</option><option value="Selous">Selous</option><option value="Shamva">Shamva</option><option value="Silobela">Silobela</option><option value="Tengwe">Tengwe</option><option value="Triangle">Triangle</option><option value="Tsholotsho">Tsholotsho</option><option value="West Nicholson">West Nicholson</option></optgroup><optgroup label="Districts &amp; Custom"><option value="Growth Point / Rural District">Growth Point / Rural District</option><option value="Other">Other (Specify Custom Location in Zimbabwe)</option></optgroup><optgroup label="International &amp; Diaspora"><option value="Diaspora / Abroad (Outside Zimbabwe)">Diaspora / Abroad (Outside Zimbabwe)</option></optgroup></select></label>
+      <div id="reg-custom-city-wrap" style="display:none; margin-top:-8px; margin-bottom:12px; padding:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;"><label class="field" style="margin:0;"><span id="reg-custom-city-label" style="font-size:11px; font-weight:700; color:#166534;">Specify Town / Country</span><input name="customCity" id="reg-custom-city" type="text" placeholder="e.g. Chakari, Hauna, or South Africa (Johannesburg)" style="background:white;" /></label><p id="reg-custom-city-note" style="margin:4px 0 0; font-size:10px; color:#15803d;"></p></div>
       <label class="field"><span>Highest Qualification</span><select name="qualification"><option value="Bachelors Degree">Bachelors Degree</option><option value="Higher National Diploma (HND)">Higher National Diploma</option><option value="Masters Degree">Masters Degree</option><option value="National Diploma">National Diploma</option><option value="A-Level Certificate">A-Level Certificate</option></select></label>
       <p class="form-error" id="register-error" role="alert"></p>
       <p class="form-feedback" id="register-success" style="color: #00875a; font-size: 11px;"></p>
@@ -582,6 +583,32 @@ function bindInteractions() {
     go("/dashboard");
   });
 
+  // City Selection & Custom / Diaspora Location Handler
+  const citySelect = document.querySelector("#reg-city-select");
+  const customCityWrap = document.querySelector("#reg-custom-city-wrap");
+  const customCityLabel = document.querySelector("#reg-custom-city-label");
+  const customCityInput = document.querySelector("#reg-custom-city");
+  const customCityNote = document.querySelector("#reg-custom-city-note");
+
+  citySelect?.addEventListener("change", (e) => {
+    const val = e.target.value;
+    if (val === "Other") {
+      if (customCityWrap) customCityWrap.style.display = "block";
+      if (customCityLabel) customCityLabel.textContent = "Specify Zimbabwean Town, Growth Point or Ward:";
+      if (customCityInput) customCityInput.placeholder = "e.g. Chakari, Hauna, Nyika, Murombedzi, Mhangura...";
+      if (customCityNote) customCityNote.textContent = "📍 We will match you with the closest regional solar & Starlink hub in Zimbabwe.";
+      customCityInput?.focus();
+    } else if (val === "Diaspora / Abroad (Outside Zimbabwe)") {
+      if (customCityWrap) customCityWrap.style.display = "block";
+      if (customCityLabel) customCityLabel.textContent = "Specify Country & City Abroad:";
+      if (customCityInput) customCityInput.placeholder = "e.g. South Africa (Johannesburg), UK (London), Botswana (Gaborone)...";
+      if (customCityNote) customCityNote.textContent = "🌍 Diaspora Mode: Full remote access enabled for diagnostics, CV tailoring & job applications (physical hubs operate inside Zimbabwe).";
+      customCityInput?.focus();
+    } else {
+      if (customCityWrap) customCityWrap.style.display = "none";
+    }
+  });
+
   // Candidate Registration Form
   const regForm = document.querySelector("#register-form");
   if (regForm) {
@@ -594,7 +621,11 @@ function bindInteractions() {
       const name = String(data.get("name") || "").trim();
       const email = String(data.get("email") || "").trim().toLowerCase();
       const password = String(data.get("password") || "").trim();
-      const city = String(data.get("city") || "Harare");
+      let city = String(data.get("city") || "Harare");
+      const customCity = String(data.get("customCity") || "").trim();
+      if ((city === "Other" || city.includes("Abroad") || city.includes("Diaspora")) && customCity) {
+        city = city.includes("Abroad") || city.includes("Diaspora") ? `Abroad (${customCity})` : customCity;
+      }
       const qualification = String(data.get("qualification") || "Bachelors Degree");
 
       if (!name || !email || !password) {

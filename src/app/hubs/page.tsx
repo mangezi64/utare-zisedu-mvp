@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { SEED_INNOVATION_HUBS } from "@/lib/mock-data";
+import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
 import { InnovationHub } from "@/types";
 import { StoredCandidateRecord } from "@/lib/store";
 import {
@@ -42,7 +43,7 @@ export default function HubsDirectoryPage() {
       .catch(() => {});
   }, []);
 
-  const cities = ["All", "Harare", "Bulawayo", "Mutare", "Gweru", "Masvingo"];
+  const cities = ["All", ...Array.from(new Set(hubs.map((h) => h.city)))];
   const filteredHubs =
     selectedCity === "All"
       ? hubs
@@ -161,22 +162,12 @@ export default function HubsDirectoryPage() {
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
               />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                City
-              </label>
-              <select
-                value={newHub.city}
-                onChange={(e) => setNewHub({ ...newHub, city: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              >
-                <option value="Harare">Harare</option>
-                <option value="Bulawayo">Bulawayo</option>
-                <option value="Mutare">Mutare</option>
-                <option value="Gweru">Gweru</option>
-                <option value="Masvingo">Masvingo</option>
-              </select>
-            </div>
+            <ZimbabweCitySelect
+              value={newHub.city}
+              onChange={(city) => setNewHub({ ...newHub, city })}
+              label="City / Town in Zimbabwe *"
+              allowAbroad={false}
+            />
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Physical Address

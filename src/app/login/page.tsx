@@ -17,6 +17,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useViewMode } from "@/lib/view-mode-context";
+import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
 
 function LoginForm() {
   const router = useRouter();
@@ -375,27 +376,13 @@ function LoginForm() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    City / Location *
-                  </label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <select
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none bg-white"
-                    >
-                      <option value="Harare">Harare</option>
-                      <option value="Bulawayo">Bulawayo</option>
-                      <option value="Mutare">Mutare</option>
-                      <option value="Gweru">Gweru</option>
-                      <option value="Masvingo">Masvingo</option>
-                      <option value="Chinhoyi">Chinhoyi</option>
-                    </select>
-                  </div>
-                </div>
+              <div className="space-y-4">
+                <ZimbabweCitySelect
+                  value={city}
+                  onChange={setCity}
+                  label="City / Town in Zimbabwe *"
+                  required
+                />
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">

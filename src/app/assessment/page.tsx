@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 import { PRESET_PERSONAS } from "@/lib/mock-data";
+import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
 
 export default function AssessmentAndPathwayPage() {
   const { user, isAdmin } = useViewMode();
@@ -185,37 +186,16 @@ export default function AssessmentAndPathwayPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  City / Location in Zimbabwe
-                </label>
-                <select
-                  value={profile.city}
-                  onChange={(e) =>
-                    setProfile({
-                      ...profile,
-                      city: e.target.value as CandidateProfile["city"],
-                    })
-                  }
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                >
-                  <option value="Harare">Harare</option>
-                  <option value="Bulawayo">Bulawayo</option>
-                  <option value="Mutare">Mutare</option>
-                  <option value="Gweru">Gweru</option>
-                  <option value="Masvingo">Masvingo</option>
-                  <option value="Chinhoyi">Chinhoyi</option>
-                  <option value="Bindura">Bindura</option>
-                  <option value="Marondera">Marondera</option>
-                  <option value="Kwekwe">Kwekwe</option>
-                  <option value="Victoria Falls">Victoria Falls</option>
-                  <option value="Zvishavane">Zvishavane</option>
-                  <option value="Growth Point / Rural District">
-                    Growth Point / Rural District
-                  </option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
+              <ZimbabweCitySelect
+                value={profile.city}
+                onChange={(city) =>
+                  setProfile({
+                    ...profile,
+                    city,
+                  })
+                }
+                label="City / Location in Zimbabwe"
+              />
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">

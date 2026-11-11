@@ -50,20 +50,108 @@ export type PrimaryGoal =
   | "Agribusiness & Farm Commercialization"
   | "Foundational Digital Skills & Micro-Tasking";
 
-export type ZimbabweanCity =
-  | "Harare"
-  | "Bulawayo"
-  | "Mutare"
-  | "Gweru"
-  | "Masvingo"
-  | "Chinhoyi"
-  | "Bindura"
-  | "Marondera"
-  | "Kwekwe"
-  | "Victoria Falls"
-  | "Zvishavane"
-  | "Growth Point / Rural District"
-  | "Other";
+export const ZIMBABWE_CITIES = [
+  // Major Cities & Metropolitan Hubs
+  "Harare",
+  "Bulawayo",
+  "Chitungwiza",
+  "Mutare",
+  "Gweru",
+  "Epworth",
+  "Kwekwe",
+  "Kadoma",
+  "Masvingo",
+  "Chinhoyi",
+  "Norton",
+  "Marondera",
+  "Ruwa",
+  "Chegutu",
+  "Zvishavane",
+  "Bindura",
+  "Beitbridge",
+  "Redcliff",
+  "Victoria Falls",
+  "Hwange",
+  "Rusape",
+  "Chiredzi",
+  "Kariba",
+  "Karoi",
+  "Gokwe",
+  "Chipinge",
+  "Shurugwi",
+  "Gwanda",
+  // Towns, Municipalities & Urban Centres (Alphabetical)
+  "Banket",
+  "Bikita",
+  "Binga",
+  "Buhera",
+  "Centenary",
+  "Chakari",
+  "Chimanimani",
+  "Chirundu",
+  "Chivhu",
+  "Colleen Bawn",
+  "Concession",
+  "Dete",
+  "Dorowa",
+  "Esigodini",
+  "Filabusi",
+  "Glendale",
+  "Goromonzi",
+  "Guruve",
+  "Gutu",
+  "Hauna",
+  "Headlands",
+  "Hwedza (Wedza)",
+  "Insiza",
+  "Kamativi",
+  "Kotwa",
+  "Lalapanzi",
+  "Lupane",
+  "Macheke",
+  "Madziwa",
+  "Magunje",
+  "Maphisa",
+  "Marange",
+  "Mashava",
+  "Matobo",
+  "Mazowe",
+  "Mberengwa",
+  "Mhangura",
+  "Mount Darwin",
+  "Mubaira",
+  "Mupandawana",
+  "Murambinda",
+  "Murehwa",
+  "Mutoko",
+  "Mvuma",
+  "Mvurwi",
+  "Mwenezi",
+  "Nkayi",
+  "Nyabira",
+  "Nyamapanda",
+  "Nyanga",
+  "Nyika",
+  "Penhalonga",
+  "Plumtree",
+  "Raffingora",
+  "Renco Mine",
+  "Sadza",
+  "Sanyati",
+  "Selous",
+  "Shamva",
+  "Silobela",
+  "Tengwe",
+  "Triangle",
+  "Tsholotsho",
+  "West Nicholson",
+  // Districts, Diaspora & Custom Locations
+  "Growth Point / Rural District",
+  "Diaspora / Abroad (Outside Zimbabwe)",
+  "Other",
+] as const;
+
+export type ZimbabweanCity = (typeof ZIMBABWE_CITIES)[number] | (string & {});
 
 export type ReadinessTier =
   | "Remote Ready"

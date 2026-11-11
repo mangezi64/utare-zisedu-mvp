@@ -18,26 +18,12 @@ import {
   Download,
   ArrowRight,
   ShieldCheck,
+  Globe,
 } from "lucide-react";
 import { CandidateProfile, ZimbabweanCity } from "@/types";
 import { JobApplicationRecord, StoredCandidateRecord } from "@/lib/store";
 import { useViewMode } from "@/lib/view-mode-context";
-
-const ZIMBABWE_CITIES: ZimbabweanCity[] = [
-  "Harare",
-  "Bulawayo",
-  "Mutare",
-  "Gweru",
-  "Masvingo",
-  "Chinhoyi",
-  "Bindura",
-  "Marondera",
-  "Kwekwe",
-  "Victoria Falls",
-  "Zvishavane",
-  "Growth Point / Rural District",
-  "Other",
-];
+import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
 
 const DEFAULT_PROFILE: CandidateProfile = {
   fullName: "Chipo Nyamande",
@@ -303,25 +289,17 @@ export default function CandidateAccountPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      City
-                    </label>
-                    <select
+                    <ZimbabweCitySelect
                       value={profile.city}
-                      onChange={(e) =>
+                      onChange={(city) =>
                         setProfile({
                           ...profile,
-                          city: e.target.value as ZimbabweanCity,
+                          city,
                         })
                       }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
-                    >
-                      {ZIMBABWE_CITIES.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
+                      label="City / Town"
+                      selectClassName="text-xs"
+                    />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -520,8 +498,34 @@ export default function CandidateAccountPage() {
 
         {/* Right Column (7 cols): Hub Assignment, Milestone Progress & Job Applications */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Matched Hub Card */}
-          {assignedHub && (
+          {/* Matched Hub or Diaspora Track Card */}
+          {profile.city.toLowerCase().includes("abroad") ||
+          profile.city.toLowerCase().includes("diaspora") ? (
+            <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-6 shadow-sm space-y-3">
+              <div className="flex items-center justify-between border-b border-blue-200/80 pb-3">
+                <div className="flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-blue-700" />
+                  <h3 className="text-base font-bold text-blue-900">
+                    Diaspora Remote Track ({profile.city})
+                  </h3>
+                </div>
+                <span className="rounded-full bg-blue-200 text-blue-900 px-2.5 py-0.5 text-xs font-bold">
+                  International Candidate
+                </span>
+              </div>
+              <p className="text-xs text-blue-800 leading-relaxed">
+                You are registered on the Diaspora Remote Track. You have full access to our skills diagnostic assessment, AI career roadmap, ATS CV & application studio, and verified remote job applications. Physical solar and Starlink co-working partner hubs operate within Zimbabwe (Harare, Bulawayo, Mutare, Gweru, Masvingo) and are accessible whenever you are in-country.
+              </p>
+              <div className="pt-2 flex justify-end">
+                <Link
+                  href="/jobs"
+                  className="text-xs font-bold text-blue-800 hover:underline"
+                >
+                  Browse Remote Opportunities & Tailor CV →
+                </Link>
+              </div>
+            </div>
+          ) : assignedHub ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
@@ -560,7 +564,7 @@ export default function CandidateAccountPage() {
                 </Link>
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* AI Roadmap Milestones */}
           {milestones.length > 0 && (
