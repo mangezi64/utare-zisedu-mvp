@@ -1,27 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readStore, registerOrUpdateCandidate } from "@/lib/store";
+import { readStore, registerOrUpdateCandidate, findCandidateByEmail } from "@/lib/store";
 import { CandidateProfile } from "@/types";
 
 export async function GET(req: NextRequest) {
   const state = readStore();
   const emailParam = req.nextUrl.searchParams.get("email");
+  const idParam = req.nextUrl.searchParams.get("id");
 
   let candidate = null;
   if (emailParam) {
-    candidate = state.candidates.find(
-      (c) => c.profile.email.toLowerCase() === emailParam.toLowerCase()
-    );
-  } else if (state.activeCandidateId) {
-    candidate = state.candidates.find((c) => c.id === state.activeCandidateId);
-  }
-
-  if (!candidate && state.candidates.length > 0) {
-    candidate = state.candidates[0];
+    candidate = findCandidateByEmail(emailParam);
+  } else if (idParam) {
+    candidate = state.candidates.find((c) => c.id === idParam) || null;
   }
 
   return NextResponse.json({
     candidate,
-    activeCandidateId: state.activeCandidateId,
   });
 }
 

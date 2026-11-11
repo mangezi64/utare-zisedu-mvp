@@ -119,7 +119,7 @@ export default function CandidateAccountPage() {
             onClick={() => {
               loginAsCandidate({
                 name: "Tatenda Moyo",
-                email: "tatenda.moyo@example.co.zw",
+                email: "demo@utaresizedu.ai",
                 qualification: "Bachelors Degree",
                 city: "Harare",
                 fieldOfStudy: "BSc Computer Science",

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { StoredCandidateRecord } from "@/lib/store";
+import { useViewMode } from "@/lib/view-mode-context";
 import {
   CheckCircle2,
   Circle,
@@ -13,23 +14,37 @@ import {
   ArrowRight,
   Sparkles,
   Laptop,
+  User,
+  Globe,
 } from "lucide-react";
 
 export default function PathwayStudioPage() {
+  const { user, isAuthenticated, loginAsCandidate } = useViewMode();
   const [record, setRecord] = useState<StoredCandidateRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
-    fetch("/api/pathway")
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
+    const url = user?.email
+      ? `/api/pathway?email=${encodeURIComponent(user.email)}`
+      : "/api/pathway";
+
+    fetch(url)
       .then((r) => r.json())
       .then((data) => {
         if (data.activeCandidate) {
           setRecord(data.activeCandidate);
+        } else {
+          setRecord(null);
         }
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [user, isAuthenticated]);
 
   async function handleToggleMilestone(phase: string) {
     if (!record) return;
@@ -93,6 +108,50 @@ export default function PathwayStudioPage() {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 text-center text-sm text-slate-500">
         Loading active candidate AI pathway & coaching state...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="mx-auto max-w-lg py-20 px-4 text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 shadow-sm">
+          <User className="h-8 w-8" />
+        </div>
+        <h1 className="text-2xl font-bold text-slate-900">Sign In to Access Your AI Pathway</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          Your personalized career pathway, paired industry coach, and partner hub reservations are tied to your candidate account. Sign in to view your milestones or take the diagnostic assessment to create one.
+        </p>
+        <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+          <Link
+            href="/login?redirect=/pathway"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition"
+          >
+            Candidate Sign In / Register
+          </Link>
+          <button
+            onClick={() => {
+              loginAsCandidate({
+                name: "Tatenda Moyo",
+                email: "demo@utaresizedu.ai",
+                qualification: "Bachelors Degree",
+                city: "Harare",
+                fieldOfStudy: "BSc Computer Science",
+              });
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition"
+          >
+            Quick Demo: Tatenda Moyo
+          </button>
+        </div>
+        <div className="mt-8 pt-6 border-t border-slate-200">
+          <Link
+            href="/assessment"
+            className="text-xs font-semibold text-emerald-700 hover:underline"
+          >
+            ← Or take the 6-Factor Skills Diagnostic first
+          </Link>
+        </div>
       </div>
     );
   }
@@ -284,54 +343,85 @@ export default function PathwayStudioPage() {
           )}
         </div>
 
-        {/* Partner Innovation Hub Pass */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900">
-              <Building2 className="h-4 w-4" /> Last-Mile Hardware & Power Hub
-            </span>
-            <Link
-              href="/hubs"
-              className="text-xs font-semibold text-emerald-700 hover:underline"
-            >
-              View All Hubs →
-            </Link>
-          </div>
-
-          <div>
-            <h3 className="text-xl font-bold text-slate-900">
-              {record.pathway.recommendedHub.name}
-            </h3>
-            <p className="text-xs text-slate-500">
-              {record.pathway.recommendedHub.address}
-            </p>
-          </div>
-
-          <p className="rounded-xl bg-amber-50/70 border border-amber-200 p-3.5 text-xs text-slate-700 leading-relaxed">
-            {record.pathway.infrastructureBridgePlan}
-          </p>
-
-          {record.bookedHubDesk ? (
-            <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3.5 text-xs font-semibold text-emerald-800 flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              <span>
-                Subsidized Workstation Desk Reserved at{" "}
-                {record.bookedHubDesk.hubName}!
+        {/* Partner Innovation Hub Pass or Diaspora Track */}
+        {record.profile.city.toLowerCase().includes("abroad") ||
+        record.profile.city.toLowerCase().includes("diaspora") ? (
+          <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-900">
+                <Globe className="h-4 w-4" /> Diaspora Remote Track ({record.profile.city})
+              </span>
+              <span className="text-xs font-semibold text-blue-700">
+                Cloud Access
               </span>
             </div>
-          ) : (
-            <button
-              type="button"
-              disabled={updating}
-              onClick={handleBookHubPass}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-xs font-bold text-white hover:bg-emerald-800"
-            >
-              <Laptop className="h-4 w-4" />
-              Reserve Subsidized Workstation Pass at{" "}
-              {record.pathway.recommendedHub.name}
-            </button>
-          )}
-        </div>
+
+            <div>
+              <h3 className="text-xl font-bold text-slate-900">
+                International Workstation Mode
+              </h3>
+              <p className="text-xs text-slate-500">
+                Operating remotely from {record.profile.city}
+              </p>
+            </div>
+
+            <p className="rounded-xl bg-white border border-blue-200 p-3.5 text-xs text-blue-900 leading-relaxed">
+              {record.pathway.infrastructureBridgePlan}
+            </p>
+
+            <div className="rounded-xl bg-blue-100/80 border border-blue-200 p-3.5 text-xs font-medium text-blue-900">
+              💡 Physical innovation hubs ({record.pathway.recommendedHub.name} in Harare, plus Bulawayo, Mutare, Gweru, Masvingo) remain accessible to you whenever visiting Zimbabwe.
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900">
+                <Building2 className="h-4 w-4" /> Last-Mile Hardware & Power Hub
+              </span>
+              <Link
+                href="/hubs"
+                className="text-xs font-semibold text-emerald-700 hover:underline"
+              >
+                View All Hubs →
+              </Link>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-bold text-slate-900">
+                {record.pathway.recommendedHub.name}
+              </h3>
+              <p className="text-xs text-slate-500">
+                {record.pathway.recommendedHub.address}
+              </p>
+            </div>
+
+            <p className="rounded-xl bg-amber-50/70 border border-amber-200 p-3.5 text-xs text-slate-700 leading-relaxed">
+              {record.pathway.infrastructureBridgePlan}
+            </p>
+
+            {record.bookedHubDesk ? (
+              <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3.5 text-xs font-semibold text-emerald-800 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                <span>
+                  Subsidized Workstation Desk Reserved at{" "}
+                  {record.bookedHubDesk.hubName}!
+                </span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                disabled={updating}
+                onClick={handleBookHubPass}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 text-xs font-bold text-white hover:bg-emerald-800"
+              >
+                <Laptop className="h-4 w-4" />
+                Reserve Subsidized Workstation Pass at{" "}
+                {record.pathway.recommendedHub.name}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Next Step Callout to Jobs */}

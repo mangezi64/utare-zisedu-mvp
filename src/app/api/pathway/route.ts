@@ -9,21 +9,27 @@ import {
   readStore,
   saveCandidateEndToEnd,
   updateCandidateProgress,
+  findCandidateByEmail,
 } from "@/lib/store";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const state = readStore();
-  const activeCandidate =
-    state.candidates.find((c) => c.id === state.activeCandidateId) ||
-    state.candidates[0] ||
-    null;
+  const emailParam = req.nextUrl.searchParams.get("email");
+  const idParam = req.nextUrl.searchParams.get("id");
+  let activeCandidate = null;
+
+  if (emailParam) {
+    activeCandidate = findCandidateByEmail(emailParam);
+  } else if (idParam) {
+    activeCandidate =
+      state.candidates.find((c) => c.id === idParam) || null;
+  }
 
   return NextResponse.json({
     activeCandidate,
     totalCandidates: state.candidates.length,
     totalApplications: state.applications.length,
     totalHubs: state.hubs.length,
-    candidates: state.candidates,
   });
 }
 

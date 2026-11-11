@@ -55,6 +55,127 @@ export interface JobApplicationRecord {
   appliedAt: string;
 }
 
+export const SEED_DEMO_CANDIDATE: StoredCandidateRecord = {
+  id: "cand-tatenda-01",
+  profile: {
+    fullName: "Tatenda Moyo",
+    email: "demo@utaresizedu.ai",
+    phone: "+263 77 210 9876",
+    city: "Harare",
+    highestQualification: "Bachelors Degree",
+    fieldOfStudy: "BSc Computer Science",
+    yearsExperience: 2,
+    employmentStatus: "Survival Gig (Misaligned)",
+    monthlyIncomeBracket: "$1 - $150 / mo",
+    hasDedicatedLaptop: true,
+    primaryDevice: "Dedicated Laptop / PC",
+    internetAccessType: "Mobile Data Bundles Only",
+    powerReliabilityHours: 6,
+    hasGlobalPaymentRail: false,
+    primaryGoal: "International Remote Work",
+    currentSkills: [
+      "Python",
+      "SQL",
+      "Data Analysis",
+      "Async Communication",
+      "Git",
+      "Technical Documentation",
+    ],
+  },
+  assessment: {
+    domainCompetencyScore: 88,
+    digitalReadinessScore: 82,
+    remoteWorkLiteracyScore: 85,
+    infrastructureIndexScore: 54,
+    overallScore: 77,
+    readinessTier: "Market-Ready (Direct Placement)",
+    strengths: [
+      "BSc in Computer Science provides strong computational & data analysis foundation",
+      "High software architecture and asynchronous problem-solving literacy",
+      "Direct hands-on experience with Python, SQL, and database modeling",
+    ],
+    criticalGaps: [
+      "Power Reliability Bottleneck: 6 hours/day ZESA grid availability interrupts international client sprints",
+      "Payment Rail Lockout: Unbanked for global USD direct deposit (needs Deel & Payoneer USD Nostro bridge)",
+      "International Portfolio Repackaging: Academic degree projects need conversion into verified GitHub case studies",
+    ],
+  },
+  pathway: {
+    recommendedTrack: "Global Technical Operations, AI QA & Automation Engineering Track",
+    executiveDiagnosis: "Tatenda Moyo holds a Bachelors Degree in BSc Computer Science (Domain Score: 88/100), yet is currently engaged in misaligned informal work earning under $150/month. With dedicated workstation continuity and cross-border payment rails, Tatenda is primed for international remote technical operations roles earning $950–$1,600/month.",
+    infrastructureBridgePlan: "Priority Hardware & Power Bridge: Enrolled at Impact Hub Harare — Utare Node (142 Kwame Nkrumah Ave, Avenues, Harare) for 100% solar power backup during load-shedding and 185 Mbps Starlink business connectivity.",
+    recommendedHub: SEED_INNOVATION_HUBS[0],
+    assignedCoach: SEED_COACHES[0],
+    coachingAgenda: [
+      "Session 1 (Week 1) with Tariro Moyo: Audit BSc Computer Science degree projects and convert them into 2 production-ready asynchronous GitHub case studies.",
+      "Session 2 (Week 3): Set up compliant cross-border payment rails (Deel + Payoneer + local USD Nostro account) and verify international tax compliance.",
+      "Session 3 (Week 6): Conduct mock technical interview for EMEA-based distributed teams and deliver warm referrals to verified hiring partners.",
+    ],
+    upskillingMilestones: [
+      {
+        phase: "Phase 1 (Weeks 1–2)",
+        durationWeeks: 2,
+        title: "Async Remote Workflows & Production GitHub Portfolio",
+        objective: "Master international remote communication norms, Notion/Linear documentation, and clean GitHub repository standards.",
+        deliverable: "Published GitHub Portfolio with Live Architecture Case Studies",
+        resources: [
+          "GitLab Remote Handbook (Offline PDF Bundle)",
+          "Utare Async Operations Lab (Hub Workstation Module)",
+        ],
+        lowBandwidthFriendly: true,
+      },
+      {
+        phase: "Phase 2 (Weeks 3–5)",
+        durationWeeks: 3,
+        title: "Applied AI Automation, Data Pipelines & Technical Support",
+        objective: "Bridge computer science theory into modern asynchronous cloud tooling, Gemini API integration, and automated CI/CD workflows.",
+        deliverable: "End-to-End Automated Data Synthesis Pipeline & Verification Suite",
+        resources: [
+          "Utare Competency Sandbox (Hosted at Local Partner Hub)",
+          "Gemini Prompt Engineering & Verification Curriculum",
+        ],
+        lowBandwidthFriendly: true,
+      },
+      {
+        phase: "Phase 3 (Weeks 6–8)",
+        durationWeeks: 3,
+        title: "Global Payment Onboarding & Direct Market Placement",
+        objective: "Eliminate the 86.4% payment rail lockout and submit tailored applications to vetted international remote hiring partners.",
+        deliverable: "Active Deel/Payoneer Contractor Profile + 5 Tailored Remote Applications",
+        resources: [
+          "1-on-1 Coaching Review with Tariro Moyo",
+          "Utare Verified Remote Employer Fast-Track Feed",
+        ],
+        lowBandwidthFriendly: false,
+      },
+    ],
+    targetRemoteRoles: [
+      {
+        role: "Global Technical Operations & Automation Associate",
+        estimatedMonthlyUsd: "$1,100 – $1,650 / mo",
+        matchReason: "Direct match for Zimbabwe's GMT+2 timezone with UK/EU engineering teams seeking degreed technical operators.",
+      },
+      {
+        role: "AI Data QA & Technical Annotation Specialist",
+        estimatedMonthlyUsd: "$950 – $1,400 / mo",
+        matchReason: "High-volume demand for degreed computer science graduates to evaluate LLM technical outputs asynchronously.",
+      },
+    ],
+    paymentRailGuidance: "Step 1: Open a zero-balance USD Individual Nostro account using national ID and Utare proof of enrollment. Step 2: Register on Deel and Payoneer using valid ID/passport to receive direct USD ACH/wire deposits from UK/US remote clients.",
+    tailoredResumeSummary: "Execution-oriented Bachelors Degree graduate in BSc Computer Science based in Harare, Zimbabwe (GMT+2 / EMEA overlap). Proven ability to build Python/SQL automation pipelines, write clear technical documentation, and collaborate asynchronously. Backed by Utare ZISEDU AI Partner Hub infrastructure with solar power and Starlink connectivity for zero-downtime remote delivery.",
+    generatedBy: "utare-deterministic-engine",
+  },
+  completedMilestones: ["Phase 1 (Weeks 1–2)"],
+  coachingStatus: "Session Confirmed",
+  coachingPreferredDate: "Upcoming Tuesday · 10:00 CAT (GMT+2)",
+  bookedHubDesk: {
+    hubId: "hub-hre-01",
+    hubName: "Impact Hub Harare — Utare Node",
+    bookedAt: "2026-11-10T12:00:00.000Z",
+  },
+  createdAt: "2026-11-10T12:00:00.000Z",
+};
+
 export interface UtareDatabaseState {
   activeCandidateId: string | null;
   candidates: StoredCandidateRecord[];
@@ -73,7 +194,7 @@ const STORE_FILE = path.join(DATA_DIR, "utare-store.json");
 function createInitialState(): UtareDatabaseState {
   return {
     activeCandidateId: null,
-    candidates: [],
+    candidates: [SEED_DEMO_CANDIDATE],
     hubs: [...SEED_INNOVATION_HUBS],
     coaches: [...SEED_COACHES],
     jobs: [...SEED_REMOTE_JOBS],
@@ -96,6 +217,14 @@ export function readStore(): UtareDatabaseState {
           ...createInitialState(),
           ...parsed,
         };
+        const hasDemo = merged.candidates.some(
+          (c) =>
+            c.profile.email.trim().toLowerCase() === "demo@utaresizedu.ai" ||
+            c.profile.email.trim().toLowerCase() === "tatenda.moyo@example.co.zw"
+        );
+        if (!hasDemo) {
+          merged.candidates.unshift(SEED_DEMO_CANDIDATE);
+        }
         inMemoryStore = merged;
         return merged;
       }
@@ -109,6 +238,21 @@ export function readStore(): UtareDatabaseState {
   const initial = inMemoryStore || createInitialState();
   inMemoryStore = initial;
   return initial;
+}
+
+export function findCandidateByEmail(email?: string | null): StoredCandidateRecord | null {
+  if (!email) return null;
+  const state = readStore();
+  const normalized = email.trim().toLowerCase();
+  if (normalized === "demo@utaresizedu.ai" || normalized === "tatenda.moyo@example.co.zw") {
+    const found = state.candidates.find(
+      (c) =>
+        c.profile.email.trim().toLowerCase() === "demo@utaresizedu.ai" ||
+        c.profile.email.trim().toLowerCase() === "tatenda.moyo@example.co.zw"
+    );
+    return found || SEED_DEMO_CANDIDATE;
+  }
+  return state.candidates.find((c) => c.profile.email.trim().toLowerCase() === normalized) || null;
 }
 
 export function writeStore(state: UtareDatabaseState): UtareDatabaseState {
