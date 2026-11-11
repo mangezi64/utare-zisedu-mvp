@@ -26,6 +26,7 @@ const CANDIDATE_NAV_ITEMS = [
   { href: "/hubs", label: "Hubs", icon: Building2 },
   { href: "/employers", label: "Employers", icon: Globe },
   { href: "/account", label: "My Workspace", icon: User },
+  { href: "/demo/index.html", label: "Demo Site", icon: Sparkles },
 ];
 
 const ADMIN_NAV_ITEMS = [
@@ -35,6 +36,7 @@ const ADMIN_NAV_ITEMS = [
   { href: "/hubs", label: "Partner Hubs", icon: Building2 },
   { href: "/employers", label: "Employers", icon: Globe },
   { href: "/assessment", label: "Intake Simulator", icon: Cpu },
+  { href: "/demo/index.html", label: "Demo Site", icon: Sparkles },
 ];
 
 export default function Navbar() {
