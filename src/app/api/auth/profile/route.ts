@@ -28,14 +28,22 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const profile = (body.profile || body) as CandidateProfile;
+    const rawProfile = (body.profile || body) as Record<string, unknown>;
+    const fullName = (rawProfile.fullName || rawProfile.name) as string | undefined;
+    const email = rawProfile.email as string | undefined;
 
-    if (!profile || !profile.fullName || !profile.email) {
+    if (!rawProfile || !fullName || !email) {
       return NextResponse.json(
         { error: "Full name and email are required to create or save a profile." },
         { status: 400 }
       );
     }
+
+    const profile = {
+      ...rawProfile,
+      fullName,
+      email,
+    } as unknown as CandidateProfile;
 
     const record = registerOrUpdateCandidate(profile);
     return NextResponse.json({

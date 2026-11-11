@@ -92,7 +92,10 @@ export default function RemoteJobsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch("/api/jobs")
+    const candidateQuery = user?.email
+      ? `?email=${encodeURIComponent(user.email)}`
+      : "";
+    fetch(`/api/jobs${candidateQuery}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.jobs) setJobs(data.jobs);
@@ -100,6 +103,20 @@ export default function RemoteJobsPage() {
         if (data.activeCandidate) {
           setActiveCandidate(data.activeCandidate);
           setCvDetails(buildDefaultCvDetails(data.activeCandidate.profile));
+        } else if (user?.name) {
+          setCvDetails(
+            buildDefaultCvDetails({
+              ...FALLBACK_CANDIDATE_PROFILE,
+              fullName: user.name,
+              email: user.email || FALLBACK_CANDIDATE_PROFILE.email,
+              city: (user.city as any) || FALLBACK_CANDIDATE_PROFILE.city,
+              highestQualification:
+                (user.qualification as any) ||
+                FALLBACK_CANDIDATE_PROFILE.highestQualification,
+              fieldOfStudy:
+                user.fieldOfStudy || FALLBACK_CANDIDATE_PROFILE.fieldOfStudy,
+            })
+          );
         }
       })
       .catch(() => {});
@@ -111,7 +128,7 @@ export default function RemoteJobsPage() {
         if (st.model) setModelInput(st.model);
       })
       .catch(() => {});
-  }, []);
+  }, [user]);
 
   const currentProfile: CandidateProfile =
     activeCandidate?.profile || FALLBACK_CANDIDATE_PROFILE;
@@ -225,7 +242,9 @@ export default function RemoteJobsPage() {
         body: JSON.stringify({
           jobId: activeJob.id,
           tailoredResumePitch: generatedDocs.cv.summary,
-          candidateId: user?.id || activeCandidate?.id,
+          candidateId: user?.id || activeCandidate?.id || user?.email,
+          candidateName:
+            currentProfile.fullName || user?.name || "Utare Candidate",
         }),
       });
       const data = await res.json();

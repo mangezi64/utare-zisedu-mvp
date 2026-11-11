@@ -1225,6 +1225,49 @@ export default function AdminConsolePage() {
                       </Link>
                     </div>
                   </div>
+
+                  {applications.filter(
+                    (a) =>
+                      a.candidateId === cand.id ||
+                      a.candidateName.toLowerCase() ===
+                        cand.profile.fullName.toLowerCase()
+                  ).length > 0 && (
+                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs space-y-1.5">
+                      <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                        <Briefcase className="h-3.5 w-3.5 text-blue-600" />
+                        Submitted Applications (
+                        {
+                          applications.filter(
+                            (a) =>
+                              a.candidateId === cand.id ||
+                              a.candidateName.toLowerCase() ===
+                                cand.profile.fullName.toLowerCase()
+                          ).length
+                        }
+                        ):
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {applications
+                          .filter(
+                            (a) =>
+                              a.candidateId === cand.id ||
+                              a.candidateName.toLowerCase() ===
+                                cand.profile.fullName.toLowerCase()
+                          )
+                          .map((app) => (
+                            <span
+                              key={app.id}
+                              className="rounded-lg bg-white border border-slate-200 px-2.5 py-1 text-slate-700 shadow-xs"
+                            >
+                              <strong>{app.jobTitle}</strong> at {app.company}{" "}
+                              <span className="text-slate-400">
+                                ({new Date(app.appliedAt).toLocaleDateString()})
+                              </span>
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             )}

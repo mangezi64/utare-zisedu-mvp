@@ -3,11 +3,21 @@ import { readStore, submitJobApplicationToStore } from "@/lib/store";
 
 export async function GET(req: NextRequest) {
   const state = readStore();
+  const emailParam = req.nextUrl.searchParams.get("email");
   const showAll = req.nextUrl.searchParams.get("all") === "1";
-  const activeCandidate =
-    state.candidates.find((c) => c.id === state.activeCandidateId) ||
-    state.candidates[0] ||
-    null;
+
+  let activeCandidate = null;
+  if (emailParam) {
+    activeCandidate = state.candidates.find(
+      (c) => c.profile.email.trim().toLowerCase() === emailParam.trim().toLowerCase()
+    );
+  }
+  if (!activeCandidate) {
+    activeCandidate =
+      state.candidates.find((c) => c.id === state.activeCandidateId) ||
+      state.candidates[0] ||
+      null;
+  }
 
   // Regular candidate users see only approved jobs; admins can pass ?all=1
   const jobs = showAll
@@ -37,6 +47,7 @@ export async function POST(req: NextRequest) {
       jobId: body.jobId,
       tailoredResumePitch: body.tailoredResumePitch,
       candidateId: body.candidateId,
+      candidateName: body.candidateName,
     });
 
     if (!application) {

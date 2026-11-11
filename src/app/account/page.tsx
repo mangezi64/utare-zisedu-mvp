@@ -59,7 +59,7 @@ const DEFAULT_PROFILE: CandidateProfile = {
 };
 
 export default function CandidateAccountPage() {
-  const { user, isAuthenticated } = useViewMode();
+  const { user, isAuthenticated, loginAsCandidate } = useViewMode();
   const [candidate, setCandidate] = useState<StoredCandidateRecord | null>(null);
   const [profile, setProfile] = useState<CandidateProfile>(DEFAULT_PROFILE);
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
@@ -68,6 +68,8 @@ export default function CandidateAccountPage() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const url = user?.email
       ? `/api/auth/profile?email=${encodeURIComponent(user.email)}`
       : "/api/auth/profile";
@@ -95,23 +97,64 @@ export default function CandidateAccountPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.applications) {
-          // Filter applications for current user if email exists
           if (user?.email) {
             const userApps = data.applications.filter(
               (a: JobApplicationRecord) =>
-                a.candidateName === user.name ||
-                a.candidateId === user.id ||
-                !data.candidate ||
-                a.candidateId === data.candidate?.id
+                (user.name && a.candidateName.toLowerCase() === user.name.toLowerCase()) ||
+                (user.id && a.candidateId === user.id)
             );
-            setApplications(userApps.length > 0 ? userApps : data.applications);
+            setApplications(userApps);
           } else {
-            setApplications(data.applications);
+            setApplications([]);
           }
         }
       })
       .catch(() => {});
-  }, [user]);
+  }, [user, isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="mx-auto max-w-lg py-20 px-4 text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 shadow-sm">
+          <User className="h-8 w-8" />
+        </div>
+        <h1 className="text-2xl font-bold text-slate-900">Sign In to Your Workspace</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          Sign in or create an account to view your personalized 6-factor diagnostic, AI career roadmap, booked partner hub pass, and submitted job applications.
+        </p>
+        <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+          <Link
+            href="/login?redirect=/account"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition"
+          >
+            Candidate Sign In / Register
+          </Link>
+          <button
+            onClick={() => {
+              loginAsCandidate({
+                name: "Tatenda Moyo",
+                email: "tatenda.moyo@example.co.zw",
+                qualification: "Bachelors Degree",
+                city: "Harare",
+                fieldOfStudy: "BSc Computer Science",
+              });
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition"
+          >
+            Quick Demo: Tatenda Moyo
+          </button>
+        </div>
+        <div className="mt-8 pt-6 border-t border-slate-200">
+          <Link
+            href="/opportunities"
+            className="text-xs font-semibold text-emerald-700 hover:underline"
+          >
+            ← Or explore public remote opportunities first
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();

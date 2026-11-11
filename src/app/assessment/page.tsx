@@ -20,6 +20,7 @@ import {
   FileText,
   Calendar,
   ArrowRight,
+  Briefcase,
 } from "lucide-react";
 
 import { PRESET_PERSONAS } from "@/lib/mock-data";
@@ -876,6 +877,33 @@ export default function AssessmentAndPathwayPage() {
               <div className="rounded-xl bg-slate-900 p-4 text-xs text-slate-200 leading-relaxed font-mono">
                 {result.pathway.tailoredResumeSummary}
               </div>
+            </div>
+          </div>
+
+          {/* Next Steps in Candidate Workflow */}
+          <div className="rounded-2xl border-2 border-emerald-500 bg-emerald-50/60 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <h4 className="text-base font-bold text-slate-900">
+                Ready to Apply with Your Grounded Profile?
+              </h4>
+              <p className="text-xs text-slate-600 mt-1">
+                Your diagnostic results and hub voucher are saved to your workspace. Explore verified remote roles and generate a tailored ATS CV now.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/account"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 transition shadow-xs"
+              >
+                My Workspace →
+              </Link>
+              <Link
+                href="/jobs"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-800 transition shadow-sm"
+              >
+                <Briefcase className="h-4 w-4" />
+                Browse Remote Roles & Tailor CV →
+              </Link>
             </div>
           </div>
         </section>

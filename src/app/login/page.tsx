@@ -22,6 +22,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") === "register" ? "register" : "login";
+  const redirectUrl = searchParams.get("redirect");
   
   const { loginAsCandidate, loginAsAdmin } = useViewMode();
   const [tab, setTab] = useState<"login" | "register" | "admin">(initialTab);
@@ -41,33 +42,55 @@ function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registerSuccess, setRegisterSuccess] = useState("");
 
-  const handleCandidateLogin = (e: React.FormEvent) => {
+  const handleCandidateLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginEmail || !loginPassword) {
       setLoginError("Please enter your email and password.");
       return;
     }
-    
-    loginAsCandidate({
-      name: loginEmail.split("@")[0].replace(".", " "),
-      email: loginEmail,
-    });
-    router.push("/account");
+
+    try {
+      const res = await fetch(`/api/auth/profile?email=${encodeURIComponent(loginEmail)}`);
+      const data = await res.json();
+      if (data.candidate?.profile) {
+        const p = data.candidate.profile;
+        loginAsCandidate({
+          name: p.fullName || p.name || loginEmail.split("@")[0].replace(".", " "),
+          email: p.email || loginEmail,
+          city: p.city || "Harare",
+          qualification: p.highestQualification || "Bachelors Degree",
+          fieldOfStudy: p.fieldOfStudy || "Tertiary Graduate",
+          id: data.candidate.id,
+        });
+      } else {
+        loginAsCandidate({
+          name: loginEmail.split("@")[0].replace(".", " "),
+          email: loginEmail,
+        });
+      }
+    } catch {
+      loginAsCandidate({
+        name: loginEmail.split("@")[0].replace(".", " "),
+        email: loginEmail,
+      });
+    }
+    router.push(redirectUrl || "/account");
   };
 
   const handleDemoCandidateQuickLogin = () => {
     loginAsCandidate({
       name: "Tatenda Moyo",
-      email: "demo@utaresizedu.ai",
-      qualification: "BSc Computer Science",
+      email: "tatenda.moyo@example.co.zw",
+      qualification: "Bachelors Degree",
       city: "Harare",
+      fieldOfStudy: "BSc Computer Science",
     });
-    router.push("/account");
+    router.push(redirectUrl || "/account");
   };
 
   const handleAdminQuickLogin = () => {
     loginAsAdmin();
-    router.push("/admin");
+    router.push(redirectUrl || "/admin");
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -119,7 +142,7 @@ function LoginForm() {
       });
 
       setTimeout(() => {
-        router.push("/assessment");
+        router.push(redirectUrl || "/assessment");
       }, 1000);
     } catch {
       // Fallback for offline local state
@@ -130,7 +153,7 @@ function LoginForm() {
         city,
         fieldOfStudy,
       });
-      router.push("/assessment");
+      router.push(redirectUrl || "/assessment");
     } finally {
       setIsSubmitting(false);
     }

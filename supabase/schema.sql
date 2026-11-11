@@ -129,6 +129,20 @@ CREATE TABLE IF NOT EXISTS public.remote_jobs (
 );
 
 -- -----------------------------------------------------------------------------
+-- 6b. CANDIDATE JOB APPLICATIONS (Submitted Grounded ATS Applications)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.job_applications (
+  id TEXT PRIMARY KEY,
+  candidate_id TEXT NOT NULL,
+  candidate_name TEXT NOT NULL,
+  job_id TEXT NOT NULL,
+  job_title TEXT NOT NULL,
+  company TEXT NOT NULL,
+  tailored_resume_pitch TEXT,
+  applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- -----------------------------------------------------------------------------
 -- 7. EMPLOYER INTEREST REGISTRATIONS (Meeting Demo & Industry Partnerships)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.employer_registrations (
@@ -202,4 +216,14 @@ VALUES
   ('Eng. Farai Ncube', 'Principal Full-Stack & AI Architect', 'Diaspora Tech Bridge', 'Remote Tech & Data', 'Specializes in bridging CS, Engineering, and Maths graduates into global contract engineering and AI data annotation pipelines.', 'Bulawayo', 6, 'https://cal.com/utare-farai'),
   ('Rudo Chikwanda', 'Cross-Border Fintech & Freelance Strategist', 'AfriPay Advisory', 'Fintech & Global Payments', 'Guides Zimbabwean freelancers and graduates on compliant international invoicing, Deel/Payoneer onboarding, and foreign currency retention.', 'Harare', 10, 'https://cal.com/utare-rudo'),
   ('Tendai Mutasa', 'SME Digitization & Venture Coach', 'Mutare Enterprise Foundry', 'Grassroots Agribusiness & SME', 'Works with smartphone-first self-employed entrepreneurs to digitize bookkeeping, access hub workstations, and unlock micro-working capital.', 'Mutare', 7, 'https://cal.com/utare-tendai')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.remote_jobs (title, company, category, compensation_usd_monthly, supported_payment_rails, required_skills, min_readiness_tier, is_async_friendly, description, application_url)
+VALUES
+  ('Junior Data Support Analyst', 'GlobalScale Data Partners', 'Data', '$800 – $1,300 / mo', ARRAY['Payoneer', 'Deel', 'USD Wire (Nostro)'], ARRAY['Spreadsheets', 'Research Synthesis', 'Data Cleaning', 'English Fluency'], 'Bridge-Ready (Hub + Rapid Upskilling)', true, 'Entry-level pathway involving data organisation, basic analysis, and clear reporting for international analytics clients.', '#apply-job-01'),
+  ('Digital Operations Associate', 'FinBridge Cloud UK', 'Operations', '$950 – $1,300 / mo', ARRAY['Deel', 'Wise', 'Payoneer'], ARRAY['Coordination', 'Digital Tools', 'Async Communication', 'Process Documentation'], 'Market-Ready (Direct Placement)', true, 'Coordinate project workflows, documentation, and customer communications across European and African working hours.', '#apply-job-02'),
+  ('AI Data Annotation Specialist', 'AfriAI Evaluation Lab', 'Data', '$700 – $1,100 / mo', ARRAY['Payoneer', 'Crypto/USDC', 'Deel'], ARRAY['Text Evaluation', 'Fact-Checking', 'Prompt Benchmarking', 'Attention to Detail'], 'Foundation Track (Intensive Coaching + Hardware Access)', true, 'Evaluate LLM responses, fact-check generated answers, and structure high-quality African context benchmark datasets.', '#apply-job-03'),
+  ('Executive Virtual Assistant', 'Apex Executive Growth', 'Operations', '$850 – $1,400 / mo', ARRAY['Deel', 'Wise'], ARRAY['Email Management', 'Calendar Scheduling', 'Google Workspace', 'Customer Service'], 'Bridge-Ready (Hub + Rapid Upskilling)', true, 'Provide proactive executive scheduling, inbox triage, and CRM hygiene for high-growth tech founders.', '#apply-job-04'),
+  ('Financial Research & Reconciliation Assistant', 'LedgerEdge Capital', 'Finance', '$1,000 – $1,600 / mo', ARRAY['Deel', 'Payoneer', 'USD Wire (Nostro)'], ARRAY['Excel Modeling', 'Financial Statements', 'Bank Reconciliation', 'Discrepancy Reporting'], 'Market-Ready (Direct Placement)', true, 'Analyze corporate transaction logs, prepare monthly trial balance summaries, and reconcile invoices for global entities.', '#apply-job-05'),
+  ('Junior Frontend & Automation Developer', 'Diaspora Web Solutions', 'Software', '$1,100 – $1,800 / mo', ARRAY['Deel', 'Wise', 'Crypto/USDC'], ARRAY['React', 'Next.js', 'TypeScript', 'REST APIs', 'Git'], 'Market-Ready (Direct Placement)', true, 'Build performant, mobile-first web interfaces and integrate automated backend workflows for international startups.', '#apply-job-06')
 ON CONFLICT DO NOTHING;

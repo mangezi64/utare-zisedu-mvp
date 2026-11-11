@@ -132,6 +132,142 @@ export function writeStore(state: UtareDatabaseState): UtareDatabaseState {
   return state;
 }
 
+// =============================================================================
+// PostgreSQL Asynchronous Sync Helpers
+// =============================================================================
+
+function syncCandidateToPostgres(profile: CandidateProfile) {
+  const fullName = profile.fullName || (profile as unknown as { name?: string }).name || "Candidate";
+  const email = (profile.email || "").trim().toLowerCase();
+  if (!email) return;
+
+  const phone = profile.phone || "";
+  const city = profile.city || "Harare";
+  const qual = profile.highestQualification || "Bachelors Degree";
+  const field = profile.fieldOfStudy || "Tertiary Graduate";
+  const exp = profile.yearsExperience || 0;
+  const empStatus = profile.employmentStatus || "Seeking Remote Employment";
+  const income = profile.monthlyIncomeBracket || "$0 - No Income";
+  const hasLaptop = Boolean(profile.hasDedicatedLaptop);
+  const device =
+    profile.primaryDevice || (hasLaptop ? "Dedicated Laptop / PC" : "Smartphone Only");
+  const internet = profile.internetAccessType || "Mobile Data Bundles";
+  const power = profile.powerReliabilityHours || 6;
+  const paymentRail = Boolean(profile.hasGlobalPaymentRail);
+  const goal = profile.primaryGoal || "International Remote Work";
+
+  query(
+    `INSERT INTO public.candidate_profiles (
+       full_name, email, phone, city,
+       highest_qualification, field_of_study, years_experience,
+       employment_status, monthly_income_bracket,
+       has_dedicated_laptop, primary_device, internet_access_type,
+       power_reliability_hours, has_global_payment_rail, primary_goal,
+       updated_at
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
+     ON CONFLICT (email) DO UPDATE SET
+       full_name = EXCLUDED.full_name,
+       phone = EXCLUDED.phone,
+       city = EXCLUDED.city,
+       highest_qualification = EXCLUDED.highest_qualification,
+       field_of_study = EXCLUDED.field_of_study,
+       years_experience = EXCLUDED.years_experience,
+       employment_status = EXCLUDED.employment_status,
+       monthly_income_bracket = EXCLUDED.monthly_income_bracket,
+       has_dedicated_laptop = EXCLUDED.has_dedicated_laptop,
+       primary_device = EXCLUDED.primary_device,
+       internet_access_type = EXCLUDED.internet_access_type,
+       power_reliability_hours = EXCLUDED.power_reliability_hours,
+       has_global_payment_rail = EXCLUDED.has_global_payment_rail,
+       primary_goal = EXCLUDED.primary_goal,
+       updated_at = NOW();`,
+    [
+      fullName,
+      email,
+      phone,
+      city,
+      qual,
+      field,
+      exp,
+      empStatus,
+      income,
+      hasLaptop,
+      device,
+      internet,
+      power,
+      paymentRail,
+      goal,
+    ]
+  ).catch((err: any) => {
+    console.warn("[PostgreSQL Candidate Sync Warning]:", err?.message);
+  });
+}
+
+function syncJobApplicationToPostgres(app: JobApplicationRecord) {
+  query(
+    `INSERT INTO public.job_applications (id, candidate_id, candidate_name, job_id, job_title, company, tailored_resume_pitch, applied_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     ON CONFLICT (id) DO NOTHING`,
+    [
+      app.id,
+      app.candidateId,
+      app.candidateName,
+      app.jobId,
+      app.jobTitle,
+      app.company,
+      app.tailoredResumePitch,
+      app.appliedAt,
+    ]
+  ).catch((err: any) => {
+    console.warn("[PostgreSQL Application Sync Warning]:", err?.message);
+  });
+}
+
+function syncHubToPostgres(hub: InnovationHub) {
+  query(
+    `INSERT INTO public.innovation_hubs (name, city, address, has_solar_backup, internet_provider, avg_speed_mbps, available_workstations, laptop_loan_available, daily_pass_usd, utare_partner_subsidized, contact_email)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+     ON CONFLICT DO NOTHING`,
+    [
+      hub.name,
+      hub.city,
+      hub.address,
+      hub.hasSolarBackup,
+      hub.internetProvider,
+      hub.avgSpeedMbps,
+      hub.availableWorkstations,
+      hub.laptopLoanAvailable,
+      hub.dailyPassUsd,
+      hub.utarePartnerSubsidized,
+      hub.contactEmail,
+    ]
+  ).catch((err: any) => {
+    console.warn("[PostgreSQL Hub Sync Warning]:", err?.message);
+  });
+}
+
+function syncJobToPostgres(job: RemoteJob) {
+  query(
+    `INSERT INTO public.remote_jobs (title, company, category, compensation_usd_monthly, supported_payment_rails, required_skills, min_readiness_tier, is_async_friendly, description, application_url)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+     ON CONFLICT DO NOTHING`,
+    [
+      job.title,
+      job.company,
+      job.category,
+      job.compensationUsdMonthly,
+      job.supportedPaymentRails,
+      job.requiredSkills,
+      job.minReadinessTier,
+      job.isAsyncFriendly,
+      job.description,
+      job.applicationUrl,
+    ]
+  ).catch((err: any) => {
+    console.warn("[PostgreSQL Job Sync Warning]:", err?.message);
+  });
+}
+
 export function saveCandidateEndToEnd(
   profile: CandidateProfile,
   assessment: SkillsAssessmentResult,
@@ -172,6 +308,7 @@ export function saveCandidateEndToEnd(
 
   state.activeCandidateId = record.id;
   writeStore(state);
+  syncCandidateToPostgres(record.profile);
   return record;
 }
 
@@ -230,6 +367,7 @@ export function addHubToStore(hub: InnovationHub): InnovationHub {
     state.hubs.unshift(hub);
   }
   writeStore(state);
+  syncHubToPostgres(hub);
   return hub;
 }
 
@@ -253,6 +391,7 @@ export function addJobToStore(job: RemoteJob): RemoteJob {
     state.jobs.unshift(job);
   }
   writeStore(state);
+  syncJobToPostgres(job);
   return job;
 }
 
@@ -290,6 +429,7 @@ export function registerOrUpdateCandidate(profile: CandidateProfile): StoredCand
     existing.profile = { ...existing.profile, ...profile };
     state.activeCandidateId = existing.id;
     writeStore(state);
+    syncCandidateToPostgres(existing.profile);
     return existing;
   }
 
@@ -365,6 +505,7 @@ export function registerOrUpdateCandidate(profile: CandidateProfile): StoredCand
   state.candidates.unshift(newRec);
   state.activeCandidateId = newRec.id;
   writeStore(state);
+  syncCandidateToPostgres(newRec.profile);
   return newRec;
 }
 
@@ -372,6 +513,7 @@ export function submitJobApplicationToStore(params: {
   jobId: string;
   tailoredResumePitch: string;
   candidateId?: string;
+  candidateName?: string;
 }): JobApplicationRecord | null {
   const state = readStore();
   const job = state.jobs.find((j) => j.id === params.jobId);
@@ -379,13 +521,18 @@ export function submitJobApplicationToStore(params: {
 
   const targetId = params.candidateId || state.activeCandidateId;
   const activeCandidate = targetId
-    ? state.candidates.find((c) => c.id === targetId)
-    : (state.candidates[0] || null);
+    ? state.candidates.find(
+        (c) =>
+          c.id === targetId ||
+          c.profile.email.trim().toLowerCase() === targetId.trim().toLowerCase()
+      )
+    : state.candidates[0] || null;
 
   const appRecord: JobApplicationRecord = {
     id: `app-${Date.now()}`,
     candidateId: activeCandidate?.id || targetId || "guest-candidate",
-    candidateName: activeCandidate?.profile.fullName || "Utare Candidate",
+    candidateName:
+      params.candidateName || activeCandidate?.profile.fullName || "Utare Candidate",
     jobId: job.id,
     jobTitle: job.title,
     company: job.company,
@@ -395,6 +542,7 @@ export function submitJobApplicationToStore(params: {
 
   state.applications.unshift(appRecord);
   writeStore(state);
+  syncJobApplicationToPostgres(appRecord);
   return appRecord;
 }
 
