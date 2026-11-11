@@ -26,7 +26,7 @@ function LoginForm() {
   const redirectUrl = searchParams.get("redirect");
   
   const { loginAsCandidate, loginAsAdmin } = useViewMode();
-  const [tab, setTab] = useState<"login" | "register" | "admin">(initialTab);
+  const [tab, setTab] = useState<"login" | "register">(initialTab === "register" ? "register" : "login");
   
   // Login State
   const [loginEmail, setLoginEmail] = useState("");
@@ -50,14 +50,28 @@ function LoginForm() {
       return;
     }
 
+    const normalizedEmail = loginEmail.trim().toLowerCase();
+
+    // 1. Automatically recognize admin/facilitator email and switch to Admin profile
+    if (
+      normalizedEmail === "admin@utare.co.zw" ||
+      normalizedEmail.startsWith("admin@") ||
+      normalizedEmail.endsWith("@utare.co.zw")
+    ) {
+      loginAsAdmin();
+      router.push(redirectUrl || "/admin");
+      return;
+    }
+
+    // 2. Otherwise authenticate as candidate
     try {
-      const res = await fetch(`/api/auth/profile?email=${encodeURIComponent(loginEmail)}`);
+      const res = await fetch(`/api/auth/profile?email=${encodeURIComponent(normalizedEmail)}`);
       const data = await res.json();
       if (data.candidate?.profile) {
         const p = data.candidate.profile;
         loginAsCandidate({
-          name: p.fullName || p.name || loginEmail.split("@")[0].replace(".", " "),
-          email: p.email || loginEmail,
+          name: p.fullName || p.name || normalizedEmail.split("@")[0].replace(".", " "),
+          email: p.email || normalizedEmail,
           city: p.city || "Harare",
           qualification: p.highestQualification || "Bachelors Degree",
           fieldOfStudy: p.fieldOfStudy || "Tertiary Graduate",
@@ -65,14 +79,14 @@ function LoginForm() {
         });
       } else {
         loginAsCandidate({
-          name: loginEmail.split("@")[0].replace(".", " "),
-          email: loginEmail,
+          name: normalizedEmail.split("@")[0].replace(".", " "),
+          email: normalizedEmail,
         });
       }
     } catch {
       loginAsCandidate({
-        name: loginEmail.split("@")[0].replace(".", " "),
-        email: loginEmail,
+        name: normalizedEmail.split("@")[0].replace(".", " "),
+        email: normalizedEmail,
       });
     }
     router.push(redirectUrl || "/account");
@@ -179,18 +193,12 @@ function LoginForm() {
             </div>
           </Link>
           <h1 className="mt-6 text-2xl font-bold tracking-tight text-slate-900">
-            {tab === "login"
-              ? "Candidate Sign In"
-              : tab === "register"
-              ? "Create Candidate Account"
-              : "Facilitator & Admin Portal"}
+            {tab === "login" ? "Sign In to Your Account" : "Create Candidate Account"}
           </h1>
           <p className="mt-2 text-sm text-slate-600">
             {tab === "login"
-              ? "Sign in to access your readiness assessment, AI roadmap, and remote jobs."
-              : tab === "register"
-              ? "Create your account to bridge credentials into verified remote work."
-              : "Access cohort diagnostics, partner hub enlistment, and AI job approvals."}
+              ? "Sign in to access your readiness assessment, AI roadmap, and workspace."
+              : "Create your account to bridge credentials into verified remote work."}
           </p>
         </div>
 
@@ -206,7 +214,7 @@ function LoginForm() {
             }`}
           >
             <User className="h-4 w-4 text-emerald-700" />
-            Candidate Login
+            Sign In
           </button>
           <button
             type="button"
@@ -219,18 +227,6 @@ function LoginForm() {
           >
             <GraduationCap className="h-4 w-4 text-emerald-700" />
             Create Account
-          </button>
-          <button
-            type="button"
-            onClick={() => { setTab("admin"); setLoginError(""); }}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg transition ${
-              tab === "admin"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <Shield className="h-4 w-4 text-amber-700" />
-            Admin Portal
           </button>
         </div>
 
@@ -290,31 +286,40 @@ function LoginForm() {
                   type="submit"
                   className="w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition flex items-center justify-center gap-2"
                 >
-                  Sign In to Candidate Workspace <ArrowRight className="h-4 w-4" />
+                  Sign In to Workspace <ArrowRight className="h-4 w-4" />
                 </button>
               </form>
 
               {/* 1-Click Fast Test Box */}
               <div className="mt-6 border-t border-slate-100 pt-6">
-                <div className="rounded-xl bg-emerald-50/70 border border-emerald-200 p-4">
+                <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                       Quick Demo Testing
                     </span>
-                    <span className="rounded bg-emerald-200/80 px-2 py-0.5 text-[10px] font-bold text-emerald-900">
+                    <span className="rounded bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-700">
                       1-Click
                     </span>
                   </div>
                   <p className="text-xs text-slate-600 mb-3">
-                    Instantly load verified candidate <strong>Tatenda Moyo</strong> (Computer Science Graduate, Harare) with no typing required:
+                    Fast-load verified test credentials with no typing required:
                   </p>
-                  <button
-                    type="button"
-                    onClick={handleDemoCandidateQuickLogin}
-                    className="w-full rounded-lg bg-white border border-emerald-600 text-emerald-800 py-2 text-xs font-bold hover:bg-emerald-50 transition shadow-sm flex items-center justify-center gap-2"
-                  >
-                    <User className="h-4 w-4" /> Sign In as Demo Candidate (Tatenda Moyo)
-                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={handleDemoCandidateQuickLogin}
+                      className="rounded-lg bg-white border border-emerald-600 text-emerald-800 py-2 px-3 text-xs font-bold hover:bg-emerald-50 transition shadow-xs flex items-center justify-center gap-1.5"
+                    >
+                      <User className="h-3.5 w-3.5 text-emerald-700" /> Demo Candidate (Tatenda)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAdminQuickLogin}
+                      className="rounded-lg bg-white border border-amber-600 text-amber-900 py-2 px-3 text-xs font-bold hover:bg-amber-50 transition shadow-xs flex items-center justify-center gap-1.5"
+                    >
+                      <Shield className="h-3.5 w-3.5 text-amber-700" /> Facilitator Admin (Stewart)
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -443,53 +448,6 @@ function LoginForm() {
                 </button>
               </p>
             </form>
-          )}
-
-          {/* TAB 3: Admin / Facilitator Portal */}
-          {tab === "admin" && (
-            <div>
-              <div className="rounded-xl bg-amber-50/80 border border-amber-200 p-4 mb-6">
-                <div className="flex items-center gap-2 mb-1.5 text-amber-900 font-bold text-xs uppercase tracking-wider">
-                  <Shield className="h-4 w-4 text-amber-700" />
-                  Facilitator Operations
-                </div>
-                <p className="text-xs text-amber-800">
-                  Admins and evaluators can approve discovered AI remote jobs, enlist co-working hubs, inspect candidate readiness tiers, and monitor employer inquiries.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Facilitator Email
-                  </label>
-                  <input
-                    type="email"
-                    defaultValue="admin@utare.co.zw"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-amber-600 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Admin Password
-                  </label>
-                  <input
-                    type="password"
-                    defaultValue="Admin123!"
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-amber-600 focus:outline-none"
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleAdminQuickLogin}
-                  className="w-full rounded-lg bg-amber-600 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-amber-700 transition flex items-center justify-center gap-2"
-                >
-                  Enter Facilitator Admin Console <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
           )}
         </div>
 

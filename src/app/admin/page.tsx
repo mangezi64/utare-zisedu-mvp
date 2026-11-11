@@ -335,16 +335,22 @@ export default function AdminConsolePage() {
           The Admin Console is reserved for evaluators, partners, and facilitators to approve jobs, enlist partner hubs, and review candidate cohorts.
         </p>
         <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+          <Link
+            href="/login?redirect=/admin"
+            className="rounded-xl bg-amber-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-amber-700 transition inline-flex items-center justify-center gap-2"
+          >
+            Sign In with Facilitator Account
+          </Link>
           <button
             type="button"
             onClick={loginAsAdmin}
-            className="rounded-xl bg-amber-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-amber-700 transition"
+            className="rounded-xl border border-amber-300 bg-white px-5 py-2.5 text-xs font-semibold text-amber-900 hover:bg-amber-50 transition"
           >
-            Sign In as Facilitator / Admin
+            Quick Demo: Stewart Mangezi
           </button>
           <Link
             href="/"
-            className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+            className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition inline-flex items-center justify-center"
           >
             Return to Public Website
           </Link>
