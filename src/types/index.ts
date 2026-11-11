@@ -66,6 +66,9 @@ export type ZimbabweanCity =
   | "Other";
 
 export type ReadinessTier =
+  | "Remote Ready"
+  | "Needs Upskilling"
+  | "Needs Infrastructure Support"
   | "Market-Ready (Direct Placement)"
   | "Bridge-Ready (Hub + Rapid Upskilling)"
   | "Foundation Track (Hardware Bridge + Intensive Coaching)";
@@ -163,6 +166,9 @@ export interface RemoteJob {
   title: string;
   company: string;
   category: string;
+  industry?: string; // 'Technology', 'Research', 'Media', 'Professional Services', 'Finance'
+  level?: "Entry" | "Mid-level" | "Experienced";
+  arrangement?: "Remote" | "Hybrid" | "On-site";
   compensationUsdMonthly: string;
   supportedPaymentRails: string[];
   requiredSkills: string[];
@@ -255,4 +261,43 @@ export interface StyleReport {
   flaggedPhrases: string[];
   avgSentenceLength: number;
   notes: string[];
+}
+
+export interface EmployerRegistration {
+  id: string;
+  companyName: string;
+  contactPerson: string;
+  email: string;
+  website?: string;
+  industry: string;
+  rolesInterested: string[];
+  hiringModel: string;
+  estimatedHires: number;
+  timezoneOverlapNeeded: string;
+  additionalNotes?: string;
+  createdAt: string;
+}
+
+export interface SkillsCourse {
+  id: string;
+  title: string;
+  category: string;
+  provider: string;
+  durationWeeks: number;
+  costType: string;
+  skillsTaught: string[];
+  level: string;
+  courseUrl: string;
+  description: string;
+  lessons?: string[];
+}
+
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  inquiryType: string;
+  createdAt: string;
 }

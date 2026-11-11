@@ -12,23 +12,28 @@ import {
   User,
   Shield,
   SlidersHorizontal,
+  BookOpen,
+  Globe,
 } from "lucide-react";
 import { useViewMode } from "@/lib/view-mode-context";
 
 const CANDIDATE_NAV_ITEMS = [
   { href: "/", label: "Overview", icon: Compass },
-  { href: "/assessment", label: "1. Intake & Diagnostic", icon: Cpu },
-  { href: "/pathway", label: "2. AI Pathway & Coach", icon: Route },
-  { href: "/hubs", label: "3. Partner Hubs", icon: Building2 },
-  { href: "/jobs", label: "4. Remote Jobs & CV", icon: Briefcase },
-  { href: "/account", label: "5. My Workspace", icon: User },
+  { href: "/assessment", label: "Diagnostic", icon: Cpu },
+  { href: "/pathway", label: "Pathway", icon: Route },
+  { href: "/opportunities", label: "Opportunities", icon: Briefcase },
+  { href: "/skills", label: "Skills", icon: BookOpen },
+  { href: "/hubs", label: "Hubs", icon: Building2 },
+  { href: "/employers", label: "Employers", icon: Globe },
+  { href: "/account", label: "My Workspace", icon: User },
 ];
 
 const ADMIN_NAV_ITEMS = [
   { href: "/", label: "Overview", icon: Compass },
   { href: "/admin", label: "Admin Console", icon: Shield },
+  { href: "/opportunities", label: "Opportunities", icon: Briefcase },
   { href: "/hubs", label: "Partner Hubs", icon: Building2 },
-  { href: "/jobs", label: "Remote Jobs & CV", icon: Briefcase },
+  { href: "/employers", label: "Employers", icon: Globe },
   { href: "/assessment", label: "Intake Simulator", icon: Cpu },
 ];
 

@@ -31,8 +31,32 @@ services:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
       - NEXT_TELEMETRY_DISABLED=1
+      - DATABASE_URL=postgresql://utare_user:utare_password@db:5432/utare_db
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
+
+  db:
+    container_name: utare-zisedu-db
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: utare_user
+      POSTGRES_PASSWORD: utare_password
+      POSTGRES_DB: utare_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - utare_pgdata:/var/lib/postgresql/data
+      - ./supabase/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U utare_user -d utare_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
 
 volumes:
   utare_node_modules:
   utare_next_cache:
+  utare_pgdata:

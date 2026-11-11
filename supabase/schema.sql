@@ -128,6 +128,54 @@ CREATE TABLE IF NOT EXISTS public.remote_jobs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- -----------------------------------------------------------------------------
+-- 7. EMPLOYER INTEREST REGISTRATIONS (Meeting Demo & Industry Partnerships)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.employer_registrations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_name TEXT NOT NULL,
+  contact_person TEXT NOT NULL,
+  email TEXT NOT NULL,
+  website TEXT,
+  industry TEXT NOT NULL DEFAULT 'Technology & SaaS',
+  roles_interested TEXT[] NOT NULL DEFAULT '{}',
+  hiring_model TEXT NOT NULL DEFAULT '100% Remote Contract', -- '100% Remote Contract', 'Full-Time EOR via Deel', 'Freelance / Task-based'
+  estimated_hires INTEGER NOT NULL DEFAULT 1,
+  timezone_overlap_needed TEXT NOT NULL DEFAULT 'CAT (GMT+2) / UK-EU overlap',
+  additional_notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- -----------------------------------------------------------------------------
+-- 8. SKILLS DEVELOPMENT COURSES (Curated Modules for Candidate Upskilling)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.skills_courses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  category TEXT NOT NULL, -- 'Data', 'Operations', 'Finance', 'Software', 'Remote Work Literacy'
+  provider TEXT NOT NULL,
+  duration_weeks INTEGER NOT NULL DEFAULT 4,
+  cost_type TEXT NOT NULL DEFAULT '100% Free / Subsidized',
+  skills_taught TEXT[] NOT NULL DEFAULT '{}',
+  level TEXT NOT NULL DEFAULT 'Beginner to Intermediate',
+  course_url TEXT NOT NULL DEFAULT '#',
+  description TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- -----------------------------------------------------------------------------
+-- 9. CONTACT & GENERAL PARTNERSHIP INQUIRIES
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.contact_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  inquiry_type TEXT NOT NULL DEFAULT 'General', -- 'Candidate Support', 'Partner Hub Onboarding', 'Industry Mentor', 'Employer Hiring', 'General'
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- =============================================================================
 -- SEED DATA: Zimbabwe Innovation Hubs, Coaches, and Verified Remote Roles
 -- =============================================================================
@@ -138,6 +186,14 @@ VALUES
   ('Bulawayo Digital Innovation Centre', 'Bulawayo', '88 Fife Street, CBD, Bulawayo', true, 'Starlink + TelOne Fiber', 140, 20, true, 0.00, true, 'byo-hub@utare-zisedu.org'),
   ('Manicaland Tech & Enterprise Hub', 'Mutare', '24 Herbert Chitepo St, Mutare', true, 'Starlink High-Performance', 150, 14, true, 0.00, true, 'mutare-hub@utare-zisedu.org'),
   ('Midlands Graduate Co-Working Lab', 'Gweru', '11 Seventh Street, Gweru', true, 'Liquid Home Fiber + Solar Microgrid', 95, 12, false, 0.00, true, 'gweru-hub@utare-zisedu.org')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.skills_courses (title, category, provider, duration_weeks, cost_type, skills_taught, level, course_url, description)
+VALUES
+  ('Executive Virtual Assistance & Asynchronous Comms', 'Operations', 'Utare Remote Academy', 3, '100% Free / Subsidized', ARRAY['Email Management', 'Google Workspace', 'Slack/Loom Async Comms', 'Calendar Scheduling'], 'Beginner', '#enroll-va', 'Master remote administrative support, executive calendar triage, and professional asynchronous business communications.'),
+  ('Advanced Excel & Business Data Modelling', 'Finance', 'Utare Data Bridge', 4, '100% Free / Subsidized', ARRAY['VLOOKUP & XLOOKUP', 'Pivot Tables', 'Data Cleaning', 'Financial Summaries'], 'Intermediate', '#enroll-excel', 'Turn raw accounting and survey spreadsheets into structured business intelligence reports for international clients.'),
+  ('Data Annotation & AI Output Benchmarking', 'Data', 'AfriAI Evaluation Lab', 2, '100% Free / Subsidized', ARRAY['Prompt Evaluation', 'Fact-Checking', 'LLM Benchmarking', 'Data Labeling'], 'Beginner', '#enroll-data', 'Learn the exact quality assurance and fact-verification methodologies required for high-paying remote AI training tasks.'),
+  ('Python & Modern Web Automation for Beginners', 'Software', 'Utare Dev Foundry', 6, '100% Free / Subsidized', ARRAY['Python 3', 'REST APIs', 'Web Scraping', 'Git & GitHub'], 'Intermediate', '#enroll-python', 'Build automated workflow scripts and data extractors using Python, Git, and modern cloud deployment basics.')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.coaches (full_name, title, organization, specialty_track, bio, city, available_slots_weekly, cal_booking_link)

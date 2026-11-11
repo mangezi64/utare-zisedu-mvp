@@ -31,10 +31,12 @@ export default function AssessmentAndPathwayPage() {
   );
   const [skillInput, setSkillInput] = useState("");
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({
-    domainProblemSolving: 85,
-    digitalTools: 70,
+    clientComms: 85,
+    digitalTools: 75,
+    domainProblemSolving: 80,
     asyncWorkflow: 75,
-    clientComms: 80,
+    internetAccess: 70,
+    workExperience: 65,
   });
 
   const [loading, setLoading] = useState(false);
@@ -529,20 +531,28 @@ export default function AssessmentAndPathwayPage() {
 
             {[
               {
-                key: "domainProblemSolving",
-                label: "Applied Domain & Analytical Problem Solving",
+                key: "clientComms",
+                label: "1. English Proficiency & Professional Communication",
               },
               {
                 key: "digitalTools",
-                label: "Cloud Workspace & AI Productivity Tools",
+                label: "2. Digital Literacy (Cloud Workspace, Spreadsheets, Slack)",
+              },
+              {
+                key: "domainProblemSolving",
+                label: "3. Applied Domain & Analytical Problem Solving",
               },
               {
                 key: "asyncWorkflow",
-                label: "Asynchronous Documentation & Self-Management",
+                label: "4. Asynchronous Documentation & Task Organization",
               },
               {
-                key: "clientComms",
-                label: "Professional Written & Executive Communication",
+                key: "internetAccess",
+                label: "5. Internet Stability & Digital Navigation",
+              },
+              {
+                key: "workExperience",
+                label: "6. Previous Work, Gig, or Practical Hustle Experience",
               },
             ].map((q) => (
               <div key={q.key} className="space-y-1">
