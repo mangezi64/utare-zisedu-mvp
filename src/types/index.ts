@@ -170,6 +170,10 @@ export interface RemoteJob {
   isAsyncFriendly: boolean;
   description: string;
   applicationUrl: string;
+  status?: "approved" | "pending_review" | "archived";
+  discoveredBy?: "ai-search" | "admin-manual" | "partner-feed";
+  sourceUrl?: string;
+  discoveredAt?: string;
 }
 
 // =============================================================================

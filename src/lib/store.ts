@@ -192,9 +192,149 @@ export function updateCandidateProgress(params: {
 
 export function addHubToStore(hub: InnovationHub): InnovationHub {
   const state = readStore();
-  state.hubs.unshift(hub);
+  const existingIdx = state.hubs.findIndex((h) => h.id === hub.id);
+  if (existingIdx >= 0) {
+    state.hubs[existingIdx] = hub;
+  } else {
+    state.hubs.unshift(hub);
+  }
   writeStore(state);
   return hub;
+}
+
+export function deleteHubFromStore(hubId: string): boolean {
+  const state = readStore();
+  const beforeLen = state.hubs.length;
+  state.hubs = state.hubs.filter((h) => h.id !== hubId);
+  if (state.hubs.length !== beforeLen) {
+    writeStore(state);
+    return true;
+  }
+  return false;
+}
+
+export function addJobToStore(job: RemoteJob): RemoteJob {
+  const state = readStore();
+  const existingIdx = state.jobs.findIndex((j) => j.id === job.id);
+  if (existingIdx >= 0) {
+    state.jobs[existingIdx] = job;
+  } else {
+    state.jobs.unshift(job);
+  }
+  writeStore(state);
+  return job;
+}
+
+export function updateJobStatus(
+  jobId: string,
+  status: "approved" | "pending_review" | "archived"
+): RemoteJob | null {
+  const state = readStore();
+  const job = state.jobs.find((j) => j.id === jobId);
+  if (!job) return null;
+  job.status = status;
+  writeStore(state);
+  return job;
+}
+
+export function deleteJobFromStore(jobId: string): boolean {
+  const state = readStore();
+  const beforeLen = state.jobs.length;
+  state.jobs = state.jobs.filter((j) => j.id !== jobId);
+  if (state.jobs.length !== beforeLen) {
+    writeStore(state);
+    return true;
+  }
+  return false;
+}
+
+export function registerOrUpdateCandidate(profile: CandidateProfile): StoredCandidateRecord {
+  const state = readStore();
+  const emailLower = (profile.email || "").trim().toLowerCase();
+  let existing = state.candidates.find(
+    (c) => c.profile.email.trim().toLowerCase() === emailLower
+  );
+
+  if (existing) {
+    existing.profile = { ...existing.profile, ...profile };
+    state.activeCandidateId = existing.id;
+    writeStore(state);
+    return existing;
+  }
+
+  // Create a fresh candidate record
+  const newRec: StoredCandidateRecord = {
+    id: `cand-${Date.now()}`,
+    profile,
+    assessment: {
+      domainCompetencyScore: 78,
+      digitalReadinessScore: 72,
+      remoteWorkLiteracyScore: 75,
+      infrastructureIndexScore: profile.hasDedicatedLaptop ? 80 : 45,
+      overallScore: 72,
+      readinessTier: profile.hasDedicatedLaptop
+        ? "Market-Ready (Direct Placement)"
+        : "Bridge-Ready (Hub + Rapid Upskilling)",
+      strengths: [
+        "Strong foundational tertiary education",
+        "High motivation for economic mobility & remote work",
+      ],
+      criticalGaps: [
+        ...(profile.hasDedicatedLaptop ? [] : ["Requires Partner Hub solar workstation"]),
+        ...(profile.hasGlobalPaymentRail ? [] : ["Needs USD payment rail setup (Deel / Payoneer)"]),
+      ],
+    },
+    pathway: {
+      recommendedTrack: profile.primaryGoal,
+      executiveDiagnosis: `${profile.fullName} holds ${profile.highestQualification} in ${profile.fieldOfStudy}. Ready for targeted economic bridge with localized hardware support.`,
+      infrastructureBridgePlan: `Pairing with solar & Starlink hub to eliminate daily power & connectivity constraints.`,
+      recommendedHub: state.hubs[0] || SEED_INNOVATION_HUBS[0],
+      assignedCoach: state.coaches[0] || SEED_COACHES[0],
+      coachingAgenda: [
+        "1. Remote Workflow & International Payment Setup",
+        "2. Portfolio & Verified Competency Review",
+        "3. Live Interview & Technical Practice",
+      ],
+      upskillingMilestones: [
+        {
+          phase: "Phase 1: Hardware & Baseline",
+          durationWeeks: 2,
+          title: "Hardware Access & Payment Rail Setup",
+          objective: "Secure reliable workstation at partner hub and configure Payoneer/Deel.",
+          deliverable: "Active Deel account + verified Hub workstation booking",
+          resources: ["Hub Onboarding Guide", "Global Payment Rails Primer"],
+          lowBandwidthFriendly: true,
+        },
+        {
+          phase: "Phase 2: Competency Verification",
+          durationWeeks: 4,
+          title: "Portfolio Development & Technical Proof",
+          objective: "Complete capstone project solving real-world domain problem.",
+          deliverable: "Public GitHub/Portfolio project + verified case study",
+          resources: ["Domain Practice Datasets", "Async Collab Templates"],
+          lowBandwidthFriendly: false,
+        },
+      ],
+      targetRemoteRoles: [
+        {
+          role: "Remote Associate",
+          estimatedMonthlyUsd: "$800 - $1,400 / mo",
+          matchReason: "Strong fit for candidate's educational background and analytical skills.",
+        },
+      ],
+      paymentRailGuidance: "Configure Deel or Payoneer for direct USD transfers.",
+      tailoredResumeSummary: `Dedicated ${profile.fieldOfStudy} specialist prepared for high-impact remote delivery.`,
+      generatedBy: "utare-deterministic-engine",
+    },
+    completedMilestones: [],
+    coachingStatus: "Pending Booking",
+    createdAt: new Date().toISOString(),
+  };
+
+  state.candidates.unshift(newRec);
+  state.activeCandidateId = newRec.id;
+  writeStore(state);
+  return newRec;
 }
 
 export function submitJobApplicationToStore(params: {

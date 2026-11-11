@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useViewMode } from "@/lib/view-mode-context";
 import {
   AICareerPathway,
   CandidateProfile,
@@ -21,160 +22,10 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-const PRESET_PERSONAS: { label: string; profile: CandidateProfile }[] = [
-  {
-    label: "Chipo (BSc Economics, Unemployed, Harare)",
-    profile: {
-      fullName: "Chipo Nyamande",
-      email: "chipo.nyamande@example.co.zw",
-      phone: "+263 77 210 9876",
-      city: "Harare",
-      highestQualification: "Bachelors Degree",
-      fieldOfStudy: "BSc Honours in Economics & Statistics",
-      yearsExperience: 1,
-      employmentStatus: "Unemployed",
-      monthlyIncomeBracket: "$0 (Zero Income)",
-      hasDedicatedLaptop: false,
-      primaryDevice: "Smartphone Only",
-      internetAccessType: "Mobile Data Bundles Only",
-      powerReliabilityHours: 5,
-      hasGlobalPaymentRail: false,
-      primaryGoal: "International Remote Work",
-      currentSkills: [
-        "Statistical Analysis",
-        "Academic Research",
-        "Excel",
-        "Report Writing",
-      ],
-    },
-  },
-  {
-    label: "Tinashe (BEng Computer Science, Survival Gig, Bulawayo)",
-    profile: {
-      fullName: "Tinashe Dube",
-      email: "tinashe.dube@example.co.zw",
-      phone: "+263 71 455 3210",
-      city: "Bulawayo",
-      highestQualification: "Bachelors Degree",
-      fieldOfStudy: "BSc Computer Science & Software Engineering",
-      yearsExperience: 2,
-      employmentStatus: "Survival Gig (Misaligned)",
-      monthlyIncomeBracket: "$1 - $150 / mo",
-      hasDedicatedLaptop: true,
-      primaryDevice: "Dedicated Laptop / PC",
-      internetAccessType: "Mobile Data Bundles Only",
-      powerReliabilityHours: 6,
-      hasGlobalPaymentRail: false,
-      primaryGoal: "International Remote Work",
-      currentSkills: ["Python", "JavaScript", "SQL", "Data Entry", "Git"],
-    },
-  },
-  {
-    label: "Nyasha (HND Agribusiness, SME Founder, Mutare)",
-    profile: {
-      fullName: "Nyasha Mutekede",
-      email: "nyasha.mutekede@example.co.zw",
-      phone: "+263 78 301 4490",
-      city: "Mutare",
-      highestQualification: "HND / Higher National Diploma",
-      fieldOfStudy: "Agribusiness & Horticulture Value Chain",
-      yearsExperience: 3,
-      employmentStatus: "Self-Employed / Grassroots SME",
-      monthlyIncomeBracket: "$151 - $300 / mo",
-      hasDedicatedLaptop: false,
-      primaryDevice: "Smartphone Only",
-      internetAccessType: "Mobile Data Bundles Only",
-      powerReliabilityHours: 4,
-      hasGlobalPaymentRail: false,
-      primaryGoal: "Agribusiness & Farm Commercialization",
-      currentSkills: [
-        "Produce Sourcing",
-        "WhatsApp Sales",
-        "Basic Bookkeeping",
-      ],
-    },
-  },
-  {
-    label: "Simba (TVET Solar & Electrical Artisan, Masvingo)",
-    profile: {
-      fullName: "Simbarashe Chitepo",
-      email: "simba.solar@example.co.zw",
-      phone: "+263 77 412 8899",
-      city: "Masvingo",
-      highestQualification:
-        "Vocational Trade Certificate (Artisan / Apprenticeship)",
-      fieldOfStudy: "Electrical Power Engineering & Solar PV Installation",
-      yearsExperience: 3,
-      employmentStatus: "Independent Artisan / Tradesperson",
-      monthlyIncomeBracket: "$151 - $300 / mo",
-      hasDedicatedLaptop: false,
-      primaryDevice: "Smartphone Only",
-      internetAccessType: "Mobile Data Bundles Only",
-      powerReliabilityHours: 6,
-      hasGlobalPaymentRail: false,
-      primaryGoal: "Vocational & Clean Energy Trades",
-      currentSkills: [
-        "Solar PV Inverter Wiring",
-        "Single-Phase Circuits",
-        "System Sizing",
-        "Battery Maintenance",
-      ],
-    },
-  },
-  {
-    label: "Kudzai (O-Level School Leaver, Micro-Work, Chinhoyi)",
-    profile: {
-      fullName: "Kudzai Marufu",
-      email: "kudzai.marufu@example.co.zw",
-      phone: "+263 71 882 1144",
-      city: "Chinhoyi",
-      highestQualification: "O-Level / Secondary Leaver",
-      fieldOfStudy: "General Secondary Sciences & English (O-Levels)",
-      yearsExperience: 0,
-      employmentStatus: "Unemployed",
-      monthlyIncomeBracket: "$0 (Zero Income)",
-      hasDedicatedLaptop: false,
-      primaryDevice: "Smartphone Only",
-      internetAccessType: "WhatsApp Bundles Only",
-      powerReliabilityHours: 4,
-      hasGlobalPaymentRail: false,
-      primaryGoal: "Foundational Digital Skills & Micro-Tasking",
-      currentSkills: [
-        "Fast Smartphone Typing",
-        "Audio Transcription",
-        "Shona/English Translation",
-      ],
-    },
-  },
-  {
-    label: "Vongai (Self-Taught Motion Graphics & UI, Gweru)",
-    profile: {
-      fullName: "Vongai Mupandawana",
-      email: "vongai.design@example.co.zw",
-      phone: "+263 78 555 7711",
-      city: "Gweru",
-      highestQualification: "Self-Taught / Practical Experience",
-      fieldOfStudy: "Digital Media, Motion Graphics & Visual Branding",
-      yearsExperience: 2,
-      employmentStatus: "Survival Gig (Misaligned)",
-      monthlyIncomeBracket: "$1 - $150 / mo",
-      hasDedicatedLaptop: true,
-      primaryDevice: "Dedicated Laptop / PC",
-      internetAccessType: "Mobile Data Bundles Only",
-      powerReliabilityHours: 5,
-      hasGlobalPaymentRail: false,
-      primaryGoal: "Creative, Media & Freelance Services",
-      currentSkills: [
-        "Adobe Photoshop",
-        "CapCut & Premiere Pro",
-        "Figma UI Basics",
-        "Social Media Ads",
-      ],
-    },
-  },
-];
+import { PRESET_PERSONAS } from "@/lib/mock-data";
 
 export default function AssessmentAndPathwayPage() {
+  const { isAdmin } = useViewMode();
   const [profile, setProfile] = useState<CandidateProfile>(
     PRESET_PERSONAS[0].profile
   );
@@ -230,46 +81,65 @@ export default function AssessmentAndPathwayPage() {
       {/* Header */}
       <div className="space-y-3">
         <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
-          Tasks #1, #2 & #3 — Candidate Intake, Diagnostic & Gemini AI Coach Bridge
+          {isAdmin
+            ? "Facilitator Console — Intake, Diagnostic & AI Pathway Synthesis"
+            : "Candidate Intake & Skills Diagnostic"}
         </div>
         <h1 className="text-3xl font-extrabold text-slate-900">
-          Smart Candidate Intake, Readiness Diagnostic & AI Career Bridge
+          {isAdmin
+            ? "Candidate Intake & Diagnostic — Facilitator Console"
+            : "Candidate Intake, Readiness Diagnostic & Career Bridge"}
         </h1>
         <p className="max-w-3xl text-sm text-slate-600">
-          Test our end-to-end economic mobility flow. Load a realistic Zimbabwe
-          survey persona below or enter custom details, complete the readiness
-          diagnostic, and generate a personalized{" "}
-          <strong>Gemini AI Upskilling Roadmap</strong> paired with a{" "}
-          <strong>Local Partner Hub</strong> and{" "}
-          <strong>Human Industry Coach</strong>.
+          {isAdmin ? (
+            <>
+              Evaluate the end-to-end economic mobility pipeline. Select a
+              Zimbabwean survey archetype below to test different candidate
+              backgrounds and generate a personalized AI upskilling roadmap.
+            </>
+          ) : (
+            <>
+              Complete your profile and readiness diagnostic to generate your
+              personalized <strong>AI Career Pathway</strong> paired with a{" "}
+              <strong>Local Partner Innovation Hub</strong> and a dedicated{" "}
+              <strong>Human Industry Coach</strong>.
+            </>
+          )}
         </p>
       </div>
 
-      {/* Persona Quick-Load Bar */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
-          Quick-Load Survey Persona (UTARE N=23 Archetypes):
+      {/* Persona Quick-Load Bar (Admin / Facilitator Console only) */}
+      {isAdmin && (
+        <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/50 p-4 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-900">
+              🛠️ Facilitator Console: Quick-Load Demographic Archetypes (N=23 Survey):
+            </span>
+            <span className="text-[11px] font-medium text-amber-800">
+              Hidden from candidate view
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {PRESET_PERSONAS.map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => {
+                  setProfile(p.profile);
+                  setResult(null);
+                }}
+                className={`rounded-xl border px-3.5 py-2 text-xs font-semibold transition ${
+                  profile.fullName === p.profile.fullName
+                    ? "border-emerald-600 bg-emerald-700 text-white shadow-sm"
+                    : "border-slate-300 bg-white text-slate-800 hover:bg-slate-100"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {PRESET_PERSONAS.map((p) => (
-            <button
-              key={p.label}
-              type="button"
-              onClick={() => {
-                setProfile(p.profile);
-                setResult(null);
-              }}
-              className={`rounded-xl border px-3.5 py-2 text-xs font-semibold transition ${
-                profile.fullName === p.profile.fullName
-                  ? "border-emerald-600 bg-emerald-50 text-emerald-900"
-                  : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Intake & Diagnostic Form */}
       <form

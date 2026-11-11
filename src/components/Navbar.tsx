@@ -9,26 +9,33 @@ import {
   Briefcase,
   Sparkles,
   Route,
+  User,
+  Shield,
+  SlidersHorizontal,
 } from "lucide-react";
+import { useViewMode } from "@/lib/view-mode-context";
 
-const NAV_ITEMS = [
+const CANDIDATE_NAV_ITEMS = [
   { href: "/", label: "Overview", icon: Compass },
-  {
-    href: "/assessment",
-    label: "1. Intake & Diagnostic",
-    icon: Cpu,
-  },
-  {
-    href: "/pathway",
-    label: "2. AI Pathway & Coach",
-    icon: Route,
-  },
+  { href: "/assessment", label: "1. Intake & Diagnostic", icon: Cpu },
+  { href: "/pathway", label: "2. AI Pathway & Coach", icon: Route },
   { href: "/hubs", label: "3. Partner Hubs", icon: Building2 },
   { href: "/jobs", label: "4. Remote Jobs & CV", icon: Briefcase },
+  { href: "/account", label: "5. My Workspace", icon: User },
+];
+
+const ADMIN_NAV_ITEMS = [
+  { href: "/", label: "Overview", icon: Compass },
+  { href: "/admin", label: "Admin Console", icon: Shield },
+  { href: "/hubs", label: "Partner Hubs", icon: Building2 },
+  { href: "/jobs", label: "Remote Jobs & CV", icon: Briefcase },
+  { href: "/assessment", label: "Intake Simulator", icon: Cpu },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { mode, isAdmin, toggleMode } = useViewMode();
+  const navItems = isAdmin ? ADMIN_NAV_ITEMS : CANDIDATE_NAV_ITEMS;
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -48,7 +55,7 @@ export default function Navbar() {
         </Link>
 
         <nav className="hidden lg:flex lg:items-center lg:gap-1">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
             return (
@@ -68,19 +75,58 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <Link
-            href="/assessment"
-            className="rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-800 sm:text-sm"
+        <div className="flex items-center gap-2.5">
+          {/* Mode Switcher: Candidate User vs Admin / Evaluator Console */}
+          <button
+            type="button"
+            onClick={toggleMode}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
+              isAdmin
+                ? "border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 shadow-sm"
+                : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+            }`}
+            title="Toggle between Candidate View (single user) and Admin/Facilitator Console"
           >
-            Start Candidate Bridge
-          </Link>
+            {isAdmin ? (
+              <>
+                <Shield className="h-3.5 w-3.5 text-amber-700" />
+                <span className="font-bold">Admin Console</span>
+                <span className="rounded bg-amber-200/80 px-1 py-0.2 text-[10px] font-extrabold text-amber-900">
+                  Exit
+                </span>
+              </>
+            ) : (
+              <>
+                <User className="h-3.5 w-3.5 text-emerald-700" />
+                <span>Candidate View</span>
+                <span className="text-[10px] font-normal text-slate-400">
+                  / Admin
+                </span>
+              </>
+            )}
+          </button>
+
+          {isAdmin ? (
+            <Link
+              href="/admin"
+              className="rounded-lg bg-amber-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-amber-700 sm:text-sm"
+            >
+              Admin Operations
+            </Link>
+          ) : (
+            <Link
+              href="/account"
+              className="rounded-lg bg-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-800 sm:text-sm"
+            >
+              My Workspace
+            </Link>
+          )}
         </div>
       </div>
 
       {/* Mobile navigation bar */}
       <div className="flex overflow-x-auto border-t border-slate-100 px-4 py-2 lg:hidden">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const active = pathname === item.href;
           return (
             <Link
@@ -97,6 +143,11 @@ export default function Navbar() {
           );
         })}
       </div>
+      {isAdmin && (
+        <div className="border-t border-amber-200 bg-amber-50/95 px-4 py-1 text-center text-[11px] font-semibold text-amber-900">
+          🛠️ Facilitator & Admin Console Active — Multi-persona demo loaders and AI diagnostics are enabled for evaluation.
+        </div>
+      )}
     </header>
   );
 }

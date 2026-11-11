@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readStore, submitJobApplicationToStore } from "@/lib/store";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const state = readStore();
+  const showAll = req.nextUrl.searchParams.get("all") === "1";
   const activeCandidate =
     state.candidates.find((c) => c.id === state.activeCandidateId) ||
     state.candidates[0] ||
     null;
 
+  // Regular candidate users see only approved jobs; admins can pass ?all=1
+  const jobs = showAll
+    ? state.jobs
+    : state.jobs.filter(
+        (j) => j.status !== "pending_review" && j.status !== "archived"
+      );
+
   return NextResponse.json({
-    jobs: state.jobs,
+    jobs,
     applications: state.applications,
     activeCandidate,
   });

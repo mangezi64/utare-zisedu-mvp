@@ -4,7 +4,7 @@
 // Grounded in the UTARE User Journey & Economic Mobility Survey (N = 23)
 // =============================================================================
 
-import { CoachProfile, InnovationHub, RemoteJob } from "@/types";
+import { CandidateProfile, CoachProfile, InnovationHub, RemoteJob } from "@/types";
 
 export const SURVEY_BENCHMARKS = [
   {
@@ -247,5 +247,158 @@ export const SEED_REMOTE_JOBS: RemoteJob[] = [
     description:
       "Leverage your university research training to produce market intelligence briefs and donor funding proposals for pan-African climate and agri-tech enterprises.",
     applicationUrl: "#apply-job-04",
+  },
+];
+
+export const PRESET_PERSONAS: { label: string; profile: CandidateProfile }[] = [
+  {
+    label: "Chipo (BSc Economics, Unemployed, Harare)",
+    profile: {
+      fullName: "Chipo Nyamande",
+      email: "chipo.nyamande@example.co.zw",
+      phone: "+263 77 210 9876",
+      city: "Harare",
+      highestQualification: "Bachelors Degree",
+      fieldOfStudy: "BSc Honours in Economics & Statistics",
+      yearsExperience: 1,
+      employmentStatus: "Unemployed",
+      monthlyIncomeBracket: "$0 (Zero Income)",
+      hasDedicatedLaptop: false,
+      primaryDevice: "Smartphone Only",
+      internetAccessType: "Mobile Data Bundles Only",
+      powerReliabilityHours: 5,
+      hasGlobalPaymentRail: false,
+      primaryGoal: "International Remote Work",
+      currentSkills: [
+        "Statistical Analysis",
+        "Academic Research",
+        "Excel",
+        "Report Writing",
+      ],
+    },
+  },
+  {
+    label: "Tinashe (BEng Computer Science, Survival Gig, Bulawayo)",
+    profile: {
+      fullName: "Tinashe Dube",
+      email: "tinashe.dube@example.co.zw",
+      phone: "+263 71 455 3210",
+      city: "Bulawayo",
+      highestQualification: "Bachelors Degree",
+      fieldOfStudy: "BSc Computer Science & Software Engineering",
+      yearsExperience: 2,
+      employmentStatus: "Survival Gig (Misaligned)",
+      monthlyIncomeBracket: "$1 - $150 / mo",
+      hasDedicatedLaptop: true,
+      primaryDevice: "Dedicated Laptop / PC",
+      internetAccessType: "Mobile Data Bundles Only",
+      powerReliabilityHours: 6,
+      hasGlobalPaymentRail: false,
+      primaryGoal: "International Remote Work",
+      currentSkills: ["Python", "JavaScript", "SQL", "Data Entry", "Git"],
+    },
+  },
+  {
+    label: "Nyasha (HND Agribusiness, SME Founder, Mutare)",
+    profile: {
+      fullName: "Nyasha Mutekede",
+      email: "nyasha.mutekede@example.co.zw",
+      phone: "+263 78 301 4490",
+      city: "Mutare",
+      highestQualification: "HND / Higher National Diploma",
+      fieldOfStudy: "Agribusiness & Horticulture Value Chain",
+      yearsExperience: 3,
+      employmentStatus: "Self-Employed / Grassroots SME",
+      monthlyIncomeBracket: "$151 - $300 / mo",
+      hasDedicatedLaptop: false,
+      primaryDevice: "Smartphone Only",
+      internetAccessType: "Mobile Data Bundles Only",
+      powerReliabilityHours: 4,
+      hasGlobalPaymentRail: false,
+      primaryGoal: "Agribusiness & Farm Commercialization",
+      currentSkills: [
+        "Produce Sourcing",
+        "WhatsApp Sales",
+        "Basic Bookkeeping",
+      ],
+    },
+  },
+  {
+    label: "Simba (TVET Solar & Electrical Artisan, Masvingo)",
+    profile: {
+      fullName: "Simbarashe Chitepo",
+      email: "simba.solar@example.co.zw",
+      phone: "+263 77 412 8899",
+      city: "Masvingo",
+      highestQualification:
+        "Vocational Trade Certificate (Artisan / Apprenticeship)",
+      fieldOfStudy: "Electrical Power Engineering & Solar PV Installation",
+      yearsExperience: 3,
+      employmentStatus: "Independent Artisan / Tradesperson",
+      monthlyIncomeBracket: "$151 - $300 / mo",
+      hasDedicatedLaptop: false,
+      primaryDevice: "Smartphone Only",
+      internetAccessType: "Mobile Data Bundles Only",
+      powerReliabilityHours: 6,
+      hasGlobalPaymentRail: false,
+      primaryGoal: "Vocational & Clean Energy Trades",
+      currentSkills: [
+        "Solar PV Inverter Wiring",
+        "Single-Phase Circuits",
+        "System Sizing",
+        "Battery Maintenance",
+      ],
+    },
+  },
+  {
+    label: "Kudzai (O-Level School Leaver, Micro-Work, Chinhoyi)",
+    profile: {
+      fullName: "Kudzai Marufu",
+      email: "kudzai.marufu@example.co.zw",
+      phone: "+263 71 882 1144",
+      city: "Chinhoyi",
+      highestQualification: "O-Level / Secondary Leaver",
+      fieldOfStudy: "General Secondary Sciences & English (O-Levels)",
+      yearsExperience: 0,
+      employmentStatus: "Unemployed",
+      monthlyIncomeBracket: "$0 (Zero Income)",
+      hasDedicatedLaptop: false,
+      primaryDevice: "Smartphone Only",
+      internetAccessType: "WhatsApp Bundles Only",
+      powerReliabilityHours: 4,
+      hasGlobalPaymentRail: false,
+      primaryGoal: "Foundational Digital Skills & Micro-Tasking",
+      currentSkills: [
+        "Fast Smartphone Typing",
+        "Audio Transcription",
+        "Shona/English Translation",
+      ],
+    },
+  },
+  {
+    label: "Vongai (Self-Taught Motion Graphics & UI, Gweru)",
+    profile: {
+      fullName: "Vongai Mupandawana",
+      email: "vongai.design@example.co.zw",
+      phone: "+263 78 555 7711",
+      city: "Gweru",
+      highestQualification: "Self-Taught / Practical Experience",
+      fieldOfStudy: "Digital Media, Motion Graphics & Visual Branding",
+      yearsExperience: 2,
+      employmentStatus: "Survival Gig (Misaligned)",
+      monthlyIncomeBracket: "$1 - $150 / mo",
+      hasDedicatedLaptop: true,
+      primaryDevice: "Dedicated Laptop / PC",
+      internetAccessType: "Mobile Data Bundles Only",
+      powerReliabilityHours: 5,
+      hasGlobalPaymentRail: false,
+      primaryGoal: "Creative, Media & Freelance Services",
+      currentSkills: [
+        "Adobe Photoshop",
+        "CapCut & Premiere Pro",
+        "Figma UI Basics",
+        "Social Media Ads",
+      ],
+    },
   },
 ];

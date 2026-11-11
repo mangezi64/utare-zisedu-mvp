@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SEED_REMOTE_JOBS } from "@/lib/mock-data";
+import { PRESET_PERSONAS, SEED_REMOTE_JOBS } from "@/lib/mock-data";
+import { useViewMode } from "@/lib/view-mode-context";
 import {
   CandidateProfile,
   CvSourceDetails,
@@ -51,6 +52,7 @@ const FALLBACK_CANDIDATE_PROFILE: CandidateProfile = {
 };
 
 export default function RemoteJobsPage() {
+  const { isAdmin } = useViewMode();
   const [jobs, setJobs] = useState<RemoteJob[]>(SEED_REMOTE_JOBS);
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
   const [activeCandidate, setActiveCandidate] =
@@ -249,10 +251,14 @@ export default function RemoteJobsPage() {
       <div className="no-print flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-900">
-            Task #5 — Verified Remote Jobs + Humanized CV & Application Letter Studio
+            {isAdmin
+              ? "Facilitator Console — Verified Remote Jobs & Model Diagnostics"
+              : "Verified Remote Jobs & Tailored Application Studio"}
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900">
-            Verified Remote Jobs, ATS CV & Application Letter Studio
+            {isAdmin
+              ? "Verified Remote Jobs & AI Studio (Admin Console)"
+              : "Verified Remote Jobs, ATS CV & Application Studio"}
           </h1>
           <p className="max-w-3xl text-sm text-slate-600">
             Generate structured, ATS-friendly CVs and natural-sounding
@@ -262,24 +268,36 @@ export default function RemoteJobsPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowAiConfig(!showAiConfig)}
-          className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition ${
-            aiStatus.enabled && aiStatus.ok
-              ? "border-emerald-300 bg-emerald-50 text-emerald-900"
-              : "border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
-          }`}
-        >
-          <KeyRound className="h-4 w-4 text-emerald-700" />
-          {aiStatus.enabled && aiStatus.ok
-            ? `Live Model Active: ${aiStatus.model}`
-            : "Configure Live Gemini AI Model"}
-        </button>
+        {isAdmin ? (
+          <button
+            type="button"
+            onClick={() => setShowAiConfig(!showAiConfig)}
+            className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition ${
+              aiStatus.enabled && aiStatus.ok
+                ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                : "border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
+            }`}
+          >
+            <KeyRound className="h-4 w-4 text-emerald-700" />
+            {aiStatus.enabled && aiStatus.ok
+              ? `Live Model Active: ${aiStatus.model}`
+              : "Configure Live Gemini AI Model"}
+          </button>
+        ) : (
+          <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/90 px-4 py-2 text-xs font-semibold text-emerald-900 shadow-sm">
+            <Sparkles className="h-4 w-4 text-emerald-700" />
+            <div>
+              <div className="font-bold">AI Career Engine Active</div>
+              <div className="text-[10px] text-emerald-700 font-normal">
+                Anti-AI-Slop Verified • Grounded ATS Resume
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Live AI Model Configuration Drawer */}
-      {showAiConfig && (
+      {/* Live AI Model Configuration Drawer (Admin Console Only) */}
+      {isAdmin && showAiConfig && (
         <form
           onSubmit={handleSaveAiConfig}
           className="no-print rounded-2xl border-2 border-emerald-600/30 bg-white p-6 shadow-md space-y-4"
@@ -358,23 +376,105 @@ export default function RemoteJobsPage() {
         </form>
       )}
 
+      {/* Admin Demographic Archetype Switcher (Admin Console Only) */}
+      {isAdmin && (
+        <div className="no-print rounded-2xl border-2 border-amber-300 bg-amber-50/60 p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-amber-900">
+            <span>🛠️ Facilitator Console: Switch Candidate Archetype (Demo Mode)</span>
+            <span className="text-[11px] font-normal text-amber-800">
+              Hidden from candidate view
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {PRESET_PERSONAS.map((p) => {
+              const isSelected = currentProfile.fullName === p.profile.fullName;
+              return (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => {
+                    const newRec: StoredCandidateRecord = {
+                      id: `cand-${p.profile.fullName.toLowerCase().replace(/[^a-z0-9]/g, "")}`,
+                      profile: p.profile,
+                      assessment: {} as any,
+                      pathway: {
+                        recommendedHub: {
+                          name:
+                            p.profile.city === "Bulawayo"
+                              ? "Bulawayo Digital Innovation & Remote Lab"
+                              : p.profile.city === "Mutare"
+                              ? "Manicaland Tech & Enterprise Hub"
+                              : p.profile.city === "Masvingo"
+                              ? "Great Zimbabwe Tech Lab"
+                              : "Impact Hub Harare — Utare Node",
+                        },
+                      } as any,
+                      completedMilestones: [],
+                      coachingStatus: "Pending Booking",
+                      createdAt: new Date().toISOString(),
+                    };
+                    setActiveCandidate(newRec);
+                    const newDetails = buildDefaultCvDetails(p.profile);
+                    setCvDetails(newDetails);
+                    if (activeJob) {
+                      generateStudioDocuments(activeJob, newDetails);
+                    }
+                  }}
+                  className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+                    isSelected
+                      ? "border-emerald-600 bg-emerald-700 text-white shadow-sm"
+                      : "border-slate-300 bg-white text-slate-800 hover:bg-slate-100"
+                  }`}
+                >
+                  {p.profile.fullName} ({p.profile.fieldOfStudy.split(" ")[0]})
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Active Candidate Context Banner */}
-      <div className="no-print rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-        <div>
-          <span className="font-bold text-emerald-900">
-            CV & Application Letter Studio Connected to:{" "}
-          </span>
-          <span>
-            <strong>{currentProfile.fullName}</strong> (
-            {currentProfile.highestQualification} in{" "}
-            {currentProfile.fieldOfStudy} • {currentProfile.city}) • Hub:{" "}
-            {currentHubName}
+      {isAdmin ? (
+        <div className="no-print rounded-2xl border border-amber-300 bg-amber-50/50 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+          <div>
+            <span className="font-bold text-amber-900">
+              Facilitator Preview Candidate:{" "}
+            </span>
+            <span>
+              <strong>{currentProfile.fullName}</strong> (
+              {currentProfile.highestQualification} in{" "}
+              {currentProfile.fieldOfStudy} • {currentProfile.city}) • Hub:{" "}
+              {currentHubName}
+            </span>
+          </div>
+          <span className="font-bold text-amber-800">
+            Applications Submitted: {applications.length}
           </span>
         </div>
-        <span className="font-bold text-emerald-800">
-          Applications Submitted: {applications.length}
-        </span>
-      </div>
+      ) : (
+        <div className="no-print rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-700 text-white font-bold text-sm shadow-sm">
+              {currentProfile.fullName.charAt(0)}
+            </div>
+            <div>
+              <div className="font-bold text-slate-900 text-sm">
+                {currentProfile.fullName}
+              </div>
+              <div className="text-slate-600">
+                {currentProfile.highestQualification} in {currentProfile.fieldOfStudy} • {currentProfile.city} • Verified Hub:{" "}
+                <strong className="text-slate-800">{currentHubName}</strong>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-white border border-emerald-200 px-3.5 py-1 text-xs font-semibold text-emerald-800 shadow-xs">
+              Applications Submitted: {applications.length}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* CV & Application Letter Studio Drawer */}
       {activeJob && (
