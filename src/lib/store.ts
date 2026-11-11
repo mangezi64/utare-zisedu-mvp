@@ -84,30 +84,50 @@ function createInitialState(): UtareDatabaseState {
   };
 }
 
+let inMemoryStore: UtareDatabaseState | null = null;
+
 export function readStore(): UtareDatabaseState {
   try {
     if (fs.existsSync(STORE_FILE)) {
-      const raw = fs.readFileSync(STORE_FILE, "utf-8");
-      const parsed = JSON.parse(raw) as UtareDatabaseState;
-      return {
-        ...createInitialState(),
-        ...parsed,
-      };
+      const raw = fs.readFileSync(STORE_FILE, "utf-8").trim();
+      if (raw.length > 0) {
+        const parsed = JSON.parse(raw) as UtareDatabaseState;
+        const merged: UtareDatabaseState = {
+          ...createInitialState(),
+          ...parsed,
+        };
+        inMemoryStore = merged;
+        return merged;
+      }
     }
   } catch (err) {
+    if (inMemoryStore) {
+      return inMemoryStore;
+    }
     console.warn("[Utare Store] Failed to read store file, using seed:", err);
   }
-  return createInitialState();
+  const initial = inMemoryStore || createInitialState();
+  inMemoryStore = initial;
+  return initial;
 }
 
 export function writeStore(state: UtareDatabaseState): UtareDatabaseState {
+  inMemoryStore = state;
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
-    fs.writeFileSync(STORE_FILE, JSON.stringify(state, null, 2), "utf-8");
+    const serialized = JSON.stringify(state, null, 2);
+    const tmpFile = `${STORE_FILE}.tmp.${Date.now()}`;
+    fs.writeFileSync(tmpFile, serialized, "utf-8");
+    fs.renameSync(tmpFile, STORE_FILE);
   } catch (err) {
     console.warn("[Utare Store] Non-fatal write warning:", err);
+    try {
+      fs.writeFileSync(STORE_FILE, JSON.stringify(state, null, 2), "utf-8");
+    } catch {
+      // Ignore fallback error
+    }
   }
   return state;
 }
