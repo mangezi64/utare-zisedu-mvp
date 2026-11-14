@@ -188,7 +188,13 @@ export interface UtareDatabaseState {
   contactMessages: ContactMessage[];
 }
 
-const DATA_DIR = path.join(process.cwd(), ".data");
+const IS_SERVERLESS = Boolean(
+  process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
+);
+const DATA_DIR = IS_SERVERLESS
+  ? path.join("/tmp", ".data")
+  : path.join(process.cwd(), ".data");
+const BUNDLED_STORE_FILE = path.join(process.cwd(), ".data", "utare-store.json");
 const STORE_FILE = path.join(DATA_DIR, "utare-store.json");
 
 function createInitialState(): UtareDatabaseState {
@@ -209,8 +215,14 @@ let inMemoryStore: UtareDatabaseState | null = null;
 
 export function readStore(): UtareDatabaseState {
   try {
-    if (fs.existsSync(STORE_FILE)) {
-      const raw = fs.readFileSync(STORE_FILE, "utf-8").trim();
+    const targetFile = fs.existsSync(STORE_FILE)
+      ? STORE_FILE
+      : fs.existsSync(BUNDLED_STORE_FILE)
+      ? BUNDLED_STORE_FILE
+      : null;
+
+    if (targetFile) {
+      const raw = fs.readFileSync(targetFile, "utf-8").trim();
       if (raw.length > 0) {
         const parsed = JSON.parse(raw) as UtareDatabaseState;
         const merged: UtareDatabaseState = {
