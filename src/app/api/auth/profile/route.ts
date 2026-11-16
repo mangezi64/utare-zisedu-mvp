@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readStore, registerOrUpdateCandidate, findCandidateByEmail } from "@/lib/store";
 import { CandidateProfile } from "@/types";
+import { validateEmail } from "@/lib/validation";
+import { checkEmailDomain } from "@/lib/email-domain-check";
+
+export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   const state = readStore();
@@ -33,10 +37,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // New account registration: enforce strict email validation server-side
+    if (body.mode === "register") {
+      const formatCheck = validateEmail(normalizedEmail);
+      if (!formatCheck.isValid) {
+        return NextResponse.json({ error: formatCheck.error }, { status: 400 });
+      }
+
+      if ((await checkEmailDomain(normalizedEmail)) === "undeliverable") {
+        return NextResponse.json(
+          {
+            error:
+              "This email domain doesn't exist or can't receive mail. Please use a real email address.",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (findCandidateByEmail(normalizedEmail)) {
+        return NextResponse.json(
+          { error: "An account with this email already exists. Please sign in instead." },
+          { status: 409 }
+        );
+      }
+    }
+
     const profile = {
       ...rawProfile,
       fullName,
-      email,
+      email: normalizedEmail,
     } as unknown as CandidateProfile;
 
     const record = registerOrUpdateCandidate(profile);

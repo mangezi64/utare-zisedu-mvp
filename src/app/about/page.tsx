@@ -17,7 +17,7 @@ export default function AboutPage() {
       <section className="rounded-3xl bg-slate-900 px-6 py-12 text-white shadow-xl sm:px-12 sm:py-16">
         <div className="max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3.5 py-1 text-xs font-semibold text-emerald-300">
-            About UTARE ZISEDU AI
+            About UTARE ZEM AI
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl leading-tight">
             Bridging Zimbabwe&apos;s{" "}

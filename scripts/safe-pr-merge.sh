@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# UTARE ZISEDU AI — Safe PR & Merge Workflow (Local Gate + Remote CI Fallback)
+# UTARE ZEM AI — Safe PR & Merge Workflow (Local Gate + Remote CI Fallback)
 # =============================================================================
 # Usage:
 #   ./scripts/safe-pr-merge.sh [PR_NUMBER]

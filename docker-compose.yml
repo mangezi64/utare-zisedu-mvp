@@ -1,5 +1,5 @@
 # =============================================================================
-# UTARE ZISEDU AI — Docker Compose Configuration
+# UTARE ZEM AI — Docker Compose Configuration
 # =============================================================================
 # Usage:
 #   docker compose up --build        # Start in foreground with live logs

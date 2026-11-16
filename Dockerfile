@@ -1,5 +1,5 @@
 # =============================================================================
-# UTARE ZISEDU AI — Production Multi-Stage Dockerfile
+# UTARE ZEM AI — Production Multi-Stage Dockerfile
 # =============================================================================
 
 FROM node:20-alpine AS base

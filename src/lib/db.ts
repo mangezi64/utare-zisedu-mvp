@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZISEDU AI — Containerized PostgreSQL Database Client
+// UTARE ZEM AI — Containerized PostgreSQL Database Client
 // =============================================================================
 // Connects to the local containerized PostgreSQL database (`utare-zisedu-db`)
 // running at `postgresql://utare_user:utare_password@localhost:5432/utare_db`

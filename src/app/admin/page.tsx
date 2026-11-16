@@ -341,13 +341,15 @@ export default function AdminConsolePage() {
           >
             Sign In with Facilitator Account
           </Link>
+          {process.env.NODE_ENV === "development" && (
           <button
             type="button"
             onClick={loginAsAdmin}
             className="rounded-xl border border-amber-300 bg-white px-5 py-2.5 text-xs font-semibold text-amber-900 hover:bg-amber-50 transition"
           >
-            Quick Demo: Stewart Mangezi
+            Quick Demo: Stewart Mangezi (local dev)
           </button>
+          )}
           <Link
             href="/"
             className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition inline-flex items-center justify-center"
@@ -380,7 +382,7 @@ export default function AdminConsolePage() {
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 border border-amber-300 px-3 py-1 text-xs font-bold text-amber-900">
             <Shield className="h-3.5 w-3.5 text-amber-700" />
-            Utare ZISEDU AI — Facilitator & Admin Operations Console
+            Utare ZEM AI — Facilitator & Admin Operations Console
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900 mt-2">
             Ecosystem Admin, Partner Hubs & Verified Jobs

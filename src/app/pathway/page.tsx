@@ -129,20 +129,6 @@ export default function PathwayStudioPage() {
           >
             Candidate Sign In / Register
           </Link>
-          <button
-            onClick={() => {
-              loginAsCandidate({
-                name: "Tatenda Moyo",
-                email: "demo@utaresizedu.ai",
-                qualification: "Bachelors Degree",
-                city: "Harare",
-                fieldOfStudy: "BSc Computer Science",
-              });
-            }}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition"
-          >
-            Quick Demo: Tatenda Moyo
-          </button>
         </div>
         <div className="mt-8 pt-6 border-t border-slate-200">
           <Link

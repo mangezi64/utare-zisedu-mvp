@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZISEDU AI — Core Domain Types
+// UTARE ZEM AI — Core Domain Types
 // =============================================================================
 
 export type QualificationLevel =

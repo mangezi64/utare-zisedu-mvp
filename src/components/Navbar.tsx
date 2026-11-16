@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Compass,
   Cpu,
@@ -51,7 +51,13 @@ const ADMIN_NAV_ITEMS = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, isAuthenticated, isAdmin, isCandidate, logout } = useViewMode();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
 
   const navItems = isAdmin
     ? ADMIN_NAV_ITEMS
@@ -69,7 +75,7 @@ export default function Navbar() {
           </div>
           <div>
             <span className="text-lg font-bold tracking-tight text-slate-900">
-              UTARE <span className="text-emerald-700">ZISEDU AI</span>
+              UTARE <span className="text-emerald-700">ZEM AI</span>
             </span>
             <p className="text-xs text-slate-500">
               Zimbabwe Economic Mobility & Remote Bridge
@@ -117,11 +123,13 @@ export default function Navbar() {
               </Link>
               <button
                 type="button"
-                onClick={logout}
+                onClick={handleLogout}
                 title="Sign Out"
-                className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-slate-600 hover:bg-slate-100 transition"
+                aria-label="Sign out"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700 transition shadow-sm"
               >
                 <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Sign Out</span>
               </button>
             </div>
           ) : isCandidate && user ? (
@@ -144,11 +152,13 @@ export default function Navbar() {
               </Link>
               <button
                 type="button"
-                onClick={logout}
+                onClick={handleLogout}
                 title="Sign Out"
-                className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-slate-600 hover:bg-slate-100 transition"
+                aria-label="Sign out"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700 transition shadow-sm"
               >
                 <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Sign Out</span>
               </button>
             </div>
           ) : (

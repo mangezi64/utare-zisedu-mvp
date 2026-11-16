@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZISEDU AI — Shared Gemini Client
+// UTARE ZEM AI — Shared Gemini Client
 // =============================================================================
 // One place to configure the live model. Every AI feature (pathway, CV, cover
 // letter) goes through `generateJson`, which:

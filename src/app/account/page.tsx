@@ -19,7 +19,9 @@ import {
   ArrowRight,
   ShieldCheck,
   Globe,
+  LogOut,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { CandidateProfile, ZimbabweanCity } from "@/types";
 import { JobApplicationRecord, StoredCandidateRecord } from "@/lib/store";
 import { useViewMode } from "@/lib/view-mode-context";
@@ -45,7 +47,8 @@ const DEFAULT_PROFILE: CandidateProfile = {
 };
 
 export default function CandidateAccountPage() {
-  const { user, isAuthenticated, loginAsCandidate } = useViewMode();
+  const router = useRouter();
+  const { user, isAuthenticated, loginAsCandidate, logout } = useViewMode();
   const [candidate, setCandidate] = useState<StoredCandidateRecord | null>(null);
   const [profile, setProfile] = useState<CandidateProfile>(DEFAULT_PROFILE);
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
@@ -120,20 +123,6 @@ export default function CandidateAccountPage() {
           >
             Candidate Sign In / Register
           </Link>
-          <button
-            onClick={() => {
-              loginAsCandidate({
-                name: "Tatenda Moyo",
-                email: "demo@utaresizedu.ai",
-                qualification: "Bachelors Degree",
-                city: "Harare",
-                fieldOfStudy: "BSc Computer Science",
-              });
-            }}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition"
-          >
-            Quick Demo: Tatenda Moyo
-          </button>
         </div>
         <div className="mt-8 pt-6 border-t border-slate-200">
           <Link
@@ -228,6 +217,17 @@ export default function CandidateAccountPage() {
             <FileText className="h-3.5 w-3.5" />
             My CV & Application Studio
           </Link>
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              router.push("/");
+            }}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700 transition shadow-xs"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Sign Out
+          </button>
         </div>
       </div>
 

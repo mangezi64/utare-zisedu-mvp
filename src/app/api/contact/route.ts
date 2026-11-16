@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       messageRecord: saved,
-      message: "Thank you for contacting UTARE ZISEDU AI. Your message has been received.",
+      message: "Thank you for contacting UTARE ZEM AI. Your message has been received.",
     });
   } catch (err: any) {
     console.error("[API /api/contact Error]:", err);

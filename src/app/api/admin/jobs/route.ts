@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest, adminUnauthorizedResponse } from "@/lib/auth-guard";
 import {
   addJobToStore,
   deleteJobFromStore,
@@ -78,16 +79,6 @@ const SAMPLE_AI_DISCOVERIES: Omit<RemoteJob, "id">[] = [
   },
 ];
 
-function isAuthorizedAdmin(req: NextRequest): boolean {
-  const role =
-    req.headers.get("x-utare-role") || req.nextUrl.searchParams.get("role");
-  const email =
-    req.headers.get("x-utare-email") || req.nextUrl.searchParams.get("email");
-  return (
-    role === "admin" ||
-    Boolean(email && email.toLowerCase().includes("admin@utare.co.zw"))
-  );
-}
 
 export async function GET() {
   const state = readStore();
@@ -98,7 +89,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAuthorizedAdmin(req)) {
+  if (!(await isAdminRequest(req))) {
     return NextResponse.json(
       { error: "Unauthorized. Admin/Facilitator privileges required." },
       { status: 401 }
@@ -270,7 +261,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!isAuthorizedAdmin(req)) {
+  if (!(await isAdminRequest(req))) {
     return NextResponse.json(
       { error: "Unauthorized. Admin/Facilitator privileges required." },
       { status: 401 }
@@ -317,7 +308,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!isAuthorizedAdmin(req)) {
+  if (!(await isAdminRequest(req))) {
     return NextResponse.json(
       { error: "Unauthorized. Admin/Facilitator privileges required." },
       { status: 401 }

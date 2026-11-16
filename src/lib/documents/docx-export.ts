@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZISEDU AI — Word (.docx) Export
+// UTARE ZEM AI — Word (.docx) Export
 // =============================================================================
 // Single-column layout with real text (no tables, images or text boxes) so
 // applicant-tracking systems can parse every line.
@@ -131,7 +131,7 @@ export async function cvToDocxBuffer(cv: GeneratedCv): Promise<Buffer> {
   );
 
   const doc = new Document({
-    creator: "UTARE ZISEDU AI",
+    creator: "UTARE ZEM AI",
     title: `${cv.fullName} CV`,
     sections: [{ ...PAGE, children }],
   });
@@ -168,7 +168,7 @@ export async function coverLetterToDocxBuffer(letter: GeneratedCoverLetter): Pro
   ];
 
   const doc = new Document({
-    creator: "UTARE ZISEDU AI",
+    creator: "UTARE ZEM AI",
     title: `${letter.fullName} Application Letter`,
     sections: [{ ...PAGE, children }],
   });

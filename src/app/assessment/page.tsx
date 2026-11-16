@@ -26,6 +26,15 @@ import {
 import { PRESET_PERSONAS } from "@/lib/mock-data";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
 
+const DIAGNOSTIC_QUESTIONS = [
+  { key: "clientComms", label: "1. English Proficiency & Professional Communication" },
+  { key: "digitalTools", label: "2. Digital Literacy (Cloud Workspace, Spreadsheets, Slack)" },
+  { key: "domainProblemSolving", label: "3. Applied Domain & Analytical Problem Solving" },
+  { key: "asyncWorkflow", label: "4. Asynchronous Documentation & Task Organization" },
+  { key: "internetAccess", label: "5. Internet Stability & Digital Navigation" },
+  { key: "workExperience", label: "6. Previous Work, Gig, or Practical Hustle Experience" },
+];
+
 export default function AssessmentAndPathwayPage() {
   const { user, isAdmin } = useViewMode();
   const [profile, setProfile] = useState<CandidateProfile>(
@@ -46,13 +55,17 @@ export default function AssessmentAndPathwayPage() {
   }, [user]);
   const [skillInput, setSkillInput] = useState("");
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({
-    clientComms: 85,
-    digitalTools: 75,
-    domainProblemSolving: 80,
-    asyncWorkflow: 75,
-    internetAccess: 70,
-    workExperience: 65,
+    clientComms: 0,
+    digitalTools: 0,
+    domainProblemSolving: 0,
+    asyncWorkflow: 0,
+    internetAccess: 0,
+    workExperience: 0,
   });
+  // Tracks which diagnostic sliders the candidate has actually rated,
+  // so a deliberate 0 is distinguishable from "not answered yet".
+  const [ratedKeys, setRatedKeys] = useState<Set<string>>(new Set());
+  const [formError, setFormError] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{
@@ -63,6 +76,16 @@ export default function AssessmentAndPathwayPage() {
 
   async function handleGeneratePathway(e: React.FormEvent) {
     e.preventDefault();
+    setFormError("");
+
+    const unrated = DIAGNOSTIC_QUESTIONS.filter((q) => !ratedKeys.has(q.key));
+    if (unrated.length > 0) {
+      setFormError(
+        `Please rate all ${DIAGNOSTIC_QUESTIONS.length} readiness questions in section 3 (${unrated.length} remaining).`
+      );
+      return;
+    }
+
     setLoading(true);
     setCoachSessionBooked(false);
     try {
@@ -71,12 +94,15 @@ export default function AssessmentAndPathwayPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ profile, quizAnswers }),
       });
-      const data = await res.json();
-      if (data.assessment && data.pathway) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.assessment && data.pathway) {
         setResult(data);
+      } else {
+        setFormError(data.error || "We couldn't generate your pathway. Please try again.");
       }
     } catch (err) {
       console.error("Failed to generate pathway:", err);
+      setFormError("Network error — please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -265,15 +291,15 @@ export default function AssessmentAndPathwayPage() {
                   }
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 >
-                  <option value="Unemployed">Unemployed (43.5% cohort)</option>
+                  <option value="Unemployed">Unemployed</option>
                   <option value="Survival Gig (Misaligned)">
-                    Survival Gig — Completely Misaligned (38.5% cohort)
+                    Survival Gig — Completely Misaligned
                   </option>
                   <option value="Partially Aligned Role">
-                    Partially Aligned Role (46.2% cohort)
+                    Partially Aligned Role
                   </option>
                   <option value="Aligned Discipline Role">
-                    Aligned Discipline Role (15.4% cohort)
+                    Aligned Discipline Role
                   </option>
                   <option value="Self-Employed / Grassroots SME">
                     Self-Employed / Grassroots SME
@@ -523,54 +549,51 @@ export default function AssessmentAndPathwayPage() {
               and asynchronous communication readiness.
             </p>
 
-            {[
-              {
-                key: "clientComms",
-                label: "1. English Proficiency & Professional Communication",
-              },
-              {
-                key: "digitalTools",
-                label: "2. Digital Literacy (Cloud Workspace, Spreadsheets, Slack)",
-              },
-              {
-                key: "domainProblemSolving",
-                label: "3. Applied Domain & Analytical Problem Solving",
-              },
-              {
-                key: "asyncWorkflow",
-                label: "4. Asynchronous Documentation & Task Organization",
-              },
-              {
-                key: "internetAccess",
-                label: "5. Internet Stability & Digital Navigation",
-              },
-              {
-                key: "workExperience",
-                label: "6. Previous Work, Gig, or Practical Hustle Experience",
-              },
-            ].map((q) => (
-              <div key={q.key} className="space-y-1">
-                <div className="flex justify-between text-xs font-semibold text-slate-700">
-                  <span>{q.label}</span>
-                  <span className="text-emerald-700">
-                    {quizAnswers[q.key]} / 100
-                  </span>
+            <p className="text-[11px] text-slate-500">
+              Rate yourself from 0 (no experience) to 100 (expert). Rated{" "}
+              <strong>{ratedKeys.size}</strong> of {DIAGNOSTIC_QUESTIONS.length}.
+            </p>
+
+            {DIAGNOSTIC_QUESTIONS.map((q) => {
+              const rated = ratedKeys.has(q.key);
+              const markRated = () =>
+                setRatedKeys((prev) => (prev.has(q.key) ? prev : new Set(prev).add(q.key)));
+              return (
+                <div key={q.key} className="space-y-1">
+                  <div className="flex justify-between gap-3 text-xs font-semibold text-slate-700">
+                    <label htmlFor={`diag-${q.key}`}>{q.label}</label>
+                    <span className={`shrink-0 ${rated ? "text-emerald-700" : "text-slate-400"}`}>
+                      {rated ? `${quizAnswers[q.key]} / 100` : "Not rated"}
+                    </span>
+                  </div>
+                  <input
+                    id={`diag-${q.key}`}
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={5}
+                    value={quizAnswers[q.key]}
+                    onChange={(e) => {
+                      markRated();
+                      setQuizAnswers((prev) => ({
+                        ...prev,
+                        [q.key]: Number(e.target.value),
+                      }));
+                    }}
+                    onPointerUp={markRated}
+                    onKeyUp={markRated}
+                    className="w-full accent-emerald-600"
+                  />
                 </div>
-                <input
-                  type="range"
-                  min={30}
-                  max={100}
-                  value={quizAnswers[q.key]}
-                  onChange={(e) =>
-                    setQuizAnswers({
-                      ...quizAnswers,
-                      [q.key]: Number(e.target.value),
-                    })
-                  }
-                  className="w-full accent-emerald-600"
-                />
+              );
+            })}
+
+            {formError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700 flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>{formError}</span>
               </div>
-            ))}
+            )}
 
             <button
               type="submit"

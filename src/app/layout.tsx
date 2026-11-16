@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { ViewModeProvider } from "@/lib/view-mode-context";
 
 export const metadata: Metadata = {
-  title: "UTARE ZISEDU AI — Economic Mobility Bridge for Zimbabwe",
+  title: "UTARE ZEM AI — Economic Mobility Bridge for Zimbabwe",
   description:
     "Converting dormant Zimbabwean tertiary talent into productive global & local earners by bridging last-mile hardware, competency verification, AI upskilling, and human coaching.",
 };
@@ -25,7 +25,7 @@ export default function RootLayout({
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
               <div className="text-center md:text-left">
                 <span className="font-semibold text-slate-800">
-                  UTARE ZISEDU AI
+                  UTARE ZEM AI
                 </span>{" "}
                 — Zimbabwe Economic Mobility & Remote Bridge
               </div>

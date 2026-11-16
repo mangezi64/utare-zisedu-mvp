@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# UTARE ZISEDU AI — Local Pre-Push / Pre-Merge CI Verification Gate
+# UTARE ZEM AI — Local Pre-Push / Pre-Merge CI Verification Gate
 # =============================================================================
 # Runs the exact same 4 quality gates as GitHub Actions (.github/workflows/ci.yml)
 # inside the local Docker container BEFORE code is pushed or merged:
@@ -14,7 +14,7 @@
 set -euo pipefail
 
 echo "=================================================================="
-echo " UTARE ZISEDU AI — Running Local Container CI Gate"
+echo " UTARE ZEM AI — Running Local Container CI Gate"
 echo "=================================================================="
 
 # 1. Ensure no architecture-specific package-lock.json is tracked

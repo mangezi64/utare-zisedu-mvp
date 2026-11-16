@@ -1,5 +1,5 @@
 -- =============================================================================
--- UTARE ZISEDU AI — Supabase / PostgreSQL Database Schema
+-- UTARE ZEM AI — Supabase / PostgreSQL Database Schema
 -- =============================================================================
 -- Run this script in your Supabase SQL Editor to initialize all tables,
 -- indexes, and initial seed records for the MVP.
@@ -196,10 +196,10 @@ CREATE TABLE IF NOT EXISTS public.contact_messages (
 
 INSERT INTO public.innovation_hubs (name, city, address, has_solar_backup, internet_provider, avg_speed_mbps, available_workstations, laptop_loan_available, daily_pass_usd, utare_partner_subsidized, contact_email)
 VALUES
-  ('Impact Hub Harare / Utare Node', 'Harare', '142 Kwame Nkrumah Ave, Avenues, Harare', true, 'Starlink Business + Liquid Fiber', 180, 28, true, 0.00, true, 'harare-hub@utare-zisedu.org'),
-  ('Bulawayo Digital Innovation Centre', 'Bulawayo', '88 Fife Street, CBD, Bulawayo', true, 'Starlink + TelOne Fiber', 140, 20, true, 0.00, true, 'byo-hub@utare-zisedu.org'),
-  ('Manicaland Tech & Enterprise Hub', 'Mutare', '24 Herbert Chitepo St, Mutare', true, 'Starlink High-Performance', 150, 14, true, 0.00, true, 'mutare-hub@utare-zisedu.org'),
-  ('Midlands Graduate Co-Working Lab', 'Gweru', '11 Seventh Street, Gweru', true, 'Liquid Home Fiber + Solar Microgrid', 95, 12, false, 0.00, true, 'gweru-hub@utare-zisedu.org')
+  ('Impact Hub Harare / Utare Node', 'Harare', '142 Kwame Nkrumah Ave, Avenues, Harare', true, 'Starlink Business + Liquid Fiber', 180, 28, true, 0.00, true, 'harare-hub@utare-zem.org'),
+  ('Bulawayo Digital Innovation Centre', 'Bulawayo', '88 Fife Street, CBD, Bulawayo', true, 'Starlink + TelOne Fiber', 140, 20, true, 0.00, true, 'byo-hub@utare-zem.org'),
+  ('Manicaland Tech & Enterprise Hub', 'Mutare', '24 Herbert Chitepo St, Mutare', true, 'Starlink High-Performance', 150, 14, true, 0.00, true, 'mutare-hub@utare-zem.org'),
+  ('Midlands Graduate Co-Working Lab', 'Gweru', '11 Seventh Street, Gweru', true, 'Liquid Home Fiber + Solar Microgrid', 95, 12, false, 0.00, true, 'gweru-hub@utare-zem.org')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.skills_courses (title, category, provider, duration_weeks, cost_type, skills_taught, level, course_url, description)

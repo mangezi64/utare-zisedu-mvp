@@ -58,7 +58,7 @@ describe("Admin & Candidate Account Store Integration", () => {
       laptopLoanAvailable: true,
       dailyPassUsd: 0,
       utarePartnerSubsidized: true,
-      contactEmail: "mutare@utare-zisedu.org",
+      contactEmail: "mutare@utare-zem.org",
       operatingHours: "08:00 - 18:00",
     };
 

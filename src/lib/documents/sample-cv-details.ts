@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZISEDU AI — Default CV Source Details Builder
+// UTARE ZEM AI — Default CV Source Details Builder
 // =============================================================================
 // Populates realistic, editable Zimbabwean work history, education, and project
 // notes from a CandidateProfile so candidates have a strong starting draft in
@@ -56,7 +56,7 @@ export function buildDefaultCvDetails(
         },
       ],
       certifications: [
-        "Utare ZISEDU Verified Digital Operations & Async Workflow Module",
+        "Utare ZEM Verified Digital Operations & Async Workflow Module",
         "Google Data Analytics Foundations",
       ],
       languages: ["English (Fluent)", "Shona (Native)"],
@@ -105,7 +105,7 @@ export function buildDefaultCvDetails(
         },
       ],
       certifications: [
-        "Utare ZISEDU Verified Technical & AI QA Assessment",
+        "Utare ZEM Verified Technical & AI QA Assessment",
         "PostgreSQL & SQL Performance Fundamentals",
       ],
       languages: ["English (Fluent)", "Ndebele (Native)", "Shona (Conversational)"],
@@ -115,7 +115,7 @@ export function buildDefaultCvDetails(
   if (nameLower.includes("simba")) {
     return {
       headline: "Licensed Solar PV & Electrical Technician | Off-Grid & Commercial Systems",
-      linkedinOrPortfolio: "utare-zisedu.org/artisans/simba-chitepo",
+      linkedinOrPortfolio: "utare-zem.org/artisans/simba-chitepo",
       aboutMe:
         "Hands-on electrical and solar technician with 3 years of site installation, inverter sizing, and fault-finding experience.",
       workHistory: [
@@ -191,7 +191,7 @@ export function buildDefaultCvDetails(
       },
     ],
     certifications: [
-      `Utare ZISEDU Verified Readiness Assessment (${profile.city} Partner Hub)`,
+      `Utare ZEM Verified Readiness Assessment (${profile.city} Partner Hub)`,
     ],
     languages: ["English (Fluent)", "Shona / Ndebele (Native)"],
   };

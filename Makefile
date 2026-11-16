@@ -1,11 +1,11 @@
 # =============================================================================
-# UTARE ZISEDU AI — Team Convenience Commands
+# UTARE ZEM AI — Team Convenience Commands
 # =============================================================================
 
 .PHONY: help setup up down restart logs shell test lint typecheck ci ci-local install-hooks safe-merge clean
 
 help:
-	@echo "Utare ZISEDU AI — Available Commands:"
+	@echo "Utare ZEM AI — Available Commands:"
 	@echo "  make setup          - Copy .env.example to .env.local if not present"
 	@echo "  make up             - Build and start the Docker container (http://localhost:3000)"
 	@echo "  make down           - Stop running containers"

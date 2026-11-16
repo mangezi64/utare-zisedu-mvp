@@ -545,21 +545,6 @@ export default function RemoteJobsPage() {
             >
               Sign In to Apply
             </Link>
-            <button
-              type="button"
-              onClick={() => {
-                loginAsCandidate({
-                  name: "Tatenda Moyo",
-                  email: "demo@utaresizedu.ai",
-                  qualification: "Bachelors Degree",
-                  city: "Harare",
-                  fieldOfStudy: "BSc Computer Science",
-                });
-              }}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
-            >
-              Quick Demo: Tatenda Moyo
-            </button>
           </div>
         </div>
       )}
@@ -579,21 +564,6 @@ export default function RemoteJobsPage() {
                 >
                   Sign In
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => {
-                    loginAsCandidate({
-                      name: "Tatenda Moyo",
-                      email: "demo@utaresizedu.ai",
-                      qualification: "Bachelors Degree",
-                      city: "Harare",
-                      fieldOfStudy: "BSc Computer Science",
-                    });
-                  }}
-                  className="rounded-lg border border-amber-400 bg-white px-3 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100 transition"
-                >
-                  Quick Demo
-                </button>
               </div>
             </div>
           )}

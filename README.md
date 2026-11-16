@@ -1,4 +1,4 @@
-# UTARE ZISEDU AI — Economic Mobility Bridge MVP
+# UTARE ZEM AI — Economic Mobility Bridge MVP
 
 > **Converting dormant Zimbabwean tertiary talent into productive earners by bridging last-mile hardware, competency verification, AI upskilling paired with human coaching, and direct remote market access.**
 
@@ -11,7 +11,7 @@ In Zimbabwe, high academic qualification no longer translates into economic mobi
 - **43.5%** remain unemployed and **56.5%** earn $\le \$300$/month (with **30.4%** earning zero income).
 - Among those working, **84.6%** are trapped in completely misaligned survival gigs (**38.5%**) or partially aligned roles (**46.2%**), leaving only **15.4%** working in their trained discipline.
 
-### The Triple Bottleneck Solved by UTARE ZISEDU AI
+### The Triple Bottleneck Solved by UTARE ZEM AI
 1. **Opaque Local Hiring:** **47.8%** cite non-responsive employers, nepotism, and rigid 1–3 year experience requirements.
 2. **Infrastructure Deficits:** **73.9%** lack reliable broadband and **100%** of surveyed self-employed small business owners operate without a dedicated laptop/PC.
 3. **Global Payment & Ecosystem Isolation:** **86.4%** of remote job seekers are locked out of international payment rails, and **72.7%** are cut off from incubators, mentorship networks, or workspace hubs.
@@ -69,7 +69,7 @@ Open `index.html` in any modern browser without needing a build step or package 
 - `#/contact` — Contact & Hub Inquiries (submits to live `/api/contact` & PostgreSQL when server is active)
 
 #### Demonstration Credentials
-- **Email:** `demo@utaresizedu.ai`
+- **Email:** `demo@utarezem.ai`
 - **Password:** `Demo123!`
 
 ---
@@ -150,7 +150,7 @@ utare-zisedu-mvp/
     │   └── Navbar.tsx             # Responsive navbar with Candidate View / Admin Console switcher
     └── app/
         ├── page.tsx               # Executive Overview & Empirical Survey Dashboard
-        ├── about/page.tsx         # About UTARE ZISEDU AI & Survey Context
+        ├── about/page.tsx         # About UTARE ZEM AI & Survey Context
         ├── how-it-works/page.tsx  # 4-Stage Mobility Journey Walkthrough
         ├── opportunities/page.tsx # 4-Way Filterable Remote Opportunities
         ├── skills/page.tsx        # Skills Development Course Directory

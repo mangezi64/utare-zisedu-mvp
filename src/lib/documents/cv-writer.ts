@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZISEDU AI — CV Writer
+// UTARE ZEM AI — CV Writer
 // =============================================================================
 // Builds an ATS-friendly CV for a specific target role.
 //

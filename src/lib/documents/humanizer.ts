@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZISEDU AI — Humanizer & Style Checker
+// UTARE ZEM AI — Humanizer & Style Checker
 // =============================================================================
 // Recruiters bin CVs that read like generic AI output. This module:
 //   1. Lists phrases that mark text as machine-written or cliché (BANNED_PHRASES).

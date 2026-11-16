@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZISEDU AI — Application (Cover) Letter Writer
+// UTARE ZEM AI — Application (Cover) Letter Writer
 // =============================================================================
 // Produces a short, specific letter (about 220–320 words) that sounds like a
 // real person: one concrete reason for applying, one or two pieces of evidence

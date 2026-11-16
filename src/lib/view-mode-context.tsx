@@ -32,7 +32,7 @@ interface ViewModeContextType {
 const DEFAULT_DEMO_CANDIDATE: AuthUser = {
   id: "cand-tatenda-01",
   name: "Tatenda Moyo",
-  email: "demo@utaresizedu.ai",
+  email: "demo@utarezem.ai",
   role: "candidate",
   qualification: "BSc Computer Science",
   fieldOfStudy: "Software Engineering & Data",
@@ -83,7 +83,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
         setUser({
           id: parsed.id || (role === "admin" ? "admin-01" : "cand-user-01"),
           name: parsed.name || (role === "admin" ? "Facilitator Admin" : "Utare Candidate"),
-          email: parsed.email || (role === "admin" ? "admin@utare.co.zw" : "demo@utaresizedu.ai"),
+          email: parsed.email || (role === "admin" ? "admin@utare.co.zw" : "demo@utarezem.ai"),
           role,
           qualification: parsed.qualification,
           fieldOfStudy: parsed.fieldOfStudy,

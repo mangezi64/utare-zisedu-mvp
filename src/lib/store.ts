@@ -1,5 +1,5 @@
 // =============================================================================
-// UTARE ZISEDU AI — Unified Persistent Data Store (Local JSON + Supabase Sync)
+// UTARE ZEM AI — Unified Persistent Data Store (Local JSON + Supabase Sync)
 // =============================================================================
 // Provides an out-of-the-box end-to-end stateful backend for all 5 MVP modules.
 // - Automatically persists to `.data/utare-store.json` so data survives page
@@ -27,6 +27,15 @@ import {
   SEED_SKILLS_COURSES,
 } from "@/lib/mock-data";
 import { query } from "@/lib/db";
+
+
+// Demo candidate email aliases. "demo@utaresizedu.ai" is the pre-ZEM-rebrand
+// address, kept so previously stored demo records still resolve.
+const DEMO_CANDIDATE_EMAILS = [
+  "demo@utarezem.ai",
+  "demo@utaresizedu.ai",
+  "tatenda.moyo@example.co.zw",
+];
 
 export interface StoredCandidateRecord {
   id: string;
@@ -59,7 +68,7 @@ export const SEED_DEMO_CANDIDATE: StoredCandidateRecord = {
   id: "cand-tatenda-01",
   profile: {
     fullName: "Tatenda Moyo",
-    email: "demo@utaresizedu.ai",
+    email: "demo@utarezem.ai",
     phone: "+263 77 210 9876",
     city: "Harare",
     highestQualification: "Bachelors Degree",
@@ -162,7 +171,7 @@ export const SEED_DEMO_CANDIDATE: StoredCandidateRecord = {
       },
     ],
     paymentRailGuidance: "Step 1: Open a zero-balance USD Individual Nostro account using national ID and Utare proof of enrollment. Step 2: Register on Deel and Payoneer using valid ID/passport to receive direct USD ACH/wire deposits from UK/US remote clients.",
-    tailoredResumeSummary: "Execution-oriented Bachelors Degree graduate in BSc Computer Science based in Harare, Zimbabwe (GMT+2 / EMEA overlap). Proven ability to build Python/SQL automation pipelines, write clear technical documentation, and collaborate asynchronously. Backed by Utare ZISEDU AI Partner Hub infrastructure with solar power and Starlink connectivity for zero-downtime remote delivery.",
+    tailoredResumeSummary: "Execution-oriented Bachelors Degree graduate in BSc Computer Science based in Harare, Zimbabwe (GMT+2 / EMEA overlap). Proven ability to build Python/SQL automation pipelines, write clear technical documentation, and collaborate asynchronously. Backed by Utare ZEM AI Partner Hub infrastructure with solar power and Starlink connectivity for zero-downtime remote delivery.",
     generatedBy: "utare-deterministic-engine",
   },
   completedMilestones: ["Phase 1 (Weeks 1–2)"],
@@ -229,10 +238,8 @@ export function readStore(): UtareDatabaseState {
           ...createInitialState(),
           ...parsed,
         };
-        const hasDemo = merged.candidates.some(
-          (c) =>
-            c.profile.email.trim().toLowerCase() === "demo@utaresizedu.ai" ||
-            c.profile.email.trim().toLowerCase() === "tatenda.moyo@example.co.zw"
+        const hasDemo = merged.candidates.some((c) =>
+          DEMO_CANDIDATE_EMAILS.includes(c.profile.email.trim().toLowerCase())
         );
         if (!hasDemo) {
           merged.candidates.unshift(SEED_DEMO_CANDIDATE);
@@ -256,11 +263,9 @@ export function findCandidateByEmail(email?: string | null): StoredCandidateReco
   if (!email) return null;
   const state = readStore();
   const normalized = email.trim().toLowerCase();
-  if (normalized === "demo@utaresizedu.ai" || normalized === "tatenda.moyo@example.co.zw") {
-    const found = state.candidates.find(
-      (c) =>
-        c.profile.email.trim().toLowerCase() === "demo@utaresizedu.ai" ||
-        c.profile.email.trim().toLowerCase() === "tatenda.moyo@example.co.zw"
+  if (DEMO_CANDIDATE_EMAILS.includes(normalized)) {
+    const found = state.candidates.find((c) =>
+      DEMO_CANDIDATE_EMAILS.includes(c.profile.email.trim().toLowerCase())
     );
     return found || SEED_DEMO_CANDIDATE;
   }

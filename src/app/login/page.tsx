@@ -9,7 +9,6 @@ import {
   Shield,
   ArrowRight,
   CheckCircle2,
-  Lock,
   Mail,
   MapPin,
   GraduationCap,
@@ -18,6 +17,18 @@ import {
 } from "lucide-react";
 import { useViewMode } from "@/lib/view-mode-context";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
+import PasswordInput from "@/components/PasswordInput";
+import { validateEmail, validatePassword } from "@/lib/validation";
+
+const IS_LOCAL_DEV = process.env.NODE_ENV === "development";
+
+const STRENGTH_STYLES: Record<string, { bar: string; text: string }> = {
+  "Too Weak": { bar: "bg-slate-200", text: "text-slate-500" },
+  Weak: { bar: "bg-red-500", text: "text-red-600" },
+  Fair: { bar: "bg-amber-500", text: "text-amber-600" },
+  Good: { bar: "bg-lime-500", text: "text-lime-700" },
+  Strong: { bar: "bg-emerald-600", text: "text-emerald-700" },
+};
 
 function LoginForm() {
   const router = useRouter();
@@ -37,6 +48,8 @@ function LoginForm() {
   const [fullName, setFullName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+  const [regEmailTouched, setRegEmailTouched] = useState(false);
   const [city, setCity] = useState("Harare");
   const [qualification, setQualification] = useState("Bachelors Degree");
   const [fieldOfStudy, setFieldOfStudy] = useState("Computer Science & IT");
@@ -52,12 +65,15 @@ function LoginForm() {
 
     const normalizedEmail = loginEmail.trim().toLowerCase();
 
-    // 1. Automatically recognize admin/facilitator email and switch to Admin profile
-    if (
-      normalizedEmail === "admin@utare.co.zw" ||
-      normalizedEmail.startsWith("admin@") ||
-      normalizedEmail.endsWith("@utare.co.zw")
-    ) {
+    const emailCheck = validateEmail(normalizedEmail);
+    if (!emailCheck.isValid) {
+      setLoginError(emailCheck.error || "Please enter a valid email address.");
+      return;
+    }
+
+    // 1. Local development only: admin shortcut. Production admin access will
+    //    come exclusively from the backend-assigned role (Supabase Auth, v2).
+    if (IS_LOCAL_DEV && normalizedEmail === "admin@utare.co.zw") {
       loginAsAdmin();
       router.push(redirectUrl || "/admin");
       return;
@@ -95,7 +111,7 @@ function LoginForm() {
   const handleDemoCandidateQuickLogin = () => {
     loginAsCandidate({
       name: "Tatenda Moyo",
-      email: "demo@utaresizedu.ai",
+      email: "demo@utarezem.ai",
       qualification: "Bachelors Degree",
       city: "Harare",
       fieldOfStudy: "BSc Computer Science",
@@ -110,22 +126,42 @@ function LoginForm() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !regEmail || !regPassword) {
+    if (!fullName.trim() || !regEmail || !regPassword) {
       setLoginError("Please complete all required fields.");
+      return;
+    }
+
+    const emailCheck = validateEmail(regEmail);
+    if (!emailCheck.isValid) {
+      setRegEmailTouched(true);
+      setLoginError(emailCheck.error || "Please enter a valid email address.");
+      return;
+    }
+
+    const pwCheck = validatePassword(regPassword);
+    if (!pwCheck.isValid) {
+      setLoginError(pwCheck.error || "Please choose a stronger password.");
+      return;
+    }
+
+    if (regPassword !== regConfirmPassword) {
+      setLoginError("Passwords do not match.");
       return;
     }
 
     setIsSubmitting(true);
     setLoginError("");
 
+    let res: Response;
     try {
       // Save directly to backend / PostgreSQL database
-      const res = await fetch("/api/auth/profile", {
+      res = await fetch("/api/auth/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName,
-          email: regEmail,
+          mode: "register",
+          fullName: fullName.trim(),
+          email: regEmail.trim().toLowerCase(),
           city,
           highestQualification: qualification,
           fieldOfStudy,
@@ -141,38 +177,40 @@ function LoginForm() {
           currentSkills: [fieldOfStudy, "Digital Literacy", "English Communication"],
         }),
       });
-
-      if (!res.ok) {
-        throw new Error("Registration failed on server");
-      }
-
-      setRegisterSuccess("Account created successfully! Connecting your workspace...");
-      
-      loginAsCandidate({
-        name: fullName,
-        email: regEmail,
-        qualification,
-        city,
-        fieldOfStudy,
-      });
-
-      setTimeout(() => {
-        router.push(redirectUrl || "/assessment");
-      }, 1000);
     } catch {
-      // Fallback for offline local state
-      loginAsCandidate({
-        name: fullName,
-        email: regEmail,
-        qualification,
-        city,
-        fieldOfStudy,
-      });
-      router.push(redirectUrl || "/assessment");
-    } finally {
       setIsSubmitting(false);
+      setLoginError("We couldn't reach the server. Check your connection and try again.");
+      return;
     }
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setIsSubmitting(false);
+      setLoginError(data.error || "Registration failed. Please try again.");
+      return;
+    }
+
+    const data = await res.json().catch(() => ({}));
+    setRegisterSuccess("Account created successfully! Connecting your workspace...");
+
+    loginAsCandidate({
+      name: fullName.trim(),
+      email: regEmail.trim().toLowerCase(),
+      qualification,
+      city,
+      fieldOfStudy,
+      ...(data.candidate?.id ? { id: data.candidate.id } : {}),
+    });
+
+    setTimeout(() => {
+      router.push(redirectUrl || "/assessment");
+    }, 1000);
   };
+
+  const regEmailCheck = validateEmail(regEmail);
+  const showRegEmailError = regEmailTouched && regEmail.length > 0 && !regEmailCheck.isValid;
+  const pwStrength = validatePassword(regPassword);
+  const confirmMismatch = regConfirmPassword.length > 0 && regConfirmPassword !== regPassword;
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -185,7 +223,7 @@ function LoginForm() {
             </div>
             <div className="text-left">
               <span className="text-xl font-extrabold tracking-tight text-slate-900">
-                UTARE <span className="text-emerald-700">ZISEDU AI</span>
+                UTARE <span className="text-emerald-700">ZEM AI</span>
               </span>
               <p className="text-xs text-slate-500">
                 Zimbabwe Economic Mobility & Remote Bridge
@@ -260,7 +298,7 @@ function LoginForm() {
                       type="email"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="demo@utaresizedu.ai"
+                      placeholder="you@example.com"
                       className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
                     />
                   </div>
@@ -270,16 +308,11 @@ function LoginForm() {
                   <label className="block text-xs font-bold text-slate-700 mb-1">
                     Password
                   </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <input
-                      type="password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
-                    />
-                  </div>
+                  <PasswordInput
+                    value={loginPassword}
+                    onChange={setLoginPassword}
+                    autoComplete="current-password"
+                  />
                 </div>
 
                 <button
@@ -290,12 +323,13 @@ function LoginForm() {
                 </button>
               </form>
 
-              {/* 1-Click Fast Test Box */}
+              {/* 1-Click Fast Test Box (local development only) */}
+              {IS_LOCAL_DEV && (
               <div className="mt-6 border-t border-slate-100 pt-6">
                 <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                      Quick Demo Testing
+                      Quick Demo Testing (local dev only)
                     </span>
                     <span className="rounded bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-700">
                       1-Click
@@ -322,6 +356,7 @@ function LoginForm() {
                   </div>
                 </div>
               </div>
+              )}
             </div>
           )}
 
@@ -345,41 +380,96 @@ function LoginForm() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Email Address *
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <input
-                      type="email"
-                      required
-                      value={regEmail}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                      placeholder="farai@example.com"
-                      className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
-                    />
-                  </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Email Address *
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    onBlur={() => setRegEmailTouched(true)}
+                    placeholder="farai.nyoni@gmail.com"
+                    aria-invalid={showRegEmailError || undefined}
+                    className={`w-full rounded-lg border pl-10 pr-4 py-2 text-sm focus:outline-none ${
+                      showRegEmailError
+                        ? "border-red-400 focus:border-red-500"
+                        : "border-slate-300 focus:border-emerald-600"
+                    }`}
+                  />
                 </div>
+                {showRegEmailError && (
+                  <p className="mt-1 text-[11px] text-red-600">{regEmailCheck.error}</p>
+                )}
+              </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
                     Password *
                   </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <input
-                      type="password"
-                      required
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      placeholder="Create password"
-                      className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
-                    />
-                  </div>
+                  <PasswordInput
+                    required
+                    value={regPassword}
+                    onChange={setRegPassword}
+                    placeholder="Create password"
+                    autoComplete="new-password"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Confirm Password *
+                  </label>
+                  <PasswordInput
+                    required
+                    value={regConfirmPassword}
+                    onChange={setRegConfirmPassword}
+                    placeholder="Re-enter password"
+                    autoComplete="new-password"
+                    invalid={confirmMismatch}
+                  />
+                  {confirmMismatch && (
+                    <p className="mt-1 text-[11px] text-red-600">Passwords do not match.</p>
+                  )}
                 </div>
               </div>
+
+              {regPassword.length > 0 && (
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-semibold">
+                    <span className="text-slate-600">Password strength</span>
+                    <span className={STRENGTH_STYLES[pwStrength.label].text}>{pwStrength.label}</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className={`h-1.5 rounded-full ${
+                          pwStrength.score >= i ? STRENGTH_STYLES[pwStrength.label].bar : "bg-slate-200"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                    {pwStrength.requirements.map((r) => (
+                      <li
+                        key={r.id}
+                        className={`flex items-center gap-1.5 text-[11px] ${
+                          r.met ? "text-emerald-700" : "text-slate-500"
+                        }`}
+                      >
+                        <CheckCircle2 className={`h-3.5 w-3.5 ${r.met ? "text-emerald-600" : "text-slate-300"}`} />
+                        {r.label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <ZimbabweCitySelect
@@ -429,10 +519,10 @@ function LoginForm() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  disabled={isSubmitting || !pwStrength.isValid || confirmMismatch || !regConfirmPassword}
+                  className="w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? "Creating Account in Database..." : "Create Account & Start Diagnostic"}
+                  {isSubmitting ? "Verifying email & creating account..." : "Create Account & Start Diagnostic"}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>

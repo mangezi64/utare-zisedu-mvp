@@ -57,7 +57,7 @@ export default function HowItWorksPage() {
           The 4-Stage Mobility Journey
         </div>
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">
-          How UTARE ZISEDU AI Works
+          How UTARE ZEM AI Works
         </h1>
         <p className="text-sm text-slate-600 leading-relaxed">
           From dormant academic credential to productive global or local earner.

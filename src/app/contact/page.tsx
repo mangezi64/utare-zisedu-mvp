@@ -47,7 +47,7 @@ export default function ContactPage() {
           Connect With Us
         </div>
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">
-          Contact UTARE ZISEDU AI
+          Contact UTARE ZEM AI
         </h1>
         <p className="max-w-2xl text-sm text-slate-600 leading-relaxed">
           Whether you are a Zimbabwean graduate seeking remote work, an innovation hub
@@ -87,7 +87,7 @@ export default function ContactPage() {
             <div className="border-t border-slate-100 pt-4 space-y-2 text-xs text-slate-600">
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-blue-600" />
-                <span className="font-semibold text-slate-800">contact@utare-zisedu.org</span>
+                <span className="font-semibold text-slate-800">contact@utare-zem.org</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-emerald-600" />

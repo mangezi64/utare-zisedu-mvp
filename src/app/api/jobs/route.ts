@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/auth-guard";
 import { findCandidateByEmail, readStore, submitJobApplicationToStore } from "@/lib/store";
 
 export async function GET(req: NextRequest) {
   const state = readStore();
   const emailParam = req.nextUrl.searchParams.get("email");
   const showAll = req.nextUrl.searchParams.get("all") === "1";
-  const roleParam =
-    req.headers.get("x-utare-role") || req.nextUrl.searchParams.get("role");
-  const isAdmin = roleParam === "admin";
+  const isAdmin = showAll && (await isAdminRequest(req));
 
   let activeCandidate = null;
   if (emailParam) {
