@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   confirmUserEmailByAddress,
-  findCandidateByEmail,
-  findEmployerByEmail,
+  findCandidateByEmailAsync,
+  findEmployerByEmailAsync,
   verifyUserEmailByToken,
 } from "@/lib/store";
 import { SESSION_COOKIE_NAME, signSessionToken } from "@/lib/auth-session";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
+import { resolveBootstrapRole } from "@/lib/bootstrap-roles";
 import { UserRole } from "@/types";
 
 export const runtime = "nodejs";
@@ -32,11 +33,13 @@ export async function POST(req: NextRequest) {
 
       const verifiedEmail = data.user.email.toLowerCase();
       const localUser = confirmUserEmailByAddress(verifiedEmail);
-      const role: UserRole =
+      const employer = await findEmployerByEmailAsync(verifiedEmail);
+      const rawRole: UserRole =
         (data.user.app_metadata?.role as UserRole) ||
         localUser?.role ||
         (data.user.user_metadata?.account_type as UserRole) ||
-        "candidate";
+        (employer ? "employer" : "candidate");
+      const role: UserRole = resolveBootstrapRole(verifiedEmail, rawRole);
 
       const sessionToken = await signSessionToken({
         sub: data.user.id,
@@ -44,10 +47,11 @@ export async function POST(req: NextRequest) {
         name:
           localUser?.name ||
           (data.user.user_metadata?.full_name as string) ||
+          employer?.contactPerson ||
           verifiedEmail.split("@")[0],
         role,
         emailConfirmed: true,
-        companyName: localUser?.companyName,
+        companyName: localUser?.companyName || employer?.companyName,
       });
 
       const res = NextResponse.json({
@@ -88,14 +92,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const candidate = findCandidateByEmail(user.email);
-    const employer = findEmployerByEmail(user.email);
+    const candidate = await findCandidateByEmailAsync(user.email);
+    const employer = await findEmployerByEmailAsync(user.email);
+    const finalRole = resolveBootstrapRole(user.email, user.role);
 
     const sessionToken = await signSessionToken({
       sub: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: finalRole,
       emailConfirmed: true,
       companyName: user.companyName || employer?.companyName,
       city: user.city || candidate?.profile.city,
@@ -106,13 +111,13 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       success: true,
-      role: user.role,
+      role: finalRole,
       email: user.email,
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        role: finalRole,
         emailConfirmed: true,
         companyName: user.companyName || employer?.companyName,
       },

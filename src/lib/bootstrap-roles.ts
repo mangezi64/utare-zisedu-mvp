@@ -49,3 +49,39 @@ export function resolveBootstrapRole(
 
   return fallbackRole;
 }
+
+/**
+ * Resolves the post-login destination for each user role while guarding
+ * explicit `?redirect=` targets against cross-role mismatches.
+ */
+export function resolvePostLoginDestination(
+  role: UserRole | string | undefined,
+  redirectUrl?: string | null
+): string {
+  const isAdminRole = role === "admin" || role === "superuser";
+  const isEmployerRole = role === "employer";
+
+  const isSafeRedirect =
+    Boolean(redirectUrl) &&
+    redirectUrl!.startsWith("/") &&
+    !redirectUrl!.startsWith("//") &&
+    !(redirectUrl!.startsWith("/admin") && !isAdminRole) &&
+    !(
+      redirectUrl!.startsWith("/employer") &&
+      !redirectUrl!.startsWith("/employers") &&
+      !isEmployerRole &&
+      !isAdminRole
+    ) &&
+    !(
+      (redirectUrl!.startsWith("/account") ||
+        redirectUrl!.startsWith("/pathway")) &&
+      isEmployerRole
+    );
+
+  if (isSafeRedirect && redirectUrl) {
+    return redirectUrl;
+  }
+  if (isAdminRole) return "/admin";
+  if (isEmployerRole) return "/employer";
+  return "/account";
+}

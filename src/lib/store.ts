@@ -1282,6 +1282,87 @@ export function findEmployerByEmail(email?: string | null): EmployerRegistration
   );
 }
 
+export async function findEmployerByEmailAsync(
+  email?: string | null
+): Promise<EmployerRegistration | null> {
+  if (!email) return null;
+  const local = findEmployerByEmail(email);
+  if (local) return local;
+
+  const normalized = email.trim().toLowerCase();
+  try {
+    const res = await query<any>(
+      `SELECT id, user_id, company_name, contact_person, email, website, industry,
+              roles_interested, hiring_model, estimated_hires, timezone_overlap_needed,
+              additional_notes, verification_status, created_at
+       FROM public.employer_registrations
+       WHERE LOWER(email) = $1
+       LIMIT 1;`,
+      [normalized]
+    );
+    if (res && res.rows && res.rows.length > 0) {
+      const row = res.rows[0];
+      return saveEmployerRegistration({
+        id: row.id,
+        userId: row.user_id || undefined,
+        companyName: row.company_name || "Partner Organization",
+        contactPerson: row.contact_person || "Employer Partner",
+        email: row.email,
+        website: row.website || "",
+        industry: row.industry || "Technology & SaaS",
+        rolesInterested: Array.isArray(row.roles_interested)
+          ? row.roles_interested
+          : ["Remote Operations"],
+        hiringModel: row.hiring_model || "100% Remote Contract",
+        estimatedHires: Number(row.estimated_hires) || 1,
+        timezoneOverlapNeeded:
+          row.timezone_overlap_needed || "CAT (GMT+2) / UK-EU overlap",
+        additionalNotes: row.additional_notes || "",
+        verificationStatus:
+          (row.verification_status as EmployerVerificationStatus) || "pending",
+      });
+    }
+  } catch {
+    // Non-fatal Postgres lookup fallback
+  }
+
+  const sb = getSupabaseServer();
+  if (sb) {
+    try {
+      const { data: row, error } = await sb
+        .from("employer_registrations")
+        .select("*")
+        .ilike("email", normalized)
+        .maybeSingle();
+
+      if (!error && row) {
+        return saveEmployerRegistration({
+          id: row.id,
+          userId: row.user_id || undefined,
+          companyName: row.company_name || "Partner Organization",
+          contactPerson: row.contact_person || "Employer Partner",
+          email: row.email,
+          website: row.website || "",
+          industry: row.industry || "Technology & SaaS",
+          rolesInterested: Array.isArray(row.roles_interested)
+            ? row.roles_interested
+            : ["Remote Operations"],
+          hiringModel: row.hiring_model || "100% Remote Contract",
+          estimatedHires: Number(row.estimated_hires) || 1,
+          timezoneOverlapNeeded:
+            row.timezone_overlap_needed || "CAT (GMT+2) / UK-EU overlap",
+          additionalNotes: row.additional_notes || "",
+          verificationStatus:
+            (row.verification_status as EmployerVerificationStatus) || "pending",
+        });
+      }
+    } catch {
+      // Ignore non-fatal lookup warning
+    }
+  }
+  return null;
+}
+
 export function findEmployerById(id?: string | null): EmployerRegistration | null {
   if (!id) return null;
   const state = readStore();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   createAuthUser,
   findAuthUserByEmail,
+  findAuthUserByEmailFromDb,
   getEmployerRegistrations,
   saveEmployerRegistration,
   updateEmployerVerificationStatus,
@@ -118,7 +119,10 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      if (findAuthUserByEmail(normalizedEmail)) {
+      if (
+        findAuthUserByEmail(normalizedEmail) ||
+        (await findAuthUserByEmailFromDb(normalizedEmail))
+      ) {
         return NextResponse.json(
           {
             error:
@@ -151,20 +155,67 @@ export async function POST(req: NextRequest) {
       verificationStatus: "pending",
     });
 
+    const sb = getSupabaseServer();
+    if (sb) {
+      sb.from("employer_registrations")
+        .upsert(
+          {
+            id: record.id,
+            company_name: record.companyName,
+            contact_person: record.contactPerson,
+            email: record.email,
+            website: record.website,
+            industry: record.industry,
+            roles_interested: record.rolesInterested,
+            hiring_model: record.hiringModel,
+            estimated_hires: record.estimatedHires,
+            timezone_overlap_needed: record.timezoneOverlapNeeded,
+            additional_notes: record.additionalNotes,
+            verification_status: record.verificationStatus,
+          },
+          { onConflict: "email" }
+        )
+        .then(
+          () => {},
+          () => {}
+        );
+    }
+
     let confirmationPath: string | undefined;
     if (password) {
       const confirmationToken = generateRandomToken(24);
-      createAuthUser({
+      const passwordHash = hashPassword(String(password));
+      const authUser = createAuthUser({
         email: normalizedEmail,
         name: String(contactPerson).trim(),
         role: "employer",
-        passwordHash: hashPassword(String(password)),
+        passwordHash,
         emailConfirmed: false,
         confirmationToken,
         employerId: record.id,
         orgRole: "org_admin",
         companyName: record.companyName,
       });
+      if (sb) {
+        sb.from("auth_users")
+          .upsert(
+            {
+              id: authUser.id,
+              email: normalizedEmail,
+              name: authUser.name,
+              role: "employer",
+              password_hash: passwordHash,
+              email_confirmed: false,
+              employer_id: record.id,
+              company_name: record.companyName,
+            },
+            { onConflict: "email" }
+          )
+          .then(
+            () => {},
+            () => {}
+          );
+      }
       if (!isSupabaseConfigured) {
         confirmationPath = `/auth/callback?token=${encodeURIComponent(
           confirmationToken

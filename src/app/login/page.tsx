@@ -21,6 +21,7 @@ import { useViewMode } from "@/lib/view-mode-context";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
 import PasswordInput from "@/components/PasswordInput";
 import { validateEmail, validatePassword } from "@/lib/validation";
+import { resolvePostLoginDestination } from "@/lib/bootstrap-roles";
 
 const STRENGTH_STYLES: Record<string, { bar: string; text: string }> = {
   "Too Weak": { bar: "bg-slate-200", text: "text-slate-500" },
@@ -165,16 +166,7 @@ function LoginForm() {
 
       if (data.user) {
         setSessionUser(data.user);
-        const role = data.user.role;
-        if (redirectUrl) {
-          router.push(redirectUrl);
-        } else if (role === "admin" || role === "superuser") {
-          router.push("/admin");
-        } else if (role === "employer") {
-          router.push("/employer");
-        } else {
-          router.push("/account");
-        }
+        router.push(resolvePostLoginDestination(data.user.role, redirectUrl));
       }
     } catch {
       setLoginError(

@@ -10,7 +10,7 @@ import {
   findAuthUserByEmail,
   findAuthUserByEmailFromDb,
   findCandidateByEmailAsync,
-  findEmployerByEmail,
+  findEmployerByEmailAsync,
   updateUserRole,
 } from "@/lib/store";
 import { getSupabaseAdmin, isSupabaseConfigured, supabase } from "@/lib/supabase/client";
@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
     let resolvedRole: UserRole | undefined = userRecord?.role;
     let resolvedName = userRecord?.name;
     let resolvedId = userRecord?.id;
+    let resolvedCompanyName = userRecord?.companyName;
     let emailConfirmed = userRecord?.emailConfirmed ?? false;
     let authenticated = false;
 
@@ -85,6 +86,10 @@ export async function POST(req: NextRequest) {
         resolvedId = data.user.id;
         emailConfirmed = Boolean(data.user.email_confirmed_at);
         const metaRole = data.user.app_metadata?.role as UserRole | undefined;
+        const userMetaAccountType =
+          data.user.user_metadata?.account_type === "employer"
+            ? ("employer" as UserRole)
+            : undefined;
 
         const adminClient = getSupabaseAdmin();
         if (adminClient) {
@@ -98,6 +103,12 @@ export async function POST(req: NextRequest) {
         if (!resolvedRole && metaRole) {
           resolvedRole = metaRole;
         }
+        if (!resolvedRole && userMetaAccountType) {
+          resolvedRole = userMetaAccountType;
+        }
+        resolvedCompanyName =
+          resolvedCompanyName ||
+          (data.user.user_metadata?.company_name as string | undefined);
         resolvedName =
           resolvedName ||
           (data.user.user_metadata?.full_name as string) ||
@@ -158,14 +169,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const baseRole: UserRole = resolvedRole || userRecord?.role || "candidate";
-    const finalRole: UserRole = resolveBootstrapRole(normalizedEmail, baseRole);
+    const candidate = await findCandidateByEmailAsync(normalizedEmail);
+    const employer = await findEmployerByEmailAsync(normalizedEmail);
+
+    const inferredRole: UserRole =
+      resolvedRole ||
+      userRecord?.role ||
+      (employer && !candidate ? "employer" : "candidate");
+    const finalRole: UserRole = resolveBootstrapRole(normalizedEmail, inferredRole);
 
     if (userRecord && userRecord.role !== finalRole) {
       updateUserRole(normalizedEmail, finalRole);
     }
-    const candidate = await findCandidateByEmailAsync(normalizedEmail);
-    const employer = findEmployerByEmail(normalizedEmail);
 
     const sessionUser = {
       sub: resolvedId || userRecord?.id || `usr-${Date.now()}`,
@@ -177,7 +192,8 @@ export async function POST(req: NextRequest) {
         normalizedEmail.split("@")[0],
       role: finalRole,
       emailConfirmed: true,
-      companyName: userRecord?.companyName || employer?.companyName,
+      companyName:
+        resolvedCompanyName || userRecord?.companyName || employer?.companyName,
       city: userRecord?.city || candidate?.profile.city,
       qualification:
         userRecord?.qualification || candidate?.profile.highestQualification,

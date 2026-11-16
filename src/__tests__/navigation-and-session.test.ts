@@ -6,6 +6,7 @@ import {
   getCachedSession,
   AuthUser,
 } from "@/lib/view-mode-context";
+import { resolvePostLoginDestination } from "@/lib/bootstrap-roles";
 
 describe("Navigation & Session Persistence", () => {
   const mockStorage: Record<string, string> = {};
@@ -133,5 +134,23 @@ describe("Navigation & Session Persistence", () => {
     // Corrupted JSON
     mockStorage[CACHED_SESSION_KEY] = "invalid-json{";
     expect(getCachedSession()).toBeNull();
+  });
+
+  it("routes each user role to its rightful workspace on sign in", () => {
+    expect(resolvePostLoginDestination("employer")).toBe("/employer");
+    expect(resolvePostLoginDestination("candidate")).toBe("/account");
+    expect(resolvePostLoginDestination("admin")).toBe("/admin");
+    expect(resolvePostLoginDestination("superuser")).toBe("/admin");
+
+    // Cross-role ?redirect= guard
+    expect(resolvePostLoginDestination("candidate", "/employer")).toBe("/account");
+    expect(resolvePostLoginDestination("candidate", "/admin")).toBe("/account");
+    expect(resolvePostLoginDestination("employer", "/account")).toBe("/employer");
+    expect(resolvePostLoginDestination("employer", "/admin")).toBe("/employer");
+
+    // Safe compatible redirects are honored
+    expect(resolvePostLoginDestination("employer", "/employer")).toBe("/employer");
+    expect(resolvePostLoginDestination("candidate", "/opportunities")).toBe("/opportunities");
+    expect(resolvePostLoginDestination("superuser", "/admin")).toBe("/admin");
   });
 });

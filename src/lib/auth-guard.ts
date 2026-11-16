@@ -13,7 +13,11 @@ import {
   SessionPayload,
   verifySessionToken,
 } from "@/lib/auth-session";
-import { findAuthUserByEmail, updateUserRole } from "@/lib/store";
+import {
+  findAuthUserByEmail,
+  findAuthUserByEmailFromDb,
+  updateUserRole,
+} from "@/lib/store";
 import { getSupabaseAdmin, isSupabaseConfigured, supabase } from "@/lib/supabase/client";
 import { UserRole } from "@/types";
 import { resolveBootstrapRole } from "@/lib/bootstrap-roles";
@@ -34,7 +38,9 @@ export async function getSessionFromRequest(
     const verified = await verifySessionToken(rawToken);
     if (verified) {
       // Refresh authoritative role from backend store if present
-      const storedUser = findAuthUserByEmail(verified.email);
+      const storedUser =
+        findAuthUserByEmail(verified.email) ||
+        (await findAuthUserByEmailFromDb(verified.email));
       const effectiveRole = resolveBootstrapRole(
         verified.email,
         storedUser?.role || verified.role
