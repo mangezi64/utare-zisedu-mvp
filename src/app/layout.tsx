@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Mail, Phone } from "lucide-react";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ViewModeProvider } from "@/lib/view-mode-context";
@@ -52,14 +53,26 @@ export default function RootLayout({
                 economic opportunity through career guidance, human coaching,
                 partner innovation hubs, and verified remote work.
               </p>
-              <div className="footer-links">
-                <Link href="/about">About</Link>
-                <Link href="/how-it-works">How it works</Link>
-                <Link href="/opportunities">Opportunities</Link>
-                <Link href="/skills">Skills</Link>
-                <Link href="/hubs">Hubs</Link>
-                <Link href="/employers">For Employers</Link>
-                <Link href="/contact">Contact</Link>
+              <div className="footer-right">
+                <div className="footer-links">
+                  <Link href="/about">About</Link>
+                  <Link href="/how-it-works">How it works</Link>
+                  <Link href="/opportunities">Opportunities</Link>
+                  <Link href="/skills">Skills</Link>
+                  <Link href="/hubs">Hubs</Link>
+                  <Link href="/employers">For Employers</Link>
+                  <Link href="/contact">Contact</Link>
+                </div>
+                <div className="footer-contact">
+                  <a href="mailto:utarezemai@gmail.com">
+                    <Mail className="h-3.5 w-3.5" />
+                    <span>utarezemai@gmail.com</span>
+                  </a>
+                  <a href="tel:+263786113799">
+                    <Phone className="h-3.5 w-3.5" />
+                    <span>+263 78 611 3799</span>
+                  </a>
+                </div>
               </div>
             </div>
             <div className="footer-bottom">

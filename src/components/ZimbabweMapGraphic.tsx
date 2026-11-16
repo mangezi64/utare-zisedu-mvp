@@ -10,7 +10,7 @@ export default function ZimbabweMapGraphic({
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 613 639"
+      viewBox="28 0 448 392"
       className={className}
       fill="currentColor"
       aria-label="Map of Zimbabwe"
@@ -51,14 +51,14 @@ export default function ZimbabweMapGraphic({
       {showHubBeacons && (
         <g className="hub-beacons">
           {/* Harare Capital Radar Beacon */}
-          <circle cx="365" cy="188" r="9" fill="#f59e0b" className="animate-ping" opacity="0.75" />
-          <circle cx="365" cy="188" r="5" fill="#d97706" stroke="#fff" strokeWidth="1.5" />
+          <circle cx="352" cy="136" r="10" fill="#f59e0b" className="animate-ping" opacity="0.75" />
+          <circle cx="352" cy="136" r="5.5" fill="#d97706" stroke="#fff" strokeWidth="1.5" />
           
           {/* Bulawayo Hub Beacon */}
-          <circle cx="218" cy="358" r="4.5" fill="#10b981" stroke="#fff" strokeWidth="1.2" />
+          <circle cx="221" cy="255" r="5" fill="#10b981" stroke="#fff" strokeWidth="1.4" />
 
           {/* Mutare Hub Beacon */}
-          <circle cx="515" cy="272" r="4.5" fill="#10b981" stroke="#fff" strokeWidth="1.2" />
+          <circle cx="444" cy="212" r="5" fill="#10b981" stroke="#fff" strokeWidth="1.4" />
         </g>
       )}
     </svg>

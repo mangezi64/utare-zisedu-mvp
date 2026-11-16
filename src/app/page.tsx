@@ -130,7 +130,7 @@ export default function HomePage() {
             <div className="map-ring ring-1" />
             <div className="map-ring ring-2" />
             <div className="map-center">
-              <ZimbabweMapGraphic className="w-24 h-24 drop-shadow-[0_8px_20px_rgba(5,150,105,0.55)]" />
+              <ZimbabweMapGraphic className="w-[144px] h-[126px] drop-shadow-[0_8px_20px_rgba(5,150,105,0.55)]" />
               <div className="map-center-overlay">
                 <span>ZW</span>
                 <small>ZIMBABWE</small>

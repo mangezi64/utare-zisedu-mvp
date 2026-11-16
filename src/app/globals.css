@@ -76,20 +76,20 @@ main {
 }
 .header-inner {
   min-height: 64px;
-  max-width: 1240px;
+  max-width: 1220px;
   width: 100%;
-  padding: 8px 20px;
+  padding: 8px 16px;
   margin: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   box-sizing: border-box;
 }
 .brand {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
   flex: none;
   color: var(--navy);
   font: 700 15px var(--heading);
@@ -109,6 +109,13 @@ main {
   color: var(--muted);
   letter-spacing: 0;
   margin-top: 4px;
+}
+.site-header .brand small {
+  max-width: 142px;
+  white-space: normal;
+  font-size: 9.5px;
+  line-height: 1.22;
+  margin-top: 2px;
 }
 .brand-mark {
   width: 38px;
@@ -136,11 +143,13 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 2px;
   margin: auto;
 }
 .main-nav a {
-  padding: 9px 12px;
+  padding: 7px 9px;
   font-size: 12px;
   font-weight: 600;
   color: #5d687a;
@@ -149,7 +158,7 @@ main {
   transition: 0.18s;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 .main-nav a:hover,
 .main-nav a.active {
@@ -160,15 +169,17 @@ main {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  flex-shrink: 0;
+  gap: 6px;
 }
 .signin-link {
   font-size: 12px;
   font-weight: 700;
   color: var(--green);
-  padding: 9px 15px;
+  padding: 8px 12px;
   border: 1px solid #cbd9d5;
   border-radius: 9px;
+  white-space: nowrap;
   transition: 0.18s;
 }
 .signin-link:hover {
@@ -372,19 +383,19 @@ main {
   position: absolute;
   border: 1px solid #42bd9990;
   border-radius: 50%;
-  width: 220px;
-  height: 220px;
+  width: 226px;
+  height: 226px;
   pointer-events: none;
 }
 .ring-2 {
-  width: 160px;
-  height: 160px;
+  width: 170px;
+  height: 170px;
   border-style: dashed;
   border-color: #93e3c54d;
 }
 .map-center {
-  width: 120px;
-  height: 120px;
+  width: 156px;
+  height: 156px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -395,7 +406,7 @@ main {
 }
 .map-center-overlay {
   position: absolute;
-  bottom: 0px;
+  bottom: -2px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -553,7 +564,7 @@ main {
 }
 .section-pad {
   max-width: 1220px;
-  padding: 68px 30px;
+  padding: 68px 16px;
   margin: auto;
 }
 .journey-section .section-heading,
@@ -643,7 +654,7 @@ main {
 .mobility-inner {
   max-width: 1220px;
   margin: auto;
-  padding: 65px 30px;
+  padding: 65px 16px;
   display: grid;
   grid-template-columns: 0.85fr 1.15fr;
   gap: 70px;
@@ -706,7 +717,8 @@ main {
   margin: 0;
 }
 .closing-cta {
-  max-width: 1220px;
+  width: min(1188px, calc(100% - 32px));
+  max-width: 1188px;
   margin: 0 auto 70px;
   padding: 38px 44px;
   border-radius: 16px;
@@ -737,14 +749,14 @@ main {
 .footer {
   background: #0c1529;
   color: white;
-  padding: 40px max(30px, calc((100% - 1160px) / 2)) 22px;
+  padding: 40px max(16px, calc((100% - 1188px) / 2)) 72px;
   margin-top: auto;
 }
 .footer-top {
   display: grid;
-  grid-template-columns: 1.1fr 1fr 1.2fr;
+  grid-template-columns: 1.05fr 1fr 1.25fr;
   align-items: center;
-  gap: 30px;
+  gap: 28px;
   padding-bottom: 28px;
 }
 .brand-light {
@@ -763,10 +775,16 @@ main {
   color: #aab6c8;
   margin: 0;
 }
+.footer-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
 .footer-links {
   display: flex;
   justify-content: flex-end;
-  gap: 18px;
+  gap: 16px;
   flex-wrap: wrap;
   color: #c4cede;
   font-size: 12px;
@@ -774,6 +792,29 @@ main {
 }
 .footer-links a:hover {
   color: #81e1bd;
+}
+.footer-contact {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+.footer-contact a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #cbd5e1;
+  transition: color 0.18s;
+}
+.footer-contact a:hover {
+  color: #81e1bd;
+}
+.footer-contact svg {
+  color: #34d399;
+  flex-shrink: 0;
 }
 .footer-bottom {
   padding-top: 16px;
@@ -1662,15 +1703,16 @@ main {
     gap: 8px;
     padding: 8px 16px;
   }
-  .brand small {
-    display: none;
+  .site-header .brand small {
+    max-width: 130px;
+    font-size: 9px;
   }
   .main-nav {
     gap: 2px;
   }
   .main-nav a {
-    padding: 6px 7px;
-    font-size: 11px;
+    padding: 6px 8px;
+    font-size: 11.5px;
     gap: 3px;
   }
   .main-nav a svg {
@@ -1758,6 +1800,17 @@ main {
   .mobile-brand {
     display: block;
     margin-bottom: 28px;
+  }
+  .footer-top {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .footer-right {
+    align-items: flex-start;
+  }
+  .footer-links,
+  .footer-contact {
+    justify-content: flex-start;
   }
 }
 

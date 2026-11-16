@@ -107,7 +107,15 @@ export default function ContactPage() {
             </span>
             <div>
               <b>Phone &amp; WhatsApp Support</b>
-              <span>+263 77 210 9876 · Mon–Fri, 08:00–17:00 CAT</span>
+              <span>
+                <a
+                  href="tel:+263786113799"
+                  className="hover:text-[#08785f] underline-offset-2 hover:underline"
+                >
+                  +263 78 611 3799
+                </a>{" "}
+                · Mon–Fri, 08:00–17:00 CAT
+              </span>
             </div>
           </div>
 
@@ -117,7 +125,14 @@ export default function ContactPage() {
             </span>
             <div>
               <b>Email</b>
-              <span>contact@utare-zem.org · info@utarezem.ai</span>
+              <span>
+                <a
+                  href="mailto:utarezemai@gmail.com"
+                  className="hover:text-[#08785f] underline-offset-2 hover:underline"
+                >
+                  utarezemai@gmail.com
+                </a>
+              </span>
             </div>
           </div>
         </div>

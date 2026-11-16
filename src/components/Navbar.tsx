@@ -29,10 +29,9 @@ const PUBLIC_NAV_ITEMS = [
   { href: "/about", label: "About Us", icon: Info },
   { href: "/how-it-works", label: "How It Works", icon: HelpCircle },
   { href: "/opportunities", label: "Opportunities", icon: Briefcase },
-  { href: "/skills", label: "Skills Development", icon: BookOpen },
+  { href: "/skills", label: "Skills", icon: BookOpen },
   { href: "/hubs", label: "Hubs", icon: Building2 },
   { href: "/employers", label: "For Employers", icon: Globe },
-  { href: "/contact", label: "Contact", icon: Mail },
 ];
 
 const CANDIDATE_NAV_ITEMS = [
@@ -50,7 +49,6 @@ const EMPLOYER_NAV_ITEMS = [
   { href: "/employer", label: "Employer Portal", icon: Globe },
   { href: "/opportunities", label: "Opportunities", icon: Briefcase },
   { href: "/hubs", label: "Partner Hubs", icon: Building2 },
-  { href: "/contact", label: "Contact", icon: Mail },
 ];
 
 const ADMIN_NAV_ITEMS = [
@@ -133,6 +131,14 @@ export default function Navbar() {
 
           {/* Mobile Navigation Drawer Auth Section (< 768px) */}
           <div className="md:hidden border-t border-slate-200/90 pt-3 mt-2 flex flex-col gap-2.5 w-full">
+            <Link
+              href="/contact"
+              onClick={() => setMobileOpen(false)}
+              className="inline-flex items-center gap-1.5"
+            >
+              <Mail className="h-3.5 w-3.5 shrink-0" />
+              <span>Contact</span>
+            </Link>
             {isAdmin ? (
               <>
                 <div className="flex items-center gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 shadow-sm">
@@ -254,7 +260,7 @@ export default function Navbar() {
                 new CustomEvent("utare-open-video-walkthrough")
               )
             }
-            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50/90 px-2.5 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100 transition shadow-sm"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50/90 px-2.5 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100 transition shadow-sm whitespace-nowrap"
             title="Watch 2-Min Flow Demo"
             aria-label="Watch interactive platform flow demo"
           >
@@ -308,8 +314,8 @@ export default function Navbar() {
                   href="/employer"
                   className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50/80 px-2.5 py-1.5 text-xs font-semibold text-blue-900 hover:bg-blue-100 transition shadow-sm"
                 >
-                  <Building2 className="h-3.5 w-3.5 text-blue-700" />
-                  <span className="font-bold">
+                  <Building2 className="h-3.5 w-3.5 text-blue-700 shrink-0" />
+                  <span className="font-bold max-w-[120px] truncate">
                     {user.companyName || user.name}
                   </span>
                 </Link>
@@ -352,7 +358,7 @@ export default function Navbar() {
                   <span className="avatar" aria-hidden="true">
                     {user.name.slice(0, 2).toUpperCase()}
                   </span>
-                  <span className="font-bold">{user.name}</span>
+                  <span className="font-bold max-w-[120px] truncate">{user.name}</span>
                 </Link>
                 <Link
                   href="/account"
@@ -387,13 +393,13 @@ export default function Navbar() {
             <>
               {/* Desktop Controls */}
               <div className="hidden md:flex items-center gap-2">
-                <Link href="/login" className="signin-link">
+                <Link href="/login" className="signin-link whitespace-nowrap">
                   Sign In
                 </Link>
                 <Link
                   href="/login?tab=register"
-                  className="button button-green"
-                  style={{ minHeight: "38px", padding: "0 15px", fontSize: "12px" }}
+                  className="button button-green whitespace-nowrap"
+                  style={{ minHeight: "36px", padding: "0 14px", fontSize: "12px" }}
                 >
                   Create Account
                 </Link>
