@@ -9,6 +9,7 @@ import {
   saveEmployerRegistration,
 } from "@/lib/store";
 import { getSupabaseAdmin, isSupabaseConfigured, supabase } from "@/lib/supabase/client";
+import { resolveBootstrapRole } from "@/lib/auth-guard";
 import { CandidateProfile } from "@/types";
 
 export const runtime = "nodejs";
@@ -179,11 +180,12 @@ export async function POST(req: NextRequest) {
     }
 
     // 7. Persist AuthUser with hashed password and confirmation token
+    const assignedRole = resolveBootstrapRole(normalizedEmail, accountType);
     const authUser = createAuthUser({
       id: supabaseUserId,
       email: normalizedEmail,
       name: fullName,
-      role: accountType, // Only 'candidate' or 'employer' allowed from public signup
+      role: assignedRole,
       passwordHash,
       emailConfirmed: false,
       confirmationToken,

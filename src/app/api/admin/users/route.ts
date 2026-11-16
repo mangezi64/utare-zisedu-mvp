@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   adminUnauthorizedResponse,
-  isAdminRequest,
-  isSuperuserRequest,
+   getSessionFromRequest,
 } from "@/lib/auth-guard";
-import { listAuthUsers, updateUserRole } from "@/lib/store";
+import { findAuthUserByEmail, listAuthUsers, updateUserRole } from "@/lib/store";
 import { getSupabaseAdmin } from "@/lib/supabase/client";
 import { UserRole } from "@/types";
 
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  if (!(await isAdminRequest(req))) {
+  const session = await getSessionFromRequest(req);
+  if (!session || (session.role !== "admin" && session.role !== "superuser")) {
     return adminUnauthorizedResponse();
   }
   const users = listAuthUsers();
@@ -19,14 +19,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!(await isSuperuserRequest(req))) {
-    return NextResponse.json(
-      {
-        error:
-          "Forbidden. Only Superuser accounts can promote or demote user roles.",
-      },
-      { status: 403 }
-    );
+  const session = await getSessionFromRequest(req);
+  if (!session || (session.role !== "admin" && session.role !== "superuser")) {
+    return adminUnauthorizedResponse();
   }
 
   try {
@@ -47,9 +42,31 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    // Regular admins can upgrade normal users to 'admin', 'employer', or 'candidate'.
+    // Only a 'superuser' can grant or modify the 'superuser' role.
+    const existingTarget = findAuthUserByEmail(emailOrId);
+    if (
+      session.role !== "superuser" &&
+      (role === "superuser" || existingTarget?.role === "superuser")
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Only a Superuser can assign or modify the Superuser role. Admins can upgrade users to Admin.",
+        },
+        { status: 403 }
+      );
+    }
+
     const updated = updateUserRole(emailOrId, role);
     if (!updated) {
-      return NextResponse.json({ error: "User not found." }, { status: 404 });
+      return NextResponse.json(
+        {
+          error:
+            "No registered account found for that email. Ask your teammate to create an account on /login first, then upgrade them here.",
+        },
+        { status: 404 }
+      );
     }
 
     // Also sync role to Supabase Auth app_metadata if configured

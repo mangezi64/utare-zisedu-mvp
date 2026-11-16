@@ -58,6 +58,8 @@ export default function AdminConsolePage() {
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
   const [employers, setEmployers] = useState<EmployerRegistration[]>([]);
   const [authUsers, setAuthUsers] = useState<PublicAuthUser[]>([]);
+  const [upgradeEmailInput, setUpgradeEmailInput] = useState("");
+  const [upgradeRoleInput, setUpgradeRoleInput] = useState<UserRole>("admin");
   const [loading, setLoading] = useState(true);
 
   // Hub Form Modal / Drawer
@@ -353,14 +355,30 @@ export default function AdminConsolePage() {
       });
       const data = await res.json();
       if (res.ok && data.user) {
-        setAuthUsers((prev) =>
-          prev.map((u) => (u.email === email ? data.user : u))
-        );
-        notify(`Updated ${email} role to "${role}".`);
+        setAuthUsers((prev) => {
+          const exists = prev.some(
+            (u) => u.email.toLowerCase() === data.user.email.toLowerCase()
+          );
+          return exists
+            ? prev.map((u) =>
+                u.email.toLowerCase() === data.user.email.toLowerCase()
+                  ? data.user
+                  : u
+              )
+            : [data.user, ...prev];
+        });
+        notify(`Updated ${data.user.email} role to "${role}".`);
       } else {
         notify(data.error || "Could not update role.");
       }
     } catch {}
+  }
+
+  async function handleQuickUpgradeByEmail(e: React.FormEvent) {
+    e.preventDefault();
+    if (!upgradeEmailInput.trim()) return;
+    await handleChangeUserRole(upgradeEmailInput.trim(), upgradeRoleInput);
+    setUpgradeEmailInput("");
   }
 
   // AI Actions
@@ -594,20 +612,18 @@ export default function AdminConsolePage() {
           <span>Employers & Verification ({employers.length})</span>
         </button>
 
-        {isSuperuser && (
-          <button
-            type="button"
-            onClick={() => setActiveTab("users")}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
-              activeTab === "users"
-                ? "bg-slate-900 text-white shadow-sm"
-                : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-            }`}
-          >
-            <Shield className="h-4 w-4 text-amber-600" />
-            <span>User Roles ({authUsers.length})</span>
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setActiveTab("users")}
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
+            activeTab === "users"
+              ? "bg-slate-900 text-white shadow-sm"
+              : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+          }`}
+        >
+          <Shield className="h-4 w-4 text-amber-600" />
+          <span>Team &amp; User Roles ({authUsers.length})</span>
+        </button>
 
         <button
           type="button"
@@ -1501,19 +1517,61 @@ export default function AdminConsolePage() {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 4B: SUPERUSER ROLE MANAGEMENT */}
+      {/* TAB 4B: TEAM & USER ROLE MANAGEMENT (ADMIN & SUPERUSER) */}
       {/* ========================================================================= */}
-      {activeTab === "users" && isSuperuser && (
+      {activeTab === "users" && (
         <section className="space-y-6">
           <div>
             <h2 className="text-xl font-bold text-slate-900">
-              Account Role &amp; Access Management (Superuser Only)
+              Team &amp; Account Role Management
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Promote or demote registered accounts across Candidate, Employer,
-              Facilitator Admin, and Superuser roles.
+              Upgrade teammates who have created a regular account to{" "}
+              <strong>Admin</strong>, or adjust account roles across Candidate,
+              Employer, and Admin.
             </p>
           </div>
+
+          {/* Quick Upgrade Teammate by Email */}
+          <form
+            onSubmit={handleQuickUpgradeByEmail}
+            className="rounded-2xl border border-amber-200 bg-amber-50/60 p-5 space-y-3"
+          >
+            <div className="text-xs font-bold text-amber-950">
+              Quick Upgrade by Email (Teammate must create an account on /login
+              first):
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="email"
+                required
+                value={upgradeEmailInput}
+                onChange={(e) => setUpgradeEmailInput(e.target.value)}
+                placeholder="teammate@domain.com"
+                className="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs"
+              />
+              <select
+                value={upgradeRoleInput}
+                onChange={(e) =>
+                  setUpgradeRoleInput(e.target.value as UserRole)
+                }
+                className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-800"
+              >
+                <option value="admin">Upgrade to Admin</option>
+                <option value="employer">Set as Employer</option>
+                <option value="candidate">Set as Candidate</option>
+                {isSuperuser && (
+                  <option value="superuser">Upgrade to Superuser</option>
+                )}
+              </select>
+              <button
+                type="submit"
+                className="rounded-xl bg-amber-600 px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-amber-700 transition"
+              >
+                Apply Role
+              </button>
+            </div>
+          </form>
 
           <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
             <div className="divide-y divide-slate-200">
@@ -1532,7 +1590,15 @@ export default function AdminConsolePage() {
                         <span className="font-bold text-sm text-slate-900">
                           {u.name}
                         </span>
-                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-700">
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                            u.role === "admin" || u.role === "superuser"
+                              ? "bg-amber-100 text-amber-900"
+                              : u.role === "employer"
+                              ? "bg-blue-100 text-blue-900"
+                              : "bg-slate-100 text-slate-700"
+                          }`}
+                        >
                           {u.role}
                         </span>
                         {u.emailConfirmed ? (
@@ -1551,24 +1617,36 @@ export default function AdminConsolePage() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {u.role !== "admin" && u.role !== "superuser" && (
+                        <button
+                          type="button"
+                          onClick={() => handleChangeUserRole(u.email, "admin")}
+                          className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-700 transition"
+                        >
+                          Upgrade to Admin
+                        </button>
+                      )}
                       <label className="text-xs font-semibold text-slate-600">
                         Role:
                       </label>
                       <select
                         value={u.role}
+                        disabled={u.role === "superuser" && !isSuperuser}
                         onChange={(e) =>
                           handleChangeUserRole(
                             u.email,
                             e.target.value as UserRole
                           )
                         }
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800"
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 disabled:opacity-50"
                       >
                         <option value="candidate">candidate</option>
                         <option value="employer">employer</option>
                         <option value="admin">admin</option>
-                        <option value="superuser">superuser</option>
+                        {(isSuperuser || u.role === "superuser") && (
+                          <option value="superuser">superuser</option>
+                        )}
                       </select>
                     </div>
                   </div>

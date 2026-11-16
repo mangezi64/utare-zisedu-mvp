@@ -115,3 +115,35 @@ export function adminUnauthorizedResponse() {
 export function unauthorizedResponse(message = "Authentication required.") {
   return NextResponse.json({ error: message }, { status: 401 });
 }
+
+/**
+ * Checks whether an email address is listed in backend environment variables
+ * (`SUPERUSER_EMAILS` or `ADMIN_EMAILS`) so founding administrators can
+ * bootstrap the first admin account on serverless deployments (e.g. Vercel)
+ * after authenticating with a verified password, and then upgrade other team
+ * members directly from the Admin Console UI.
+ */
+export function resolveBootstrapRole(
+  email: string,
+  fallbackRole: UserRole = "candidate"
+): UserRole {
+  const normalized = email.trim().toLowerCase();
+  const superusers = (process.env.SUPERUSER_EMAILS || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  if (superusers.includes(normalized)) {
+    return "superuser";
+  }
+
+  const admins = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  if (admins.includes(normalized)) {
+    return "admin";
+  }
+
+  return fallbackRole;
+}
+
