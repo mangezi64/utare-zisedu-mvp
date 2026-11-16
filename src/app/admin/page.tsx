@@ -25,6 +25,7 @@ import {
   Globe,
 } from "lucide-react";
 import {
+  AuditLogEntry,
   EmployerRegistration,
   EmployerVerificationStatus,
   InnovationHub,
@@ -58,8 +59,12 @@ export default function AdminConsolePage() {
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
   const [employers, setEmployers] = useState<EmployerRegistration[]>([]);
   const [authUsers, setAuthUsers] = useState<PublicAuthUser[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [upgradeEmailInput, setUpgradeEmailInput] = useState("");
   const [upgradeRoleInput, setUpgradeRoleInput] = useState<UserRole>("admin");
+  const [adminResetEmail, setAdminResetEmail] = useState("");
+  const [adminResetPassword, setAdminResetPassword] = useState("Utare2026!");
+  const [resettingUserPw, setResettingUserPw] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Hub Form Modal / Drawer
@@ -122,7 +127,7 @@ export default function AdminConsolePage() {
   async function loadAllData() {
     setLoading(true);
     try {
-      const [hubsRes, jobsRes, candRes, aiRes, empRes, usersRes] =
+      const [hubsRes, jobsRes, candRes, aiRes, empRes, usersRes, auditRes] =
         await Promise.all([
           fetch("/api/admin/hubs", { credentials: "include" }).then((r) =>
             r.json()
@@ -140,6 +145,11 @@ export default function AdminConsolePage() {
           fetch("/api/admin/users", { credentials: "include" })
             .then((r) => r.json())
             .catch(() => ({ users: [] })),
+          fetch("/api/auth/attachments?email=all&audit=1", {
+            credentials: "include",
+          })
+            .then((r) => r.json())
+            .catch(() => ({ auditLogs: [] })),
         ]);
 
       if (hubsRes.hubs) setHubs(hubsRes.hubs);
@@ -148,6 +158,7 @@ export default function AdminConsolePage() {
       if (candRes.candidates) setCandidates(candRes.candidates);
       if (empRes && empRes.employers) setEmployers(empRes.employers);
       if (usersRes && usersRes.users) setAuthUsers(usersRes.users);
+      if (auditRes && auditRes.auditLogs) setAuditLogs(auditRes.auditLogs);
       if (aiRes) {
         setAiStatus(aiRes);
         if (aiRes.model) setModelInput(aiRes.model);
@@ -156,6 +167,37 @@ export default function AdminConsolePage() {
       console.error("Failed to load admin data:", err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleAdminResetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!adminResetEmail.trim() || !adminResetPassword) return;
+    setResettingUserPw(true);
+    try {
+      const res = await fetch("/api/auth/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          mode: "admin-reset",
+          email: adminResetEmail.trim().toLowerCase(),
+          newPassword: adminResetPassword,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        notify(
+          data.message ||
+            `Password for ${adminResetEmail} reset to "${adminResetPassword}"!`
+        );
+        setAdminResetEmail("");
+        loadAllData();
+      } else {
+        notify(data.error || "Failed to reset user password.");
+      }
+    } finally {
+      setResettingUserPw(false);
     }
   }
 
@@ -1585,6 +1627,42 @@ export default function AdminConsolePage() {
             </div>
           </form>
 
+          {/* Admin Password Override / Reset by Email */}
+          <form
+            onSubmit={handleAdminResetPassword}
+            className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 shadow-xs"
+          >
+            <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <KeyRound className="h-3.5 w-3.5 text-emerald-700" />
+              Admin Password Override &amp; Email Confirmation:
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="email"
+                required
+                value={adminResetEmail}
+                onChange={(e) => setAdminResetEmail(e.target.value)}
+                placeholder="user@example.com"
+                className="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs"
+              />
+              <input
+                type="text"
+                required
+                value={adminResetPassword}
+                onChange={(e) => setAdminResetPassword(e.target.value)}
+                placeholder="New password (e.g. Utare2026!)"
+                className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-mono"
+              />
+              <button
+                type="submit"
+                disabled={resettingUserPw}
+                className="rounded-xl bg-slate-900 px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-800 transition disabled:opacity-50"
+              >
+                {resettingUserPw ? "Setting..." : "Set User Password"}
+              </button>
+            </div>
+          </form>
+
           <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
             <div className="divide-y divide-slate-200">
               {authUsers.length === 0 ? (
@@ -1630,6 +1708,13 @@ export default function AdminConsolePage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setAdminResetEmail(u.email)}
+                        className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition"
+                      >
+                        Reset Password
+                      </button>
                       {u.role !== "admin" && u.role !== "superuser" && (
                         <button
                           type="button"
@@ -1665,6 +1750,52 @@ export default function AdminConsolePage() {
                 ))
               )}
             </div>
+          </div>
+
+          {/* System Audit & Activity Log (Who Changed What & When) */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 text-emerald-700" />
+                  Platform Audit &amp; Activity Log ({auditLogs.length})
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Tracks status transitions, document uploads, CV versions, and role updates with actor &amp; timestamp.
+                </p>
+              </div>
+            </div>
+
+            {auditLogs.length === 0 ? (
+              <p className="text-xs text-slate-500 py-4 text-center">
+                No audit events recorded yet. Actions across applications, documents, and roles will appear here.
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                {auditLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-3.5 py-2 text-xs"
+                  >
+                    <div>
+                      <span className="font-bold text-slate-900">
+                        {log.summary}
+                      </span>
+                      <div className="text-[11px] text-slate-500">
+                        Actor: <strong>{log.actorEmail}</strong> ({log.actorRole}) • Entity:{" "}
+                        <span className="uppercase">{log.entityType}</span>
+                        {log.previousValue && log.newValue
+                          ? ` • ${log.previousValue} → ${log.newValue}`
+                          : ""}
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-medium text-slate-400">
+                      {new Date(log.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       )}

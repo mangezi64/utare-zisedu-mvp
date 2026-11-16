@@ -223,6 +223,95 @@ CREATE TABLE IF NOT EXISTS public.contact_messages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- -----------------------------------------------------------------------------
+-- 10. PROFILE PICTURES & CANDIDATE CREDENTIAL ATTACHMENTS (VERSIONED)
+-- -----------------------------------------------------------------------------
+ALTER TABLE public.auth_users ADD COLUMN IF NOT EXISTS avatar_data_url TEXT;
+ALTER TABLE public.candidate_profiles ADD COLUMN IF NOT EXISTS avatar_data_url TEXT;
+ALTER TABLE public.candidate_profiles ADD COLUMN IF NOT EXISTS include_photo_on_cv BOOLEAN NOT NULL DEFAULT false;
+
+CREATE TABLE IF NOT EXISTS public.candidate_documents (
+  id TEXT PRIMARY KEY,
+  user_id TEXT,
+  candidate_id TEXT,
+  candidate_email TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'certificate', -- 'degree' | 'certificate' | 'transcript' | 'cv_upload' | 'portfolio' | 'other'
+  title TEXT NOT NULL,
+  issuer TEXT,
+  issue_year TEXT,
+  file_name TEXT NOT NULL,
+  mime_type TEXT NOT NULL,
+  file_size_bytes INTEGER NOT NULL DEFAULT 0,
+  data_url TEXT NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  is_latest BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_candidate_documents_email ON public.candidate_documents (LOWER(candidate_email));
+
+-- -----------------------------------------------------------------------------
+-- 11. VERSIONED TAILORED CV & APPLICATION LETTER ARTIFACTS
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.candidate_cv_artifacts (
+  id TEXT PRIMARY KEY,
+  user_id TEXT,
+  candidate_id TEXT,
+  candidate_email TEXT NOT NULL,
+  job_id TEXT,
+  job_title TEXT NOT NULL,
+  company TEXT NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  generated_cv JSONB NOT NULL,
+  generated_cover_letter JSONB NOT NULL,
+  source_details JSONB,
+  avatar_data_url TEXT,
+  include_photo BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_candidate_cv_artifacts_email ON public.candidate_cv_artifacts (LOWER(candidate_email));
+
+-- -----------------------------------------------------------------------------
+-- 12. AUDIT TRAIL, STATUS HISTORY & EMPLOYER SHARED DOCUMENTS / LINKS
+-- -----------------------------------------------------------------------------
+ALTER TABLE public.auth_users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.auth_users ADD COLUMN IF NOT EXISTS updated_by TEXT;
+
+ALTER TABLE public.candidate_profiles ADD COLUMN IF NOT EXISTS updated_by TEXT;
+
+ALTER TABLE public.remote_jobs ADD COLUMN IF NOT EXISTS company_website TEXT;
+ALTER TABLE public.remote_jobs ADD COLUMN IF NOT EXISTS external_role_url TEXT;
+ALTER TABLE public.remote_jobs ADD COLUMN IF NOT EXISTS attachment_documents JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.remote_jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.remote_jobs ADD COLUMN IF NOT EXISTS updated_by TEXT;
+
+ALTER TABLE public.job_applications ADD COLUMN IF NOT EXISTS attached_document_ids TEXT[] DEFAULT '{}';
+ALTER TABLE public.job_applications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.job_applications ADD COLUMN IF NOT EXISTS updated_by TEXT;
+ALTER TABLE public.job_applications ADD COLUMN IF NOT EXISTS status_history JSONB DEFAULT '[]'::jsonb;
+
+ALTER TABLE public.employer_registrations ADD COLUMN IF NOT EXISTS career_page_url TEXT;
+ALTER TABLE public.employer_registrations ADD COLUMN IF NOT EXISTS shared_documents JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.employer_registrations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.employer_registrations ADD COLUMN IF NOT EXISTS updated_by TEXT;
+
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+  id TEXT PRIMARY KEY,
+  entity_type TEXT NOT NULL, -- 'user' | 'candidate' | 'job' | 'application' | 'employer' | 'document' | 'cv_artifact'
+  entity_id TEXT NOT NULL,
+  action TEXT NOT NULL,      -- e.g. 'status_change', 'password_reset', 'document_upload', 'job_posted', 'application_submitted'
+  actor_email TEXT NOT NULL,
+  actor_role TEXT NOT NULL,
+  previous_value TEXT,
+  new_value TEXT,
+  summary TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON public.audit_logs (entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.audit_logs (created_at DESC);
+
 -- =============================================================================
 -- SEED DATA: Zimbabwe Innovation Hubs, Coaches, and Verified Remote Roles
 -- =============================================================================

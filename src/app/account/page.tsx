@@ -20,9 +20,22 @@ import {
   ShieldCheck,
   Globe,
   LogOut,
+  KeyRound,
+  Upload,
+  Trash2,
+  Camera,
+  Award,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { CandidateProfile, ZimbabweanCity } from "@/types";
+import {
+  CandidateCvArtifact,
+  CandidateDocument,
+  CandidateDocumentCategory,
+  CandidateProfile,
+  GeneratedCoverLetter,
+  GeneratedCv,
+  ZimbabweanCity,
+} from "@/types";
 import { JobApplicationRecord, StoredCandidateRecord } from "@/lib/store";
 import { useViewMode } from "@/lib/view-mode-context";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
@@ -52,9 +65,42 @@ export default function CandidateAccountPage() {
   const [candidate, setCandidate] = useState<StoredCandidateRecord | null>(null);
   const [profile, setProfile] = useState<CandidateProfile>(DEFAULT_PROFILE);
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
+  const [documents, setDocuments] = useState<CandidateDocument[]>([]);
+  const [cvArtifacts, setCvArtifacts] = useState<CandidateCvArtifact[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Password Change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  // Document Upload state
+  const [docCategory, setDocCategory] = useState<CandidateDocumentCategory>("degree");
+  const [docTitle, setDocTitle] = useState("");
+  const [docIssuer, setDocIssuer] = useState("");
+  const [docYear, setDocYear] = useState("2024");
+  const [docFile, setDocFile] = useState<{
+    fileName: string;
+    mimeType: string;
+    fileSizeBytes: number;
+    dataUrl: string;
+  } | null>(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  function loadAttachments() {
+    fetch("/api/auth/attachments")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.documents) setDocuments(data.documents);
+        if (data.cvArtifacts) setCvArtifacts(data.cvArtifacts);
+      })
+      .catch(() => {});
+  }
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -95,7 +141,10 @@ export default function CandidateAccountPage() {
               (a: JobApplicationRecord) =>
                 (user.name && a.candidateName.toLowerCase() === user.name.toLowerCase()) ||
                 (user.id && a.candidateId === user.id) ||
-                (user.email && a.candidateId === user.email)
+                (user.email && a.candidateId === user.email) ||
+                (user.email &&
+                  a.candidateEmail &&
+                  a.candidateEmail.toLowerCase() === user.email.toLowerCase())
             );
             setApplications(userApps);
           } else {
@@ -104,6 +153,8 @@ export default function CandidateAccountPage() {
         }
       })
       .catch(() => {});
+
+    loadAttachments();
   }, [user, isAuthenticated]);
 
   if (!isAuthenticated) {
@@ -161,6 +212,218 @@ export default function CandidateAccountPage() {
     }
   }
 
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement("canvas");
+        const maxDim = 240;
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        setProfile((prev) => ({
+          ...prev,
+          avatarDataUrl: compressedDataUrl,
+          includePhotoOnCv: true,
+        }));
+        const res = await fetch("/api/auth/attachments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "avatar",
+            avatarDataUrl: compressedDataUrl,
+            includePhotoOnCv: true,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data.candidate) {
+          setCandidate(data.candidate);
+          setProfile(data.candidate.profile);
+          setStatusMessage("Profile photo uploaded & enabled for your tailored CVs!");
+        }
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function handleTogglePhotoOnCv(includePhoto: boolean) {
+    setProfile((prev) => ({ ...prev, includePhotoOnCv: includePhoto }));
+    await fetch("/api/auth/attachments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "avatar",
+        avatarDataUrl: profile.avatarDataUrl,
+        includePhotoOnCv: includePhoto,
+      }),
+    }).catch(() => {});
+  }
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPasswordError(null);
+    if (!currentPassword || !newPassword) {
+      setPasswordError("Please enter both your current and new password.");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError("New password and confirmation do not match.");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      const res = await fetch("/api/auth/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "change",
+          currentPassword,
+          newPassword,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setPasswordError(data.error || "Failed to update password.");
+        return;
+      }
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setStatusMessage(data.message || "Password updated successfully!");
+    } catch {
+      setPasswordError("Unable to reach server. Please try again.");
+    } finally {
+      setChangingPassword(false);
+    }
+  }
+
+  function handleDocFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 4.5 * 1024 * 1024) {
+      setStatusMessage("File exceeds 4.5 MB limit. Please upload a smaller PDF or image.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setDocFile({
+        fileName: file.name,
+        mimeType: file.type || "application/octet-stream",
+        fileSizeBytes: file.size,
+        dataUrl: String(reader.result),
+      });
+      if (!docTitle) {
+        setDocTitle(file.name.replace(/\.[^.]+$/, ""));
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function handleUploadDocument(e: React.FormEvent) {
+    e.preventDefault();
+    if (!docFile || !docTitle.trim()) return;
+    setUploadingDoc(true);
+    try {
+      const res = await fetch("/api/auth/attachments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "document",
+          category: docCategory,
+          title: docTitle.trim(),
+          issuer: docIssuer.trim() || undefined,
+          issueYear: docYear.trim() || undefined,
+          ...docFile,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.document) {
+        setDocTitle("");
+        setDocIssuer("");
+        setDocFile(null);
+        loadAttachments();
+        setStatusMessage(data.message || "Credential document uploaded!");
+      }
+    } finally {
+      setUploadingDoc(false);
+    }
+  }
+
+  async function handleDeleteDocument(id: string) {
+    await fetch(`/api/auth/attachments?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    loadAttachments();
+    setStatusMessage("Document removed.");
+  }
+
+  async function handleDownloadCvDocx(cv: GeneratedCv, key: string) {
+    setDownloadingId(key);
+    try {
+      const enrichedCv: GeneratedCv = {
+        ...cv,
+        avatarDataUrl: cv.avatarDataUrl || profile.avatarDataUrl,
+        includePhotoOnCv:
+          cv.includePhotoOnCv !== undefined
+            ? cv.includePhotoOnCv
+            : Boolean(profile.includePhotoOnCv),
+      };
+      const res = await fetch("/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ format: "cv-docx", cv: enrichedCv }),
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${cv.fullName.replace(/\s+/g, "_")}_Tailored_CV.docx`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } finally {
+      setDownloadingId(null);
+    }
+  }
+
+  async function handleDownloadLetterDocx(
+    coverLetter: GeneratedCoverLetter,
+    key: string
+  ) {
+    setDownloadingId(key);
+    try {
+      const res = await fetch("/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ format: "letter-docx", coverLetter }),
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${coverLetter.fullName.replace(
+          /\s+/g,
+          "_"
+        )}_Application_Letter.docx`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } finally {
+      setDownloadingId(null);
+    }
+  }
+
   const assignedHub = candidate?.pathway.recommendedHub;
   const assignedCoach = candidate?.pathway.assignedCoach;
   const milestones = candidate?.pathway.upskillingMilestones || [];
@@ -199,8 +462,31 @@ export default function CandidateAccountPage() {
       {/* Candidate Header / Summary Banner */}
       <div className="rounded-3xl border border-emerald-200 bg-white p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-700 text-white font-extrabold text-2xl shadow-sm">
-            {profile.fullName.charAt(0)}
+          <div className="relative group">
+            {profile.avatarDataUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={profile.avatarDataUrl}
+                alt={profile.fullName}
+                className="h-16 w-16 rounded-2xl object-cover border-2 border-emerald-600 shadow-sm"
+              />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-700 text-white font-extrabold text-2xl shadow-sm">
+                {profile.fullName.charAt(0)}
+              </div>
+            )}
+            <label
+              title="Upload or change profile picture"
+              className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-slate-900 text-white shadow-md hover:bg-emerald-700 transition"
+            >
+              <Camera className="h-3.5 w-3.5" />
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+            </label>
           </div>
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-0.5 text-xs font-bold text-emerald-900">
@@ -213,6 +499,15 @@ export default function CandidateAccountPage() {
             <p className="text-xs sm:text-sm text-slate-600">
               {profile.highestQualification} in {profile.fieldOfStudy} • {profile.city}
             </p>
+            <label className="inline-flex items-center gap-1.5 pt-0.5 text-[11px] font-semibold text-emerald-800 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={Boolean(profile.includePhotoOnCv)}
+                onChange={(e) => handleTogglePhotoOnCv(e.target.checked)}
+                className="rounded border-slate-300 text-emerald-700"
+              />
+              Include my profile photo on generated CVs (.docx & PDF)
+            </label>
           </div>
         </div>
 
@@ -477,6 +772,76 @@ export default function CandidateAccountPage() {
             )}
           </div>
 
+          {/* Security & Password Update Card */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                <KeyRound className="h-4 w-4 text-emerald-700" />
+                Security &amp; Password Update
+              </h3>
+              <span className="text-[11px] font-semibold text-slate-400">
+                Synced with Supabase Auth
+              </span>
+            </div>
+
+            {passwordError && (
+              <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-800">
+                {passwordError}
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Current Password *
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    New Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Min 8 chars"
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Confirm New *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    placeholder="Repeat new password"
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={changingPassword}
+                className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-800 transition disabled:opacity-50"
+              >
+                {changingPassword ? "Updating Password..." : "Update My Password"}
+              </button>
+            </form>
+          </div>
+
           {/* Quick Tools Access Card */}
           <div className="rounded-2xl border border-slate-200 bg-emerald-50/50 p-5 shadow-xs space-y-3">
             <h3 className="text-sm font-bold text-emerald-950 flex items-center gap-1.5">
@@ -644,6 +1009,240 @@ export default function CandidateAccountPage() {
             </div>
           )}
 
+          {/* Degrees, Certificates & Supporting Documents Vault (Versioned) */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-emerald-700" />
+                <h3 className="text-base font-bold text-slate-900">
+                  Degrees, Certificates &amp; Supporting Documents ({documents.length})
+                </h3>
+              </div>
+              <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+                Versioned Vault
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              Upload your academic degrees, professional certificates, transcripts, or portfolio files. Re-uploading a credential with the same title automatically versions it (v1, v2, v3) and shares the latest verified version with employers when you apply.
+            </p>
+
+            <form
+              onSubmit={handleUploadDocument}
+              className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3"
+            >
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Document Category *
+                  </label>
+                  <select
+                    value={docCategory}
+                    onChange={(e) =>
+                      setDocCategory(e.target.value as CandidateDocumentCategory)
+                    }
+                    className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs"
+                  >
+                    <option value="degree">Bachelors / Masters Degree</option>
+                    <option value="certificate">Professional Certificate</option>
+                    <option value="transcript">Academic Transcript</option>
+                    <option value="cv_upload">Existing CV / Resume</option>
+                    <option value="portfolio">Portfolio / Work Sample</option>
+                    <option value="other">Other Supporting Document</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Document Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={docTitle}
+                    onChange={(e) => setDocTitle(e.target.value)}
+                    placeholder="e.g. BSc Computer Science Degree"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Institution &amp; Year
+                  </label>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      value={docIssuer}
+                      onChange={(e) => setDocIssuer(e.target.value)}
+                      placeholder="e.g. UZ / NUST"
+                      className="w-2/3 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs"
+                    />
+                    <input
+                      type="text"
+                      value={docYear}
+                      onChange={(e) => setDocYear(e.target.value)}
+                      placeholder="2024"
+                      className="w-1/3 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                <label className="inline-flex items-center gap-2 cursor-pointer rounded-lg border border-dashed border-emerald-400 bg-white px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-50 transition">
+                  <Upload className="h-3.5 w-3.5" />
+                  <span>
+                    {docFile
+                      ? `${docFile.fileName} (${Math.round(
+                          docFile.fileSizeBytes / 1024
+                        )} KB)`
+                      : "Choose PDF, Image, or Word File"}
+                  </span>
+                  <input
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                    onChange={handleDocFileSelect}
+                    className="hidden"
+                  />
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={!docFile || !docTitle.trim() || uploadingDoc}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition disabled:opacity-50"
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  {uploadingDoc ? "Uploading..." : "Upload & Save Version"}
+                </button>
+              </div>
+            </form>
+
+            {documents.length === 0 ? (
+              <div className="py-4 text-center text-xs text-slate-500">
+                No degrees or certificates uploaded yet. Upload your credentials above to attach them to your profile and job applications.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {documents.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-xs"
+                  >
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-900">
+                          {doc.title}
+                        </span>
+                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                          v{doc.version} {doc.isLatest ? "· Latest" : ""}
+                        </span>
+                        <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-700">
+                          {doc.category}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-500">
+                        {doc.issuer ? `${doc.issuer} • ` : ""}
+                        {doc.issueYear ? `${doc.issueYear} • ` : ""}
+                        {doc.fileName} ({Math.max(1, Math.round(doc.fileSizeBytes / 1024))} KB)
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={doc.dataUrl}
+                        download={doc.fileName}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100"
+                      >
+                        <Download className="h-3 w-3" />
+                        Download
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteDocument(doc.id)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-white px-2 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-50"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Saved Versioned Tailored CVs & Application Letters */}
+          {cvArtifacts.length > 0 && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-emerald-700" />
+                  <h3 className="text-base font-bold text-slate-900">
+                    Saved Tailored CVs &amp; Application Letters ({cvArtifacts.length})
+                  </h3>
+                </div>
+                <span className="text-[11px] font-semibold text-slate-500">
+                  Version History
+                </span>
+              </div>
+
+              <div className="space-y-2.5">
+                {cvArtifacts.map((art) => (
+                  <div
+                    key={art.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 text-xs"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-900">
+                          {art.jobTitle} — {art.company}
+                        </span>
+                        <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-800">
+                          Version v{art.version}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        Generated {new Date(art.createdAt).toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={downloadingId === `cv-${art.id}`}
+                        onClick={() =>
+                          handleDownloadCvDocx(art.generatedCv, `cv-${art.id}`)
+                        }
+                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-800 transition disabled:opacity-50"
+                      >
+                        <Download className="h-3 w-3" />
+                        {downloadingId === `cv-${art.id}`
+                          ? "Exporting..."
+                          : "Download CV (.docx)"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={downloadingId === `let-${art.id}`}
+                        onClick={() =>
+                          handleDownloadLetterDocx(
+                            art.generatedCoverLetter,
+                            `let-${art.id}`
+                          )
+                        }
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition disabled:opacity-50"
+                      >
+                        <Download className="h-3 w-3" />
+                        {downloadingId === `let-${art.id}`
+                          ? "Exporting..."
+                          : "Download Letter (.docx)"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Job Applications Submitted */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -674,7 +1273,7 @@ export default function CandidateAccountPage() {
                 {applications.map((app) => (
                   <div
                     key={app.id}
-                    className="rounded-xl border border-slate-200 p-4 text-xs space-y-2 bg-slate-50/50"
+                    className="rounded-xl border border-slate-200 p-4 text-xs space-y-2.5 bg-slate-50/50"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
@@ -712,11 +1311,48 @@ export default function CandidateAccountPage() {
                       &quot;{app.tailoredResumePitch}&quot;
                     </p>
 
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-                      <span>Applied: {new Date(app.appliedAt).toLocaleDateString()}</span>
-                      <span className="text-emerald-700 font-semibold">
-                        Grounded CV Attached
-                      </span>
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 pt-1">
+                      <div>
+                        <span>Applied: {new Date(app.appliedAt).toLocaleDateString()}</span>
+                        {app.updatedAt && app.updatedBy && (
+                          <span className="ml-2 text-slate-400">
+                            • Updated {new Date(app.updatedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {app.generatedCv && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDownloadCvDocx(
+                                app.generatedCv!,
+                                `app-cv-${app.id}`
+                              )
+                            }
+                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-800 transition"
+                          >
+                            <Download className="h-3 w-3" />
+                            Download CV (.docx)
+                          </button>
+                        )}
+                        {app.generatedCoverLetter && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDownloadLetterDocx(
+                                app.generatedCoverLetter!,
+                                `app-let-${app.id}`
+                              )
+                            }
+                            className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition"
+                          >
+                            <Download className="h-3 w-3" />
+                            Download Letter (.docx)
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

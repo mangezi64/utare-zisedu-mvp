@@ -73,6 +73,58 @@ function LoginForm() {
   const [registerSuccess, setRegisterSuccess] = useState("");
   const [confirmationPath, setConfirmationPath] = useState<string | null>(null);
 
+  // Forgot / Reset Password state
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetFullName, setResetFullName] = useState("");
+  const [resetNewPassword, setResetNewPassword] = useState("");
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [resetSuccessMsg, setResetSuccessMsg] = useState("");
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    setResetSuccessMsg("");
+    if (!loginEmail.trim() || !resetFullName.trim() || !resetNewPassword) {
+      setLoginError(
+        "Please enter your registered email, full name, and new password."
+      );
+      return;
+    }
+    const pwCheck = validatePassword(resetNewPassword);
+    if (!pwCheck.isValid) {
+      setLoginError(pwCheck.error || "Please choose a stronger password.");
+      return;
+    }
+    setResettingPassword(true);
+    try {
+      const res = await fetch("/api/auth/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "reset",
+          email: loginEmail.trim().toLowerCase(),
+          fullName: resetFullName.trim(),
+          newPassword: resetNewPassword,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setLoginError(data.error || "Password reset failed.");
+        return;
+      }
+      setResetSuccessMsg(
+        data.message || "Password updated! You can now sign in below."
+      );
+      setLoginPassword(resetNewPassword);
+      setShowResetPassword(false);
+      setResetNewPassword("");
+    } catch {
+      setLoginError("Could not reach the server. Please try again.");
+    } finally {
+      setResettingPassword(false);
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
@@ -417,51 +469,140 @@ function LoginForm() {
 
           {/* TAB 1: Unified Sign In */}
           {tab === "login" && (
-            <form onSubmit={handleSignIn} className="form-stack">
-              <label className="field">
-                <span>Email address</span>
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  placeholder="you@example.com"
-                />
-              </label>
+            <div className="form-stack">
+              {resetSuccessMsg && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-900">
+                  ✓ {resetSuccessMsg}
+                </div>
+              )}
 
-              <div className="field">
-                <span>Password</span>
-                <PasswordInput
-                  value={loginPassword}
-                  onChange={setLoginPassword}
-                  autoComplete="current-password"
-                />
-              </div>
+              {!showResetPassword ? (
+                <form onSubmit={handleSignIn} className="form-stack">
+                  <label className="field">
+                    <span>Email address</span>
+                    <input
+                      type="email"
+                      required
+                      autoComplete="email"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="you@example.com"
+                    />
+                  </label>
 
-              <button
-                type="submit"
-                disabled={isLoggingIn}
-                className="button button-wide button-green disabled:opacity-50"
-              >
-                {isLoggingIn ? "Signing In..." : "Sign In"}
-                <ArrowRight className="h-4 w-4" />
-              </button>
+                  <div className="field">
+                    <div className="flex items-center justify-between">
+                      <span>Password</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowResetPassword(true);
+                          setLoginError("");
+                          setResetSuccessMsg("");
+                        }}
+                        className="text-xs font-semibold text-[#08785f] hover:underline"
+                      >
+                        Forgot password? Reset here
+                      </button>
+                    </div>
+                    <PasswordInput
+                      value={loginPassword}
+                      onChange={setLoginPassword}
+                      autoComplete="current-password"
+                    />
+                  </div>
 
-              <p className="text-center text-xs text-[#667085] pt-2">
-                Don&apos;t have an account yet?{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTab("register");
-                    setLoginError("");
-                  }}
-                  className="text-button"
+                  <button
+                    type="submit"
+                    disabled={isLoggingIn}
+                    className="button button-wide button-green disabled:opacity-50"
+                  >
+                    {isLoggingIn ? "Signing In..." : "Sign In"}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+
+                  <p className="text-center text-xs text-[#667085] pt-2">
+                    Don&apos;t have an account yet?{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTab("register");
+                        setLoginError("");
+                      }}
+                      className="text-button"
+                    >
+                      Create an account
+                    </button>
+                  </p>
+                </form>
+              ) : (
+                <form
+                  onSubmit={handleResetPassword}
+                  className="form-stack rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
                 >
-                  Create an account
-                </button>
-              </p>
-            </form>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-bold text-slate-900">
+                      Reset Your Account Password
+                    </h3>
+                    <p className="text-xs text-slate-600">
+                      Verify your registered email and full name to set a new password immediately.
+                    </p>
+                  </div>
+
+                  <label className="field">
+                    <span>Registered Email *</span>
+                    <input
+                      type="email"
+                      required
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="you@example.com"
+                    />
+                  </label>
+
+                  <label className="field">
+                    <span>Registered Full Name *</span>
+                    <input
+                      type="text"
+                      required
+                      value={resetFullName}
+                      onChange={(e) => setResetFullName(e.target.value)}
+                      placeholder="e.g. Rutendo Mangezi"
+                    />
+                  </label>
+
+                  <div className="field">
+                    <span>New Password *</span>
+                    <PasswordInput
+                      value={resetNewPassword}
+                      onChange={setResetNewPassword}
+                      placeholder="Min 8 chars, upper, lower & number"
+                      autoComplete="new-password"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="submit"
+                      disabled={resettingPassword}
+                      className="button button-green flex-1 disabled:opacity-50"
+                    >
+                      {resettingPassword ? "Updating..." : "Update Password"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowResetPassword(false);
+                        setLoginError("");
+                      }}
+                      className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
 
           {/* TAB 2: Create Account (Candidate or Employer) */}

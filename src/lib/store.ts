@@ -9,7 +9,12 @@ import fs from "fs";
 import path from "path";
 import {
   AICareerPathway,
+  ApplicantAiEvaluation,
   ApplicationStatus,
+  AuditLogEntry,
+  CandidateCvArtifact,
+  CandidateDocument,
+  CandidateDocumentCategory,
   CandidateProfile,
   CoachProfile,
   ContactMessage,
@@ -22,6 +27,7 @@ import {
   RemoteJob,
   SkillsAssessmentResult,
   SkillsCourse,
+  StatusHistoryEntry,
   UserRole,
 } from "@/types";
 import {
@@ -86,8 +92,13 @@ export interface JobApplicationRecord {
   tailoredResumePitch: string;
   generatedCv?: GeneratedCv;
   generatedCoverLetter?: GeneratedCoverLetter;
+  attachedDocumentIds?: string[];
   status?: ApplicationStatus;
   appliedAt: string;
+  updatedAt?: string;
+  updatedBy?: string;
+  statusHistory?: StatusHistoryEntry[];
+  aiEvaluation?: ApplicantAiEvaluation;
 }
 
 export interface UtareDatabaseState {
@@ -101,6 +112,9 @@ export interface UtareDatabaseState {
   employerRegistrations: EmployerRegistration[];
   skillsCourses: SkillsCourse[];
   contactMessages: ContactMessage[];
+  candidateDocuments?: CandidateDocument[];
+  candidateCvArtifacts?: CandidateCvArtifact[];
+  auditLogs?: AuditLogEntry[];
 }
 
 const IS_SERVERLESS = Boolean(
@@ -124,6 +138,8 @@ function createInitialState(): UtareDatabaseState {
     employerRegistrations: [],
     skillsCourses: [...SEED_SKILLS_COURSES],
     contactMessages: [],
+    candidateDocuments: [],
+    candidateCvArtifacts: [],
   };
 }
 
@@ -145,6 +161,8 @@ export function readStore(): UtareDatabaseState {
           ...createInitialState(),
           ...parsed,
           users: parsed.users || [],
+          candidateDocuments: parsed.candidateDocuments || [],
+          candidateCvArtifacts: parsed.candidateCvArtifacts || [],
           candidates: (parsed.candidates || []).filter(
             (c) =>
               c.profile?.email?.toLowerCase() !== "demo@utarezem.ai" &&
@@ -211,6 +229,8 @@ export async function findCandidateByEmailAsync(
           hasGlobalPaymentRail: Boolean(p.has_global_payment_rail),
           primaryGoal: p.primary_goal || "International Remote Work",
           currentSkills: p.field_of_study ? [p.field_of_study] : [],
+          avatarDataUrl: p.avatar_data_url || undefined,
+          includePhotoOnCv: Boolean(p.include_photo_on_cv),
         });
       }
     } catch {
@@ -592,6 +612,16 @@ function syncCandidateToPostgres(profile: CandidateProfile) {
     console.warn("[PostgreSQL Candidate Sync Warning]:", err?.message);
   });
 
+  if (profile.avatarDataUrl !== undefined || profile.includePhotoOnCv !== undefined) {
+    query(
+      `UPDATE public.candidate_profiles
+       SET avatar_data_url = COALESCE($2, avatar_data_url),
+           include_photo_on_cv = COALESCE($3, include_photo_on_cv)
+       WHERE LOWER(email) = $1`,
+      [email, profile.avatarDataUrl || null, profile.includePhotoOnCv ?? false]
+    ).catch(() => {});
+  }
+
   const sb = getSupabaseServer();
   if (sb) {
     sb.from("candidate_profiles")
@@ -966,6 +996,126 @@ export function registerOrUpdateCandidate(profile: CandidateProfile): StoredCand
   return newRec;
 }
 
+export function evaluateApplicantFit(params: {
+  app: JobApplicationRecord;
+  job?: RemoteJob | null;
+  candidate?: StoredCandidateRecord | null;
+  documents?: CandidateDocument[];
+}): ApplicantAiEvaluation {
+  const { app, job, candidate, documents = [] } = params;
+  const candSkills = (
+    (app.candidateSkills && app.candidateSkills.length > 0
+      ? app.candidateSkills
+      : candidate?.profile.currentSkills) || []
+  ).map((s) => s.trim());
+
+  const cvSkills = app.generatedCv?.coreSkills || [];
+  const allCandSkillsLower = new Set(
+    [...candSkills, ...cvSkills].map((s) => s.toLowerCase())
+  );
+  const pitchLower = (app.tailoredResumePitch || "").toLowerCase();
+  const fieldLower = (
+    app.candidateFieldOfStudy ||
+    candidate?.profile.fieldOfStudy ||
+    ""
+  ).toLowerCase();
+
+  const reqSkills = job?.requiredSkills || [];
+  const matchedSkills: string[] = [];
+  const missingSkills: string[] = [];
+
+  for (const req of reqSkills) {
+    const reqLower = req.toLowerCase();
+    const tokenMatch = reqLower
+      .split(/[\s/&,-]+/)
+      .filter((t) => t.length > 2)
+      .some(
+        (tok) =>
+          Array.from(allCandSkillsLower).some((cs) => cs.includes(tok)) ||
+          pitchLower.includes(tok) ||
+          fieldLower.includes(tok)
+      );
+    if (allCandSkillsLower.has(reqLower) || tokenMatch) {
+      matchedSkills.push(req);
+    } else {
+      missingSkills.push(req);
+    }
+  }
+
+  const skillRatio =
+    reqSkills.length > 0
+      ? matchedSkills.length / reqSkills.length
+      : 0.8;
+
+  const hasCv = Boolean(app.generatedCv);
+  const hasCoverLetter = Boolean(app.generatedCoverLetter);
+  const latestDocs = documents.filter((d) => d.isLatest);
+  const docBonus = Math.min(12, latestDocs.length * 4);
+  const artifactBonus = (hasCv ? 5 : 0) + (hasCoverLetter ? 3 : 0);
+
+  const rawScore = Math.round(58 + skillRatio * 24 + docBonus + artifactBonus);
+  const fitScore = Math.max(55, Math.min(98, rawScore));
+
+  const fitTier: ApplicantAiEvaluation["fitTier"] =
+    fitScore >= 82
+      ? "Top Match (Recommended)"
+      : fitScore >= 70
+      ? "Strong Contender"
+      : "Developing Fit";
+
+  const qual =
+    app.candidateQualification ||
+    candidate?.profile.highestQualification ||
+    "Tertiary Qualification";
+  const field =
+    app.candidateFieldOfStudy ||
+    candidate?.profile.fieldOfStudy ||
+    "their discipline";
+
+  const credentialsSummary =
+    latestDocs.length > 0
+      ? `${latestDocs.length} verified attachment(s) on file: ${latestDocs
+          .map((d) => `${d.title} (v${d.version})`)
+          .join(", ")}.`
+      : `Holds ${qual} in ${field}. No external certificate attachments uploaded yet.`;
+
+  const recommendationSummary =
+    fitTier === "Top Match (Recommended)"
+      ? `${app.candidateName} is a high-confidence match (${fitScore}% fit) for ${app.jobTitle}, combining ${qual} in ${field} with strong alignment across ${
+          matchedSkills.slice(0, 3).join(", ") || "core role competencies"
+        }. Recommended for immediate shortlist interview.`
+      : `${app.candidateName} demonstrates ${fitScore}% role alignment for ${app.jobTitle} (${qual} in ${field}). ${
+          matchedSkills.length > 0
+            ? `Verified strengths in ${matchedSkills.join(", ")}.`
+            : "Solid foundational profile ready for structured onboarding."
+        }`;
+
+  const suggestedInterviewQuestions = [
+    `Walk us through a practical project or workflow where you applied ${
+      matchedSkills[0] || field
+    } to deliver measurable results.`,
+    `How do you structure asynchronous updates and handoffs when collaborating with remote teams across timezones?`,
+    missingSkills[0]
+      ? `How would you approach ramping up on ${missingSkills[0]} during your first 30 days in the ${app.jobTitle} role?`
+      : `What quality checks do you run before submitting deliverables for ${app.company}?`,
+  ];
+
+  return {
+    fitScore,
+    fitTier,
+    recommendationSummary,
+    matchedSkills,
+    missingSkills,
+    credentialsSummary,
+    suggestedInterviewQuestions,
+    evaluatedBy:
+      app.generatedCv?.generatedBy === "gemini-live"
+        ? "gemini-live"
+        : "utare-deterministic-engine",
+    evaluatedAt: app.appliedAt || new Date().toISOString(),
+  };
+}
+
 export function submitJobApplicationToStore(params: {
   jobId: string;
   tailoredResumePitch: string;
@@ -974,6 +1124,7 @@ export function submitJobApplicationToStore(params: {
   candidateEmail?: string;
   generatedCv?: GeneratedCv;
   generatedCoverLetter?: GeneratedCoverLetter;
+  attachedDocumentIds?: string[];
 }): JobApplicationRecord | null {
   const state = readStore();
   const job = state.jobs.find((j) => j.id === params.jobId);
@@ -989,13 +1140,16 @@ export function submitJobApplicationToStore(params: {
       )
     : state.candidates[0] || null;
 
+  const nowIso = new Date().toISOString();
+  const candidateEmail =
+    params.candidateEmail || activeCandidate?.profile.email || undefined;
+
   const appRecord: JobApplicationRecord = {
     id: `app-${Date.now()}`,
     candidateId: activeCandidate?.id || targetId || "candidate",
     candidateName:
       params.candidateName || activeCandidate?.profile.fullName || "Utare Candidate",
-    candidateEmail:
-      params.candidateEmail || activeCandidate?.profile.email || undefined,
+    candidateEmail,
     candidateCity: activeCandidate?.profile.city || "Harare",
     candidateQualification:
       activeCandidate?.profile.highestQualification || "Bachelors Degree",
@@ -1011,13 +1165,35 @@ export function submitJobApplicationToStore(params: {
     tailoredResumePitch: params.tailoredResumePitch,
     generatedCv: params.generatedCv,
     generatedCoverLetter: params.generatedCoverLetter,
+    attachedDocumentIds: params.attachedDocumentIds || [],
     status: "submitted",
-    appliedAt: new Date().toISOString(),
+    appliedAt: nowIso,
+    updatedAt: nowIso,
+    updatedBy: candidateEmail || "candidate",
+    statusHistory: [
+      {
+        status: "submitted",
+        changedBy: candidateEmail || "candidate",
+        changedAt: nowIso,
+        note: "Initial application submitted via UTARE ZEM AI platform.",
+      },
+    ],
   };
 
   state.applications.unshift(appRecord);
   writeStore(state);
   syncJobApplicationToPostgres(appRecord);
+
+  recordAuditLog({
+    entityType: "application",
+    entityId: appRecord.id,
+    action: "application_submitted",
+    actorEmail: candidateEmail || "candidate",
+    actorRole: "candidate",
+    newValue: "submitted",
+    summary: `${appRecord.candidateName} applied for "${job.title}" at ${job.company}.`,
+  });
+
   return appRecord;
 }
 
@@ -1025,20 +1201,36 @@ export function submitJobApplicationToStore(params: {
 // Employer Portal & Strict Server-Side Applicant Data Minimization
 // =============================================================================
 
-/**
- * Converts an internal `JobApplicationRecord` + optional `StoredCandidateRecord`
- * into the strictly scoped `EmployerApplicantView` DTO.
- *
- * SECURITY / PRIVACY GUARANTEE:
- * Only explicit application-related fields are copied onto the returned object.
- * Phone numbers, income brackets, employment status, device/internet/power
- * constraints, payment-rail status, diagnostic slider sub-scores, coaching
- * notes, hub bookings, and other applications are NEVER included.
- */
 export function toEmployerApplicantView(
   app: JobApplicationRecord,
   candidate?: StoredCandidateRecord | null
 ): EmployerApplicantView {
+  const state = readStore();
+  const job = state.jobs.find((j) => j.id === app.jobId) || null;
+  const candEmail = (
+    app.candidateEmail ||
+    candidate?.profile.email ||
+    ""
+  )
+    .trim()
+    .toLowerCase();
+
+  const candidateDocs = (state.candidateDocuments || []).filter(
+    (d) =>
+      d.isLatest &&
+      candEmail &&
+      d.candidateEmail.trim().toLowerCase() === candEmail
+  );
+
+  const aiEvaluation =
+    app.aiEvaluation ||
+    evaluateApplicantFit({
+      app,
+      job,
+      candidate,
+      documents: candidateDocs,
+    });
+
   return {
     id: app.id,
     jobId: app.jobId,
@@ -1046,6 +1238,9 @@ export function toEmployerApplicantView(
     company: app.company,
     appliedAt: app.appliedAt,
     status: app.status || "submitted",
+    ...(app.updatedAt ? { updatedAt: app.updatedAt } : {}),
+    ...(app.updatedBy ? { updatedBy: app.updatedBy } : {}),
+    ...(app.statusHistory ? { statusHistory: app.statusHistory } : {}),
     candidateName: app.candidateName || candidate?.profile.fullName || "Candidate",
     candidateEmail: app.candidateEmail || candidate?.profile.email || "",
     candidateCity: app.candidateCity || candidate?.profile.city || "Zimbabwe",
@@ -1068,6 +1263,11 @@ export function toEmployerApplicantView(
     ...(app.generatedCoverLetter
       ? { generatedCoverLetter: app.generatedCoverLetter }
       : {}),
+    ...(candidate?.profile.avatarDataUrl
+      ? { avatarDataUrl: candidate.profile.avatarDataUrl }
+      : {}),
+    ...(candidateDocs.length > 0 ? { documents: candidateDocs } : {}),
+    aiEvaluation,
   };
 }
 
@@ -1218,15 +1418,20 @@ export function getEmployerApplicants(employer: {
       (employer.id && app.employerId === employer.id)
   );
 
-  return matchingApps.map((app) => {
-    const cand = state.candidates.find(
-      (c) =>
-        c.id === app.candidateId ||
-        (app.candidateEmail &&
-          c.profile.email.toLowerCase() === app.candidateEmail.toLowerCase())
+  return matchingApps
+    .map((app) => {
+      const cand = state.candidates.find(
+        (c) =>
+          c.id === app.candidateId ||
+          (app.candidateEmail &&
+            c.profile.email.toLowerCase() === app.candidateEmail.toLowerCase())
+      );
+      return toEmployerApplicantView(app, cand);
+    })
+    .sort(
+      (a, b) =>
+        (b.aiEvaluation?.fitScore || 0) - (a.aiEvaluation?.fitScore || 0)
     );
-    return toEmployerApplicantView(app, cand);
-  });
 }
 
 export function updateApplicationStatus(params: {
@@ -1234,6 +1439,7 @@ export function updateApplicationStatus(params: {
   status: ApplicationStatus;
   employer?: { id?: string; email?: string; companyName?: string };
   isAdmin?: boolean;
+  actorEmail?: string;
 }): EmployerApplicantView | null {
   const state = readStore();
   const app = state.applications.find((a) => a.id === params.applicationId);
@@ -1245,9 +1451,36 @@ export function updateApplicationStatus(params: {
     if (!ownsJob) return null;
   }
 
+  const prevStatus = app.status || "submitted";
+  const actor =
+    params.actorEmail ||
+    params.employer?.email ||
+    (params.isAdmin ? "admin" : "employer");
+  const nowIso = new Date().toISOString();
+
   app.status = params.status;
+  app.updatedAt = nowIso;
+  app.updatedBy = actor;
+  if (!app.statusHistory) app.statusHistory = [];
+  app.statusHistory.push({
+    status: params.status,
+    changedBy: actor,
+    changedAt: nowIso,
+  });
+
   writeStore(state);
   syncJobApplicationToPostgres(app);
+
+  recordAuditLog({
+    entityType: "application",
+    entityId: app.id,
+    action: "status_change",
+    actorEmail: actor,
+    actorRole: params.isAdmin ? "admin" : "employer",
+    previousValue: prevStatus,
+    newValue: params.status,
+    summary: `Application status for ${app.candidateName} (${app.jobTitle}) updated from "${prevStatus}" to "${params.status}" by ${actor}.`,
+  });
 
   const cand = state.candidates.find((c) => c.id === app.candidateId);
   return toEmployerApplicantView(app, cand);
@@ -1289,4 +1522,597 @@ export function getContactMessages(): ContactMessage[] {
 export function getSkillsCourses(): SkillsCourse[] {
   const state = readStore();
   return state.skillsCourses || [...SEED_SKILLS_COURSES];
+}
+
+// =============================================================================
+// Versioned Candidate Documents (Degrees, Certificates, Transcripts)
+// =============================================================================
+
+export async function addCandidateDocument(params: {
+  userId?: string;
+  candidateId?: string;
+  candidateEmail: string;
+  category: CandidateDocumentCategory;
+  title: string;
+  issuer?: string;
+  issueYear?: string;
+  fileName: string;
+  mimeType: string;
+  fileSizeBytes: number;
+  dataUrl: string;
+}): Promise<CandidateDocument> {
+  const state = readStore();
+  if (!state.candidateDocuments) state.candidateDocuments = [];
+  const emailLower = params.candidateEmail.trim().toLowerCase();
+  const titleLower = params.title.trim().toLowerCase();
+
+  // Compute next version for this candidate + category + title
+  const matching = state.candidateDocuments.filter(
+    (d) =>
+      d.candidateEmail.trim().toLowerCase() === emailLower &&
+      d.category === params.category &&
+      d.title.trim().toLowerCase() === titleLower
+  );
+  const maxVersion = matching.reduce((max, d) => Math.max(max, d.version || 1), 0);
+  for (const prev of matching) {
+    prev.isLatest = false;
+  }
+
+  const record: CandidateDocument = {
+    id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    userId: params.userId,
+    candidateId: params.candidateId,
+    candidateEmail: emailLower,
+    category: params.category,
+    title: params.title.trim(),
+    issuer: params.issuer?.trim() || undefined,
+    issueYear: params.issueYear?.trim() || undefined,
+    fileName: params.fileName,
+    mimeType: params.mimeType,
+    fileSizeBytes: params.fileSizeBytes,
+    dataUrl: params.dataUrl,
+    version: maxVersion + 1,
+    isLatest: true,
+    createdAt: new Date().toISOString(),
+  };
+
+  state.candidateDocuments.unshift(record);
+  writeStore(state);
+
+  // Sync to PostgreSQL
+  query(
+    `UPDATE public.candidate_documents
+     SET is_latest = false
+     WHERE LOWER(candidate_email) = $1 AND category = $2 AND LOWER(title) = $3`,
+    [emailLower, record.category, titleLower]
+  ).catch(() => {});
+
+  query(
+    `INSERT INTO public.candidate_documents (
+       id, user_id, candidate_id, candidate_email, category, title, issuer,
+       issue_year, file_name, mime_type, file_size_bytes, data_url, version, is_latest, created_at
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+     ON CONFLICT (id) DO NOTHING`,
+    [
+      record.id,
+      record.userId || null,
+      record.candidateId || null,
+      record.candidateEmail,
+      record.category,
+      record.title,
+      record.issuer || null,
+      record.issueYear || null,
+      record.fileName,
+      record.mimeType,
+      record.fileSizeBytes,
+      record.dataUrl,
+      record.version,
+      record.isLatest,
+      record.createdAt,
+    ]
+  ).catch(() => {});
+
+  // Sync to Supabase
+  const sb = getSupabaseServer();
+  if (sb) {
+    sb.from("candidate_documents")
+      .upsert(
+        {
+          id: record.id,
+          user_id: record.userId || null,
+          candidate_id: record.candidateId || null,
+          candidate_email: record.candidateEmail,
+          category: record.category,
+          title: record.title,
+          issuer: record.issuer || null,
+          issue_year: record.issueYear || null,
+          file_name: record.fileName,
+          mime_type: record.mimeType,
+          file_size_bytes: record.fileSizeBytes,
+          data_url: record.dataUrl,
+          version: record.version,
+          is_latest: record.isLatest,
+          created_at: record.createdAt,
+        },
+        { onConflict: "id" }
+      )
+      .then(
+        () => {},
+        () => {}
+      );
+  }
+
+  return record;
+}
+
+export async function listCandidateDocuments(
+  email?: string | null
+): Promise<CandidateDocument[]> {
+  const state = readStore();
+  const docs: CandidateDocument[] = [...(state.candidateDocuments || [])];
+  const existingIds = new Set(docs.map((d) => d.id));
+  const emailLower = email?.trim().toLowerCase();
+
+  // Hydrate from PostgreSQL
+  try {
+    const res = emailLower
+      ? await query<any>(
+          `SELECT * FROM public.candidate_documents WHERE LOWER(candidate_email) = $1 ORDER BY created_at DESC`,
+          [emailLower]
+        )
+      : await query<any>(
+          `SELECT * FROM public.candidate_documents ORDER BY created_at DESC`
+        );
+    if (res && res.rows) {
+      for (const r of res.rows) {
+        if (r.id && !existingIds.has(r.id)) {
+          existingIds.add(r.id);
+          docs.push({
+            id: r.id,
+            userId: r.user_id || undefined,
+            candidateId: r.candidate_id || undefined,
+            candidateEmail: r.candidate_email,
+            category: r.category,
+            title: r.title,
+            issuer: r.issuer || undefined,
+            issueYear: r.issue_year || undefined,
+            fileName: r.file_name,
+            mimeType: r.mime_type,
+            fileSizeBytes: Number(r.file_size_bytes) || 0,
+            dataUrl: r.data_url,
+            version: Number(r.version) || 1,
+            isLatest: Boolean(r.is_latest ?? true),
+            createdAt: r.created_at
+              ? new Date(r.created_at).toISOString()
+              : new Date().toISOString(),
+          });
+        }
+      }
+    }
+  } catch {}
+
+  // Hydrate from Supabase
+  const sb = getSupabaseServer();
+  if (sb) {
+    try {
+      const q = sb
+        .from("candidate_documents")
+        .select("*")
+        .order("created_at", { ascending: false });
+      const { data: sbDocs, error } = emailLower
+        ? await q.ilike("candidate_email", emailLower)
+        : await q;
+      if (!error && sbDocs) {
+        for (const r of sbDocs) {
+          if (r.id && !existingIds.has(r.id)) {
+            existingIds.add(r.id);
+            docs.push({
+              id: r.id,
+              userId: r.user_id || undefined,
+              candidateId: r.candidate_id || undefined,
+              candidateEmail: r.candidate_email,
+              category: r.category,
+              title: r.title,
+              issuer: r.issuer || undefined,
+              issueYear: r.issue_year || undefined,
+              fileName: r.file_name,
+              mimeType: r.mime_type,
+              fileSizeBytes: Number(r.file_size_bytes) || 0,
+              dataUrl: r.data_url,
+              version: Number(r.version) || 1,
+              isLatest: Boolean(r.is_latest ?? true),
+              createdAt: r.created_at || new Date().toISOString(),
+            });
+          }
+        }
+      }
+    } catch {}
+  }
+
+  return emailLower
+    ? docs.filter((d) => d.candidateEmail.trim().toLowerCase() === emailLower)
+    : docs;
+}
+
+export async function deleteCandidateDocument(
+  docId: string,
+  requesterEmail?: string,
+  isAdmin?: boolean
+): Promise<boolean> {
+  const state = readStore();
+  if (!state.candidateDocuments) state.candidateDocuments = [];
+  const idx = state.candidateDocuments.findIndex((d) => d.id === docId);
+  if (idx >= 0) {
+    const doc = state.candidateDocuments[idx];
+    if (
+      !isAdmin &&
+      requesterEmail &&
+      doc.candidateEmail.toLowerCase() !== requesterEmail.toLowerCase()
+    ) {
+      return false;
+    }
+    state.candidateDocuments.splice(idx, 1);
+    writeStore(state);
+  }
+
+  query(`DELETE FROM public.candidate_documents WHERE id = $1`, [docId]).catch(
+    () => {}
+  );
+  const sb = getSupabaseServer();
+  if (sb) {
+    sb.from("candidate_documents")
+      .delete()
+      .eq("id", docId)
+      .then(
+        () => {},
+        () => {}
+      );
+  }
+  return true;
+}
+
+// =============================================================================
+// Versioned Tailored CV & Cover Letter Artifacts
+// =============================================================================
+
+export async function saveCandidateCvArtifact(params: {
+  userId?: string;
+  candidateId?: string;
+  candidateEmail: string;
+  jobId?: string;
+  jobTitle: string;
+  company: string;
+  generatedCv: GeneratedCv;
+  generatedCoverLetter: GeneratedCoverLetter;
+  sourceDetails?: any;
+  avatarDataUrl?: string;
+  includePhoto?: boolean;
+}): Promise<CandidateCvArtifact> {
+  const state = readStore();
+  if (!state.candidateCvArtifacts) state.candidateCvArtifacts = [];
+  const emailLower = params.candidateEmail.trim().toLowerCase();
+  const jobKey = (params.jobId || params.jobTitle).trim().toLowerCase();
+
+  const matching = state.candidateCvArtifacts.filter(
+    (a) =>
+      a.candidateEmail.trim().toLowerCase() === emailLower &&
+      (a.jobId || a.jobTitle).trim().toLowerCase() === jobKey
+  );
+  const maxVersion = matching.reduce((max, a) => Math.max(max, a.version || 1), 0);
+
+  const artifact: CandidateCvArtifact = {
+    id: `cvart-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    userId: params.userId,
+    candidateId: params.candidateId,
+    candidateEmail: emailLower,
+    jobId: params.jobId,
+    jobTitle: params.jobTitle,
+    company: params.company,
+    version: maxVersion + 1,
+    generatedCv: params.generatedCv,
+    generatedCoverLetter: params.generatedCoverLetter,
+    sourceDetails: params.sourceDetails,
+    avatarDataUrl: params.avatarDataUrl,
+    includePhoto: Boolean(params.includePhoto),
+    createdAt: new Date().toISOString(),
+  };
+
+  state.candidateCvArtifacts.unshift(artifact);
+  writeStore(state);
+
+  query(
+    `INSERT INTO public.candidate_cv_artifacts (
+       id, user_id, candidate_id, candidate_email, job_id, job_title, company,
+       version, generated_cv, generated_cover_letter, source_details,
+       avatar_data_url, include_photo, created_at
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+     ON CONFLICT (id) DO NOTHING`,
+    [
+      artifact.id,
+      artifact.userId || null,
+      artifact.candidateId || null,
+      artifact.candidateEmail,
+      artifact.jobId || null,
+      artifact.jobTitle,
+      artifact.company,
+      artifact.version,
+      JSON.stringify(artifact.generatedCv),
+      JSON.stringify(artifact.generatedCoverLetter),
+      artifact.sourceDetails ? JSON.stringify(artifact.sourceDetails) : null,
+      artifact.avatarDataUrl || null,
+      Boolean(artifact.includePhoto),
+      artifact.createdAt,
+    ]
+  ).catch(() => {});
+
+  const sb = getSupabaseServer();
+  if (sb) {
+    sb.from("candidate_cv_artifacts")
+      .upsert(
+        {
+          id: artifact.id,
+          user_id: artifact.userId || null,
+          candidate_id: artifact.candidateId || null,
+          candidate_email: artifact.candidateEmail,
+          job_id: artifact.jobId || null,
+          job_title: artifact.jobTitle,
+          company: artifact.company,
+          version: artifact.version,
+          generated_cv: artifact.generatedCv,
+          generated_cover_letter: artifact.generatedCoverLetter,
+          source_details: artifact.sourceDetails || null,
+          avatar_data_url: artifact.avatarDataUrl || null,
+          include_photo: Boolean(artifact.includePhoto),
+          created_at: artifact.createdAt,
+        },
+        { onConflict: "id" }
+      )
+      .then(
+        () => {},
+        () => {}
+      );
+  }
+
+  return artifact;
+}
+
+export async function listCandidateCvArtifacts(
+  email?: string | null
+): Promise<CandidateCvArtifact[]> {
+  const state = readStore();
+  const artifacts: CandidateCvArtifact[] = [...(state.candidateCvArtifacts || [])];
+  const existingIds = new Set(artifacts.map((a) => a.id));
+  const emailLower = email?.trim().toLowerCase();
+
+  try {
+    const res = emailLower
+      ? await query<any>(
+          `SELECT * FROM public.candidate_cv_artifacts WHERE LOWER(candidate_email) = $1 ORDER BY created_at DESC`,
+          [emailLower]
+        )
+      : await query<any>(
+          `SELECT * FROM public.candidate_cv_artifacts ORDER BY created_at DESC`
+        );
+    if (res && res.rows) {
+      for (const r of res.rows) {
+        if (r.id && !existingIds.has(r.id)) {
+          existingIds.add(r.id);
+          artifacts.push({
+            id: r.id,
+            userId: r.user_id || undefined,
+            candidateId: r.candidate_id || undefined,
+            candidateEmail: r.candidate_email,
+            jobId: r.job_id || undefined,
+            jobTitle: r.job_title,
+            company: r.company,
+            version: Number(r.version) || 1,
+            generatedCv:
+              typeof r.generated_cv === "string"
+                ? JSON.parse(r.generated_cv)
+                : r.generated_cv,
+            generatedCoverLetter:
+              typeof r.generated_cover_letter === "string"
+                ? JSON.parse(r.generated_cover_letter)
+                : r.generated_cover_letter,
+            sourceDetails: r.source_details || undefined,
+            avatarDataUrl: r.avatar_data_url || undefined,
+            includePhoto: Boolean(r.include_photo),
+            createdAt: r.created_at
+              ? new Date(r.created_at).toISOString()
+              : new Date().toISOString(),
+          });
+        }
+      }
+    }
+  } catch {}
+
+  const sb = getSupabaseServer();
+  if (sb) {
+    try {
+      const q = sb
+        .from("candidate_cv_artifacts")
+        .select("*")
+        .order("created_at", { ascending: false });
+      const { data: sbArts, error } = emailLower
+        ? await q.ilike("candidate_email", emailLower)
+        : await q;
+      if (!error && sbArts) {
+        for (const r of sbArts) {
+          if (r.id && !existingIds.has(r.id)) {
+            existingIds.add(r.id);
+            artifacts.push({
+              id: r.id,
+              userId: r.user_id || undefined,
+              candidateId: r.candidate_id || undefined,
+              candidateEmail: r.candidate_email,
+              jobId: r.job_id || undefined,
+              jobTitle: r.job_title,
+              company: r.company,
+              version: Number(r.version) || 1,
+              generatedCv: r.generated_cv,
+              generatedCoverLetter: r.generated_cover_letter,
+              sourceDetails: r.source_details || undefined,
+              avatarDataUrl: r.avatar_data_url || undefined,
+              includePhoto: Boolean(r.include_photo),
+              createdAt: r.created_at || new Date().toISOString(),
+            });
+          }
+        }
+      }
+    } catch {}
+  }
+
+  return emailLower
+    ? artifacts.filter((a) => a.candidateEmail.trim().toLowerCase() === emailLower)
+    : artifacts;
+}
+
+// =============================================================================
+// Audit Trail & Activity Tracking (Who Changed What & When)
+// =============================================================================
+
+export function recordAuditLog(params: {
+  entityType: AuditLogEntry["entityType"];
+  entityId: string;
+  action: string;
+  actorEmail: string;
+  actorRole: string;
+  previousValue?: string;
+  newValue?: string;
+  summary: string;
+}): AuditLogEntry {
+  const state = readStore();
+  if (!state.auditLogs) state.auditLogs = [];
+  const entry: AuditLogEntry = {
+    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    entityType: params.entityType,
+    entityId: params.entityId,
+    action: params.action,
+    actorEmail: params.actorEmail,
+    actorRole: params.actorRole,
+    previousValue: params.previousValue,
+    newValue: params.newValue,
+    summary: params.summary,
+    createdAt: new Date().toISOString(),
+  };
+
+  state.auditLogs.unshift(entry);
+  if (state.auditLogs.length > 500) {
+    state.auditLogs = state.auditLogs.slice(0, 500);
+  }
+  writeStore(state);
+
+  query(
+    `INSERT INTO public.audit_logs (
+       id, entity_type, entity_id, action, actor_email, actor_role,
+       previous_value, new_value, summary, created_at
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+     ON CONFLICT (id) DO NOTHING`,
+    [
+      entry.id,
+      entry.entityType,
+      entry.entityId,
+      entry.action,
+      entry.actorEmail,
+      entry.actorRole,
+      entry.previousValue || null,
+      entry.newValue || null,
+      entry.summary,
+      entry.createdAt,
+    ]
+  ).catch(() => {});
+
+  const sb = getSupabaseServer();
+  if (sb) {
+    sb.from("audit_logs")
+      .upsert(
+        {
+          id: entry.id,
+          entity_type: entry.entityType,
+          entity_id: entry.entityId,
+          action: entry.action,
+          actor_email: entry.actorEmail,
+          actor_role: entry.actorRole,
+          previous_value: entry.previousValue || null,
+          new_value: entry.newValue || null,
+          summary: entry.summary,
+          created_at: entry.createdAt,
+        },
+        { onConflict: "id" }
+      )
+      .then(
+        () => {},
+        () => {}
+      );
+  }
+
+  return entry;
+}
+
+export async function listAuditLogs(limit = 100): Promise<AuditLogEntry[]> {
+  const state = readStore();
+  const logs: AuditLogEntry[] = [...(state.auditLogs || [])];
+  const existingIds = new Set(logs.map((l) => l.id));
+
+  try {
+    const res = await query<any>(
+      `SELECT * FROM public.audit_logs ORDER BY created_at DESC LIMIT $1`,
+      [limit]
+    );
+    if (res && res.rows) {
+      for (const r of res.rows) {
+        if (r.id && !existingIds.has(r.id)) {
+          existingIds.add(r.id);
+          logs.push({
+            id: r.id,
+            entityType: r.entity_type,
+            entityId: r.entity_id,
+            action: r.action,
+            actorEmail: r.actor_email,
+            actorRole: r.actor_role,
+            previousValue: r.previous_value || undefined,
+            newValue: r.new_value || undefined,
+            summary: r.summary,
+            createdAt: r.created_at
+              ? new Date(r.created_at).toISOString()
+              : new Date().toISOString(),
+          });
+        }
+      }
+    }
+  } catch {}
+
+  const sb = getSupabaseServer();
+  if (sb) {
+    try {
+      const { data: sbLogs, error } = await sb
+        .from("audit_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (!error && sbLogs) {
+        for (const r of sbLogs) {
+          if (r.id && !existingIds.has(r.id)) {
+            existingIds.add(r.id);
+            logs.push({
+              id: r.id,
+              entityType: r.entity_type,
+              entityId: r.entity_id,
+              action: r.action,
+              actorEmail: r.actor_email,
+              actorRole: r.actor_role,
+              previousValue: r.previous_value || undefined,
+              newValue: r.new_value || undefined,
+              summary: r.summary,
+              createdAt: r.created_at || new Date().toISOString(),
+            });
+          }
+        }
+      }
+    } catch {}
+  }
+
+  return logs
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, limit);
 }

@@ -9,6 +9,7 @@ import {
   AlignmentType,
   BorderStyle,
   Document,
+  ImageRun,
   Packer,
   Paragraph,
   TabStopPosition,
@@ -68,7 +69,33 @@ const PAGE = {
 };
 
 export async function cvToDocxBuffer(cv: GeneratedCv): Promise<Buffer> {
-  const children: Paragraph[] = [
+  const children: Paragraph[] = [];
+
+  if (cv.includePhotoOnCv && cv.avatarDataUrl && cv.avatarDataUrl.startsWith("data:image/")) {
+    try {
+      const match = cv.avatarDataUrl.match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/i);
+      if (match) {
+        const imgType = match[1].toLowerCase() === "png" ? "png" : "jpg";
+        const imgBuffer = Buffer.from(match[2], "base64");
+        children.push(
+          new Paragraph({
+            spacing: { after: 80 },
+            children: [
+              new ImageRun({
+                data: imgBuffer,
+                transformation: { width: 84, height: 84 },
+                type: imgType,
+              }),
+            ],
+          })
+        );
+      }
+    } catch {
+      // Non-fatal if image parsing fails
+    }
+  }
+
+  children.push(
     new Paragraph({
       spacing: { after: 40 },
       children: [new TextRun({ text: cv.fullName, bold: true, size: 40, font: FONT, color: "111111" })],
@@ -82,8 +109,8 @@ export async function cvToDocxBuffer(cv: GeneratedCv): Promise<Buffer> {
       children: [new TextRun({ text: cv.contactLine, size: 19, font: FONT, color: MUTED })],
     }),
     sectionHeading("Profile"),
-    body(cv.summary),
-  ];
+    body(cv.summary)
+  );
 
   if (cv.coreSkills.length) {
     children.push(sectionHeading("Core Skills"), body(cv.coreSkills.join("  ·  ")));

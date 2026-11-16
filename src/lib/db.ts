@@ -12,9 +12,86 @@ import { Pool, QueryResult, QueryResultRow } from "pg";
 
 const connectionString =
   process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.SUPABASE_DB_URL ||
   "postgresql://utare_user:utare_password@localhost:5432/utare_db";
 
 let pool: Pool | null = null;
+let schemaMigrated = false;
+
+const AUTO_MIGRATION_SQL = `
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS avatar_data_url TEXT;
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS updated_by TEXT;
+
+ALTER TABLE IF EXISTS public.candidate_profiles ADD COLUMN IF NOT EXISTS avatar_data_url TEXT;
+ALTER TABLE IF EXISTS public.candidate_profiles ADD COLUMN IF NOT EXISTS include_photo_on_cv BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE IF EXISTS public.candidate_profiles ADD COLUMN IF NOT EXISTS updated_by TEXT;
+
+ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS company_website TEXT;
+ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS external_role_url TEXT;
+ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS attachment_documents JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS updated_by TEXT;
+
+ALTER TABLE IF EXISTS public.job_applications ADD COLUMN IF NOT EXISTS attached_document_ids TEXT[] DEFAULT '{}';
+ALTER TABLE IF EXISTS public.job_applications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE IF EXISTS public.job_applications ADD COLUMN IF NOT EXISTS updated_by TEXT;
+ALTER TABLE IF EXISTS public.job_applications ADD COLUMN IF NOT EXISTS status_history JSONB DEFAULT '[]'::jsonb;
+
+ALTER TABLE IF EXISTS public.employer_registrations ADD COLUMN IF NOT EXISTS career_page_url TEXT;
+ALTER TABLE IF EXISTS public.employer_registrations ADD COLUMN IF NOT EXISTS shared_documents JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE IF EXISTS public.employer_registrations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE IF EXISTS public.employer_registrations ADD COLUMN IF NOT EXISTS updated_by TEXT;
+
+CREATE TABLE IF NOT EXISTS public.candidate_documents (
+  id TEXT PRIMARY KEY,
+  user_id TEXT,
+  candidate_id TEXT,
+  candidate_email TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'certificate',
+  title TEXT NOT NULL,
+  issuer TEXT,
+  issue_year TEXT,
+  file_name TEXT NOT NULL,
+  mime_type TEXT NOT NULL,
+  file_size_bytes INTEGER NOT NULL DEFAULT 0,
+  data_url TEXT NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  is_latest BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.candidate_cv_artifacts (
+  id TEXT PRIMARY KEY,
+  user_id TEXT,
+  candidate_id TEXT,
+  candidate_email TEXT NOT NULL,
+  job_id TEXT,
+  job_title TEXT NOT NULL,
+  company TEXT NOT NULL,
+  version INTEGER NOT NULL DEFAULT 1,
+  generated_cv JSONB NOT NULL,
+  generated_cover_letter JSONB NOT NULL,
+  source_details JSONB,
+  avatar_data_url TEXT,
+  include_photo BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+  id TEXT PRIMARY KEY,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  actor_email TEXT NOT NULL,
+  actor_role TEXT NOT NULL,
+  previous_value TEXT,
+  new_value TEXT,
+  summary TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+`;
 
 function getPool(): Pool {
   if (!pool) {
@@ -31,11 +108,23 @@ function getPool(): Pool {
   return pool;
 }
 
+export async function ensureDatabaseSchema(): Promise<void> {
+  if (schemaMigrated) return;
+  schemaMigrated = true;
+  try {
+    const p = getPool();
+    await p.query(AUTO_MIGRATION_SQL);
+  } catch {
+    // Non-fatal if running in fallback mode without direct PG socket
+  }
+}
+
 export async function query<T extends QueryResultRow = any>(
   text: string,
   params?: any[]
 ): Promise<QueryResult<T> | null> {
   try {
+    await ensureDatabaseSchema();
     const p = getPool();
     return await p.query<T>(text, params);
   } catch (err: any) {

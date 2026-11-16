@@ -6,6 +6,7 @@ import {
   findEmployerById,
   getEmployerApplicants,
   getEmployerJobs,
+  recordAuditLog,
   saveEmployerRegistration,
   updateApplicationStatus,
   updateJobStatus,
@@ -130,12 +131,18 @@ export async function POST(req: NextRequest) {
       session.role === "admin" ||
       session.role === "superuser";
 
+    const nowIso = new Date().toISOString();
     const newJob: RemoteJob = {
       id: `job-emp-${Date.now()}`,
       title,
       company: employer.companyName,
       employerId: employer.id,
       employerEmail: employer.email,
+      companyWebsite: String(body.companyWebsite || employer.website || "").trim() || undefined,
+      externalRoleUrl: String(body.externalRoleUrl || body.sourceUrl || "").trim() || undefined,
+      attachmentDocuments: Array.isArray(body.attachmentDocuments)
+        ? body.attachmentDocuments
+        : undefined,
       category,
       industry: String(body.industry || employer.industry || "Technology"),
       level: body.level || "Entry",
@@ -155,10 +162,23 @@ export async function POST(req: NextRequest) {
       applicationUrl: String(body.applicationUrl || "#apply-platform"),
       status: isVerified ? "approved" : "pending_review",
       discoveredBy: "employer-posted",
-      discoveredAt: new Date().toISOString(),
+      discoveredAt: nowIso,
+      updatedAt: nowIso,
+      updatedBy: session.email,
     };
 
     const savedJob = addJobToStore(newJob);
+
+    recordAuditLog({
+      entityType: "job",
+      entityId: savedJob.id,
+      action: "job_posted",
+      actorEmail: session.email,
+      actorRole: session.role,
+      newValue: savedJob.status,
+      summary: `Employer ${employer.companyName} posted role "${savedJob.title}" (${savedJob.status}).`,
+    });
+
     return NextResponse.json({
       success: true,
       job: savedJob,
@@ -192,6 +212,37 @@ export async function PATCH(req: NextRequest) {
       companyName: employer?.companyName || session.companyName,
     };
 
+    if (body.action === "update_employer_profile" && employer) {
+      const updatedEmp = saveEmployerRegistration({
+        ...employer,
+        website:
+          body.website !== undefined ? String(body.website).trim() : employer.website,
+        careerPageUrl:
+          body.careerPageUrl !== undefined
+            ? String(body.careerPageUrl).trim()
+            : employer.careerPageUrl,
+        sharedDocuments: Array.isArray(body.sharedDocuments)
+          ? body.sharedDocuments
+          : employer.sharedDocuments,
+        updatedAt: new Date().toISOString(),
+        updatedBy: session.email,
+      });
+
+      recordAuditLog({
+        entityType: "employer",
+        entityId: updatedEmp.id,
+        action: "employer_profile_updated",
+        actorEmail: session.email,
+        actorRole: session.role,
+        summary: `Updated company website, career links & shared documents for ${updatedEmp.companyName}.`,
+      });
+
+      return NextResponse.json({
+        success: true,
+        employer: updatedEmp,
+      });
+    }
+
     if (body.action === "update_application_status") {
       const validStatuses: ApplicationStatus[] = [
         "submitted",
@@ -213,6 +264,7 @@ export async function PATCH(req: NextRequest) {
         status: nextStatus,
         employer: lookup,
         isAdmin: session.role === "admin" || session.role === "superuser",
+        actorEmail: session.email,
       });
 
       if (!updated) {

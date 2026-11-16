@@ -180,6 +180,9 @@ export interface CandidateProfile {
   hasGlobalPaymentRail: boolean;
   primaryGoal: PrimaryGoal;
   currentSkills: string[];
+  // Optional Profile Picture & CV Portrait Preference
+  avatarDataUrl?: string;
+  includePhotoOnCv?: boolean;
 }
 
 export interface SkillsAssessmentResult {
@@ -249,12 +252,26 @@ export interface AICareerPathway {
   generatedBy: "gemini-live" | "utare-deterministic-engine";
 }
 
+export interface EmployerSharedDocument {
+  id: string;
+  title: string;
+  fileName?: string;
+  mimeType?: string;
+  dataUrl?: string;
+  externalUrl?: string;
+  uploadedBy?: string;
+  createdAt: string;
+}
+
 export interface RemoteJob {
   id: string;
   title: string;
   company: string;
   employerId?: string;
   employerEmail?: string;
+  companyWebsite?: string;
+  externalRoleUrl?: string;
+  attachmentDocuments?: EmployerSharedDocument[];
   category: string;
   industry?: string; // 'Technology', 'Research', 'Media', 'Professional Services', 'Finance'
   level?: "Entry" | "Mid-level" | "Experienced";
@@ -270,6 +287,8 @@ export interface RemoteJob {
   discoveredBy?: "ai-search" | "admin-manual" | "partner-feed" | "employer-posted";
   sourceUrl?: string;
   discoveredAt?: string;
+  updatedAt?: string;
+  updatedBy?: string;
 }
 
 export type UserRole = "candidate" | "employer" | "admin" | "superuser";
@@ -288,6 +307,25 @@ export type EmployerVerificationStatus = "pending" | "verified" | "rejected";
  * Never includes phone, income bracket, employment status, hardware/internet/power
  * constraints, payment rail status, diagnostic sub-scores, coaching, or hub bookings.
  */
+export interface ApplicantAiEvaluation {
+  fitScore: number; // 0 - 100
+  fitTier: "Top Match (Recommended)" | "Strong Contender" | "Developing Fit";
+  recommendationSummary: string;
+  matchedSkills: string[];
+  missingSkills: string[];
+  credentialsSummary: string;
+  suggestedInterviewQuestions: string[];
+  evaluatedBy: "gemini-live" | "utare-deterministic-engine";
+  evaluatedAt: string;
+}
+
+export interface StatusHistoryEntry {
+  status: string;
+  changedBy: string;
+  changedAt: string;
+  note?: string;
+}
+
 export interface EmployerApplicantView {
   id: string;
   jobId: string;
@@ -295,6 +333,9 @@ export interface EmployerApplicantView {
   company: string;
   appliedAt: string;
   status: ApplicationStatus;
+  updatedAt?: string;
+  updatedBy?: string;
+  statusHistory?: StatusHistoryEntry[];
   candidateName: string;
   candidateEmail: string;
   candidateCity: string;
@@ -305,6 +346,52 @@ export interface EmployerApplicantView {
   tailoredResumePitch: string;
   generatedCv?: GeneratedCv;
   generatedCoverLetter?: GeneratedCoverLetter;
+  avatarDataUrl?: string;
+  documents?: CandidateDocument[];
+  aiEvaluation?: ApplicantAiEvaluation;
+}
+
+export type CandidateDocumentCategory =
+  | "degree"
+  | "certificate"
+  | "transcript"
+  | "cv_upload"
+  | "portfolio"
+  | "other";
+
+export interface CandidateDocument {
+  id: string;
+  userId?: string;
+  candidateId?: string;
+  candidateEmail: string;
+  category: CandidateDocumentCategory;
+  title: string;
+  issuer?: string;
+  issueYear?: string;
+  fileName: string;
+  mimeType: string;
+  fileSizeBytes: number;
+  dataUrl: string;
+  version: number;
+  isLatest: boolean;
+  createdAt: string;
+}
+
+export interface CandidateCvArtifact {
+  id: string;
+  userId?: string;
+  candidateId?: string;
+  candidateEmail: string;
+  jobId?: string;
+  jobTitle: string;
+  company: string;
+  version: number;
+  generatedCv: GeneratedCv;
+  generatedCoverLetter: GeneratedCoverLetter;
+  sourceDetails?: CvSourceDetails;
+  avatarDataUrl?: string;
+  includePhoto?: boolean;
+  createdAt: string;
 }
 
 // =============================================================================
@@ -367,6 +454,8 @@ export interface GeneratedCv {
   certifications: string[];
   languages: string[];
   generatedBy: "gemini-live" | "utare-deterministic-engine";
+  avatarDataUrl?: string;
+  includePhotoOnCv?: boolean;
 }
 
 export interface GeneratedCoverLetter {
@@ -395,6 +484,8 @@ export interface EmployerRegistration {
   contactPerson: string;
   email: string;
   website?: string;
+  careerPageUrl?: string;
+  sharedDocuments?: EmployerSharedDocument[];
   industry: string;
   rolesInterested: string[];
   hiringModel: string;
@@ -403,6 +494,28 @@ export interface EmployerRegistration {
   additionalNotes?: string;
   verificationStatus?: EmployerVerificationStatus;
   verifiedAt?: string;
+  updatedAt?: string;
+  updatedBy?: string;
+  createdAt: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  entityType:
+    | "user"
+    | "candidate"
+    | "job"
+    | "application"
+    | "employer"
+    | "document"
+    | "cv_artifact";
+  entityId: string;
+  action: string;
+  actorEmail: string;
+  actorRole: string;
+  previousValue?: string;
+  newValue?: string;
+  summary: string;
   createdAt: string;
 }
 

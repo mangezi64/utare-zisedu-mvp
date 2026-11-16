@@ -16,6 +16,12 @@ import {
   submitJobApplicationToStore,
   getEmployerApplicants,
   updateApplicationStatus,
+  updateUserPassword,
+  addCandidateDocument,
+  listCandidateDocuments,
+  saveCandidateCvArtifact,
+  listCandidateCvArtifacts,
+  listAuditLogs,
 } from "@/lib/store";
 import { hashPassword, verifyPassword } from "@/lib/password-hash";
 import { signSessionToken, verifySessionToken } from "@/lib/auth-session";
@@ -266,5 +272,108 @@ describe("Admin & Candidate Account Store Integration", () => {
 
     process.env.ADMIN_EMAILS = "regional-admin@utare.co.zw";
     expect(resolveBootstrapRole("regional-admin@utare.co.zw")).toBe("admin");
+  });
+
+  it("supports password updates, versioned credential attachments, versioned CV artifacts, and audit logs", async () => {
+    const email = `rutendo-ver-${Date.now()}@utare.co.zw`;
+    createAuthUser({
+      email,
+      name: "Rutendo Mangezi",
+      role: "candidate",
+      passwordHash: hashPassword("InitialPass1!"),
+      emailConfirmed: true,
+    });
+
+    // 1. Update password
+    const newHash = hashPassword("UpdatedPass2026!");
+    const updatedUser = updateUserPassword(email, newHash);
+    expect(updatedUser).not.toBeNull();
+    expect(verifyPassword("UpdatedPass2026!", updatedUser!.passwordHash)).toBe(true);
+
+    // 2. Upload v1 and v2 of a degree certificate
+    const docV1 = await addCandidateDocument({
+      candidateEmail: email,
+      category: "degree",
+      title: "BSc Computer Science Honours",
+      issuer: "University of Zimbabwe",
+      issueYear: "2024",
+      fileName: "bsc_degree_v1.pdf",
+      mimeType: "application/pdf",
+      fileSizeBytes: 120000,
+      dataUrl: "data:application/pdf;base64,JVBERi0xLjQ=",
+    });
+    expect(docV1.version).toBe(1);
+    expect(docV1.isLatest).toBe(true);
+
+    const docV2 = await addCandidateDocument({
+      candidateEmail: email,
+      category: "degree",
+      title: "BSc Computer Science Honours",
+      issuer: "University of Zimbabwe",
+      issueYear: "2025",
+      fileName: "bsc_degree_v2_stamped.pdf",
+      mimeType: "application/pdf",
+      fileSizeBytes: 135000,
+      dataUrl: "data:application/pdf;base64,JVBERi0xLjQ=",
+    });
+    expect(docV2.version).toBe(2);
+    expect(docV2.isLatest).toBe(true);
+
+    const docs = await listCandidateDocuments(email);
+    expect(docs.length).toBeGreaterThanOrEqual(2);
+    expect(docs.find((d) => d.id === docV1.id)?.isLatest).toBe(false);
+    expect(docs.find((d) => d.id === docV2.id)?.isLatest).toBe(true);
+
+    // 3. Save v1 and v2 of a tailored CV & Cover Letter artifact
+    const cvArtV1 = await saveCandidateCvArtifact({
+      candidateEmail: email,
+      jobId: "job-test-1",
+      jobTitle: "Junior Data Analyst",
+      company: "GlobalScale",
+      generatedCv: {
+        fullName: "Rutendo Mangezi",
+        headline: "Data & Operations Specialist",
+        contactLine: "Harare | rutendo@utare.co.zw",
+        summary: "Analytical graduate.",
+        coreSkills: ["SQL", "Excel"],
+        experience: [],
+        projects: [],
+        education: [],
+        certifications: [],
+        languages: ["English"],
+        generatedBy: "utare-deterministic-engine",
+      },
+      generatedCoverLetter: {
+        fullName: "Rutendo Mangezi",
+        contactLine: "Harare",
+        date: "2026-11-16",
+        recipient: "Hiring Team",
+        subject: "Application: Junior Data Analyst",
+        greeting: "Dear Hiring Team,",
+        paragraphs: ["I am writing to apply."],
+        signOff: "Sincerely,",
+        generatedBy: "utare-deterministic-engine",
+      },
+      includePhoto: true,
+    });
+    expect(cvArtV1.version).toBe(1);
+
+    const cvArtV2 = await saveCandidateCvArtifact({
+      candidateEmail: email,
+      jobId: "job-test-1",
+      jobTitle: "Junior Data Analyst",
+      company: "GlobalScale",
+      generatedCv: cvArtV1.generatedCv,
+      generatedCoverLetter: cvArtV1.generatedCoverLetter,
+      includePhoto: true,
+    });
+    expect(cvArtV2.version).toBe(2);
+
+    const arts = await listCandidateCvArtifacts(email);
+    expect(arts.length).toBeGreaterThanOrEqual(2);
+
+    // 4. Verify audit logs are recorded
+    const logs = await listAuditLogs(20);
+    expect(logs.length).toBeGreaterThan(0);
   });
 });

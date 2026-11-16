@@ -19,6 +19,7 @@ import {
 } from "@/lib/documents/docx-export";
 import { buildDefaultCvDetails } from "@/lib/documents/sample-cv-details";
 import { matchNearestHub } from "@/lib/gemini/pathway-engine";
+import { saveCandidateCvArtifact } from "@/lib/store";
 
 export async function POST(req: NextRequest) {
   try {
@@ -72,16 +73,39 @@ export async function POST(req: NextRequest) {
     const hubName: string =
       body.hubName || matchNearestHub(profile.city).name;
 
-    const [cv, coverLetter] = await Promise.all([
+    const [rawCv, coverLetter] = await Promise.all([
       generateCv(profile, details, target, hubName),
       generateCoverLetter(profile, details, target, hubName),
     ]);
+
+    const cv: GeneratedCv = {
+      ...rawCv,
+      ...(profile.avatarDataUrl ? { avatarDataUrl: profile.avatarDataUrl } : {}),
+      ...(profile.includePhotoOnCv !== undefined
+        ? { includePhotoOnCv: Boolean(profile.includePhotoOnCv) }
+        : {}),
+    };
 
     const cvPlain = cvToPlainText(cv);
     const letterPlain = coverLetterToPlainText(coverLetter);
 
     const cvStyle = analyzeStyle(cvPlain);
     const letterStyle = analyzeStyle(letterPlain);
+
+    let artifact = null;
+    if (profile.email && body.saveVersion !== false) {
+      artifact = await saveCandidateCvArtifact({
+        candidateEmail: profile.email,
+        jobId: body.jobId,
+        jobTitle: target.title,
+        company: target.company,
+        generatedCv: cv,
+        generatedCoverLetter: coverLetter,
+        sourceDetails: details,
+        avatarDataUrl: profile.avatarDataUrl,
+        includePhoto: Boolean(profile.includePhotoOnCv),
+      });
+    }
 
     return NextResponse.json({
       cv,
@@ -93,6 +117,7 @@ export async function POST(req: NextRequest) {
         coverLetter: letterStyle,
       },
       detailsUsed: details,
+      artifact,
     });
   } catch (error) {
     console.error("[API /api/documents POST Error]:", error);
