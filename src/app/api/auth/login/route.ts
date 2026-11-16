@@ -11,9 +11,11 @@ import {
   findAuthUserByEmailFromDb,
   findCandidateByEmail,
   findEmployerByEmail,
+  updateUserRole,
 } from "@/lib/store";
 import { getSupabaseAdmin, isSupabaseConfigured, supabase } from "@/lib/supabase/client";
 import { UserRole } from "@/types";
+import { resolveBootstrapRole } from "@/lib/bootstrap-roles";
 
 export const runtime = "nodejs";
 
@@ -135,7 +137,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const finalRole: UserRole = resolvedRole || userRecord?.role || "candidate";
+    const baseRole: UserRole = resolvedRole || userRecord?.role || "candidate";
+    const finalRole: UserRole = resolveBootstrapRole(normalizedEmail, baseRole);
+
+    if (userRecord && userRecord.role !== finalRole) {
+      updateUserRole(normalizedEmail, finalRole);
+    }
     const candidate = findCandidateByEmail(normalizedEmail);
     const employer = findEmployerByEmail(normalizedEmail);
 

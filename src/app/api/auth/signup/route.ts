@@ -9,7 +9,7 @@ import {
   saveEmployerRegistration,
 } from "@/lib/store";
 import { getSupabaseAdmin, isSupabaseConfigured, supabase } from "@/lib/supabase/client";
-import { resolveBootstrapRole } from "@/lib/auth-guard";
+import { resolveBootstrapRole } from "@/lib/bootstrap-roles";
 import { CandidateProfile } from "@/types";
 
 export const runtime = "nodejs";
@@ -87,6 +87,7 @@ export async function POST(req: NextRequest) {
       "http://localhost:3000";
 
     let supabaseUserId: string | undefined;
+    let isAutoConfirmed = false;
 
     // 5. Register with Supabase Auth when cloud credentials are configured
     if (isSupabaseConfigured && supabase) {
@@ -104,19 +105,68 @@ export async function POST(req: NextRequest) {
       });
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
-      }
-      supabaseUserId = data.user?.id;
+        const isRateLimit =
+          error.message.toLowerCase().includes("rate limit") ||
+          (error as { status?: number }).status === 429;
+        const adminClient = getSupabaseAdmin();
 
-      // Stamp authoritative role in app_metadata via Service Role client if available
-      const adminClient = getSupabaseAdmin();
-      if (adminClient && supabaseUserId) {
-        await adminClient.auth.admin.updateUserById(supabaseUserId, {
-          app_metadata: {
-            role: accountType,
-            ...(accountType === "employer" ? { org_role: "org_admin" } : {}),
-          },
-        });
+        // Fallback: If Supabase's default mailer reached its 3 emails/hour limit,
+        // use the Service Role Admin API to provision and confirm the user directly.
+        if (isRateLimit && adminClient) {
+          const { data: adminData, error: adminErr } =
+            await adminClient.auth.admin.createUser({
+              email: normalizedEmail,
+              password,
+              email_confirm: true,
+              user_metadata: {
+                full_name: fullName,
+                account_type: accountType,
+                company_name: companyName,
+              },
+              app_metadata: {
+                role: accountType,
+                ...(accountType === "employer"
+                  ? { org_role: "org_admin" }
+                  : {}),
+              },
+            });
+
+          if (!adminErr && adminData?.user) {
+            supabaseUserId = adminData.user.id;
+            isAutoConfirmed = true;
+          } else {
+            return NextResponse.json(
+              {
+                error:
+                  "Supabase email rate limit exceeded (free tier default is 3-4 emails/hr). Please disable 'Confirm email' in Supabase Dashboard (Authentication > Providers > Email), or configure Custom SMTP (e.g. Resend).",
+              },
+              { status: 429 }
+            );
+          }
+        } else if (isRateLimit) {
+          return NextResponse.json(
+            {
+              error:
+                "Supabase email rate limit exceeded (free tier default is 3-4 emails/hr). Please disable 'Confirm email' in Supabase Dashboard (Authentication > Providers > Email), configure Custom SMTP, or add SUPABASE_SERVICE_ROLE_KEY to environment variables.",
+            },
+            { status: 429 }
+          );
+        } else {
+          return NextResponse.json({ error: error.message }, { status: 400 });
+        }
+      } else {
+        supabaseUserId = data.user?.id;
+
+        // Stamp authoritative role in app_metadata via Service Role client if available
+        const adminClient = getSupabaseAdmin();
+        if (adminClient && supabaseUserId) {
+          await adminClient.auth.admin.updateUserById(supabaseUserId, {
+            app_metadata: {
+              role: accountType,
+              ...(accountType === "employer" ? { org_role: "org_admin" } : {}),
+            },
+          });
+        }
       }
     }
 
@@ -187,7 +237,7 @@ export async function POST(req: NextRequest) {
       name: fullName,
       role: assignedRole,
       passwordHash,
-      emailConfirmed: false,
+      emailConfirmed: isAutoConfirmed,
       confirmationToken,
       employerId,
       orgRole: accountType === "employer" ? "org_admin" : undefined,
@@ -203,16 +253,18 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      requiresEmailConfirmation: true,
+      requiresEmailConfirmation: !isAutoConfirmed,
       email: authUser.email,
       role: authUser.role,
-      // When Supabase cloud SMTP is not configured, expose the confirmation link
-      // so evaluators and local testers can complete email verification cleanly.
-      confirmationPath: !isSupabaseConfigured ? confirmationPath : undefined,
-      message:
-        accountType === "employer"
-          ? "Employer account created! Please confirm your email address to access your Employer Portal."
-          : "Candidate account created! Please confirm your email address before signing in.",
+      // When Supabase cloud SMTP is not configured or bypassed, expose confirmation link / auto-confirm
+      confirmationPath: !isSupabaseConfigured || isAutoConfirmed ? confirmationPath : undefined,
+      message: isAutoConfirmed
+        ? accountType === "employer"
+          ? "Employer account created successfully! You can sign in immediately."
+          : "Candidate account created successfully! You can sign in immediately."
+        : accountType === "employer"
+        ? "Employer account created! Please confirm your email address to access your Employer Portal."
+        : "Candidate account created! Please confirm your email address before signing in.",
     });
   } catch (error) {
     console.error("[API /api/auth/signup POST Error]:", error);

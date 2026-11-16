@@ -13,9 +13,11 @@ import {
   SessionPayload,
   verifySessionToken,
 } from "@/lib/auth-session";
-import { findAuthUserByEmail } from "@/lib/store";
+import { findAuthUserByEmail, updateUserRole } from "@/lib/store";
 import { getSupabaseAdmin, isSupabaseConfigured, supabase } from "@/lib/supabase/client";
 import { UserRole } from "@/types";
+import { resolveBootstrapRole } from "@/lib/bootstrap-roles";
+export { resolveBootstrapRole, DEFAULT_BOOTSTRAP_SUPERUSERS } from "@/lib/bootstrap-roles";
 
 export async function getSessionFromRequest(
   req: NextRequest
@@ -33,15 +35,19 @@ export async function getSessionFromRequest(
     if (verified) {
       // Refresh authoritative role from backend store if present
       const storedUser = findAuthUserByEmail(verified.email);
-      if (storedUser) {
-        return {
-          ...verified,
-          role: storedUser.role,
-          emailConfirmed: storedUser.emailConfirmed,
-          companyName: storedUser.companyName || verified.companyName,
-        };
+      const effectiveRole = resolveBootstrapRole(
+        verified.email,
+        storedUser?.role || verified.role
+      );
+      if (storedUser && storedUser.role !== effectiveRole) {
+        updateUserRole(verified.email, effectiveRole);
       }
-      return verified;
+      return {
+        ...verified,
+        role: effectiveRole,
+        emailConfirmed: storedUser ? storedUser.emailConfirmed : verified.emailConfirmed,
+        companyName: storedUser?.companyName || verified.companyName,
+      };
     }
 
     // 2. If Supabase is configured and a Supabase JWT was passed, verify via Supabase
@@ -60,6 +66,7 @@ export async function getSessionFromRequest(
               role = adminUser.user.app_metadata.role as UserRole;
             }
           }
+          role = resolveBootstrapRole(data.user.email, role);
           const now = Math.floor(Date.now() / 1000);
           return {
             sub: data.user.id,
@@ -116,34 +123,5 @@ export function unauthorizedResponse(message = "Authentication required.") {
   return NextResponse.json({ error: message }, { status: 401 });
 }
 
-/**
- * Checks whether an email address is listed in backend environment variables
- * (`SUPERUSER_EMAILS` or `ADMIN_EMAILS`) so founding administrators can
- * bootstrap the first admin account on serverless deployments (e.g. Vercel)
- * after authenticating with a verified password, and then upgrade other team
- * members directly from the Admin Console UI.
- */
-export function resolveBootstrapRole(
-  email: string,
-  fallbackRole: UserRole = "candidate"
-): UserRole {
-  const normalized = email.trim().toLowerCase();
-  const superusers = (process.env.SUPERUSER_EMAILS || "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  if (superusers.includes(normalized)) {
-    return "superuser";
-  }
 
-  const admins = (process.env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  if (admins.includes(normalized)) {
-    return "admin";
-  }
-
-  return fallbackRole;
-}
 

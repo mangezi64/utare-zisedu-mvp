@@ -19,6 +19,7 @@ import {
 } from "@/lib/store";
 import { hashPassword, verifyPassword } from "@/lib/password-hash";
 import { signSessionToken, verifySessionToken } from "@/lib/auth-session";
+import { resolveBootstrapRole } from "@/lib/bootstrap-roles";
 import { CandidateProfile, InnovationHub, RemoteJob } from "@/types";
 
 describe("Admin & Candidate Account Store Integration", () => {
@@ -249,5 +250,21 @@ describe("Admin & Candidate Account Store Integration", () => {
     expect(otherEmployerViews.some((v) => v.id === view.id)).toBe(false);
 
     deleteJobFromStore(empJobId);
+  });
+
+  it("dynamically resolves bootstrap roles for configured superusers and founders", () => {
+    // 1. Founder defaults
+    expect(resolveBootstrapRole("admin@utare.co.zw")).toBe("superuser");
+    expect(resolveBootstrapRole("stewart@utare.co.zw")).toBe("superuser");
+    expect(resolveBootstrapRole("stewart.mangezi@utare.co.zw")).toBe("superuser");
+    expect(resolveBootstrapRole("regular.candidate@gmail.com")).toBe("candidate");
+
+    // 2. Custom env overrides
+    process.env.SUPERUSER_EMAILS = "custom-lead@domain.com, root@utare-zem.ai";
+    expect(resolveBootstrapRole("custom-lead@domain.com")).toBe("superuser");
+    expect(resolveBootstrapRole("ROOT@utare-zem.ai")).toBe("superuser");
+
+    process.env.ADMIN_EMAILS = "regional-admin@utare.co.zw";
+    expect(resolveBootstrapRole("regional-admin@utare.co.zw")).toBe("admin");
   });
 });

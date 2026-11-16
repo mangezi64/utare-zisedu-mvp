@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth-guard";
+import {
+  SESSION_COOKIE_NAME,
+  signSessionToken,
+  verifySessionToken,
+} from "@/lib/auth-session";
 import { findCandidateByEmail, findEmployerByEmail } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -16,7 +21,7 @@ export async function GET(req: NextRequest) {
   const candidate = findCandidateByEmail(session.email);
   const employer = findEmployerByEmail(session.email);
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     authenticated: true,
     user: {
       id: session.sub,
@@ -36,4 +41,26 @@ export async function GET(req: NextRequest) {
         candidate?.profile.fieldOfStudy || session.fieldOfStudy,
     },
   });
+
+  // If the cookie had an older unprivileged role, re-issue a freshly signed cookie
+  // with the elevated role so Edge middleware and future requests stay in sync
+  const cookieVal = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  if (cookieVal) {
+    const verified = await verifySessionToken(cookieVal);
+    if (verified && verified.role !== session.role) {
+      const refreshedToken = await signSessionToken({
+        ...verified,
+        role: session.role,
+      });
+      res.cookies.set(SESSION_COOKIE_NAME, refreshedToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+      });
+    }
+  }
+
+  return res;
 }
