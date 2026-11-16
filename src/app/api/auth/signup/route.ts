@@ -233,6 +233,36 @@ export async function POST(req: NextRequest) {
         primaryGoal: "International Remote Work",
         currentSkills: fieldOfStudy ? [fieldOfStudy] : [],
       });
+
+      // Sync candidate profile to live Supabase Postgres
+      if (isSupabaseConfigured && supabase) {
+        supabase
+          .from("candidate_profiles")
+          .upsert(
+            {
+              user_id: supabaseUserId,
+              full_name: fullName,
+              email: normalizedEmail,
+              phone: String(body.phone || ""),
+              city,
+              highest_qualification: highestQualification,
+              field_of_study: fieldOfStudy,
+              years_experience: Number(body.yearsExperience) || 0,
+              employment_status: "Unemployed",
+              monthly_income_bracket: "$0 (Zero Income)",
+              has_dedicated_laptop: false,
+              primary_device: "Smartphone Only",
+              internet_access_type: "Mobile Data Bundles Only",
+              power_reliability_hours: 6,
+              has_global_payment_rail: false,
+              primary_goal: "International Remote Work",
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "email" }
+          )
+          .then(() => {})
+          .catch(() => {});
+      }
     }
 
     // 7. Persist AuthUser with hashed password and confirmation token
@@ -252,6 +282,27 @@ export async function POST(req: NextRequest) {
       qualification: body.qualification,
       fieldOfStudy: body.fieldOfStudy,
     });
+
+    // Sync auth user to live Supabase Postgres auth_users table
+    if (isSupabaseConfigured && supabase) {
+      supabase
+        .from("auth_users")
+        .upsert(
+          {
+            id: supabaseUserId || authUser.id,
+            email: normalizedEmail,
+            name: fullName,
+            role: assignedRole,
+            password_hash: passwordHash,
+            email_confirmed: isAutoConfirmed,
+            employer_id: employerId,
+            company_name: companyName,
+          },
+          { onConflict: "email" }
+        )
+        .then(() => {})
+        .catch(() => {});
+    }
 
     const confirmationPath = `/auth/callback?token=${encodeURIComponent(
       confirmationToken

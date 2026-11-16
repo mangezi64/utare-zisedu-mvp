@@ -14,7 +14,44 @@ export async function GET(req: NextRequest) {
   if (!session || (session.role !== "admin" && session.role !== "superuser")) {
     return adminUnauthorizedResponse();
   }
-  const users = listAuthUsers();
+
+  const users = [...listAuthUsers()];
+  const existingEmails = new Set(users.map((u) => u.email.trim().toLowerCase()));
+
+  // Hydrate from live Supabase Auth users
+  const adminClient = getSupabaseAdmin();
+  if (adminClient) {
+    try {
+      const { data: supaAuthData, error } =
+        await adminClient.auth.admin.listUsers();
+      if (!error && supaAuthData?.users) {
+        for (const su of supaAuthData.users) {
+          const emailNorm = (su.email || "").trim().toLowerCase();
+          if (emailNorm && !existingEmails.has(emailNorm)) {
+            existingEmails.add(emailNorm);
+            const assignedRole: UserRole =
+              (su.app_metadata?.role as UserRole) ||
+              (su.user_metadata?.account_type as UserRole) ||
+              "candidate";
+            users.push({
+              id: su.id,
+              email: su.email || "",
+              name:
+                (su.user_metadata?.full_name as string) ||
+                su.email?.split("@")[0] ||
+                "User",
+              role: assignedRole,
+              emailConfirmed: Boolean(su.email_confirmed_at),
+              createdAt: su.created_at,
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[Admin Users Supabase Fetch Warning]:", err);
+    }
+  }
+
   return NextResponse.json({ total: users.length, users });
 }
 

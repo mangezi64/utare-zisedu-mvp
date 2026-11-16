@@ -10,8 +10,8 @@ import { isAdminRequest, adminUnauthorizedResponse } from "@/lib/auth-guard";
 import { validateEmail, validatePassword } from "@/lib/validation";
 import { checkEmailDomain } from "@/lib/email-domain-check";
 import { generateRandomToken, hashPassword } from "@/lib/password-hash";
-import { isSupabaseConfigured } from "@/lib/supabase/client";
-import { EmployerVerificationStatus } from "@/types";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
+import { EmployerRegistration, EmployerVerificationStatus } from "@/types";
 
 export const runtime = "nodejs";
 
@@ -20,7 +20,49 @@ export async function GET(req: NextRequest) {
     return adminUnauthorizedResponse();
   }
 
-  const employers = getEmployerRegistrations();
+  const employers = [...getEmployerRegistrations()];
+  const existingEmails = new Set(employers.map((e) => e.email.trim().toLowerCase()));
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data: dbEmployers, error } = await supabase
+        .from("employer_registrations")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!error && dbEmployers && dbEmployers.length > 0) {
+        for (const emp of dbEmployers) {
+          const emailNorm = (emp.email || "").trim().toLowerCase();
+          if (emailNorm && !existingEmails.has(emailNorm)) {
+            existingEmails.add(emailNorm);
+            employers.unshift({
+              id: emp.id,
+              userId: emp.user_id,
+              companyName: emp.company_name,
+              contactPerson: emp.contact_person,
+              email: emp.email,
+              website: emp.website || "",
+              industry: emp.industry || "Technology & SaaS",
+              rolesInterested: Array.isArray(emp.roles_interested)
+                ? emp.roles_interested
+                : [String(emp.roles_interested || "Remote Operations")],
+              hiringModel: emp.hiring_model || "100% Remote Contract",
+              estimatedHires: Number(emp.estimated_hires) || 1,
+              timezoneOverlapNeeded:
+                emp.timezone_overlap_needed || "CAT (GMT+2) / UK-EU overlap",
+              additionalNotes: emp.additional_notes || "",
+              verificationStatus:
+                (emp.verification_status as EmployerVerificationStatus) || "pending",
+              createdAt: emp.created_at || new Date().toISOString(),
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[Employers Supabase Fetch Warning]:", err);
+    }
+  }
+
   return NextResponse.json({ total: employers.length, employers });
 }
 

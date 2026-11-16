@@ -46,6 +46,27 @@ export async function POST(req: NextRequest) {
     if (!userRecord) {
       userRecord = await findAuthUserByEmailFromDb(normalizedEmail);
     }
+    if (!userRecord && isSupabaseConfigured && supabase) {
+      try {
+        const { data: supaRow } = await supabase
+          .from("auth_users")
+          .select("*")
+          .eq("email", normalizedEmail)
+          .maybeSingle();
+
+        if (supaRow) {
+          userRecord = {
+            id: supaRow.id,
+            email: supaRow.email,
+            name: supaRow.name,
+            role: supaRow.role,
+            passwordHash: supaRow.password_hash,
+            emailConfirmed: Boolean(supaRow.email_confirmed),
+            createdAt: supaRow.created_at,
+          };
+        }
+      } catch {}
+    }
     let resolvedRole: UserRole | undefined = userRecord?.role;
     let resolvedName = userRecord?.name;
     let resolvedId = userRecord?.id;
@@ -143,7 +164,87 @@ export async function POST(req: NextRequest) {
     if (userRecord && userRecord.role !== finalRole) {
       updateUserRole(normalizedEmail, finalRole);
     }
-    const candidate = findCandidateByEmail(normalizedEmail);
+    let candidate = findCandidateByEmail(normalizedEmail);
+    if (!candidate && isSupabaseConfigured && supabase) {
+      try {
+        const { data: supaCand } = await supabase
+          .from("candidate_profiles")
+          .select("*")
+          .eq("email", normalizedEmail)
+          .maybeSingle();
+
+        if (supaCand) {
+          candidate = {
+            id: supaCand.id || `cand-${supaCand.user_id}`,
+            profile: {
+              fullName: supaCand.full_name,
+              email: supaCand.email,
+              phone: supaCand.phone || "",
+              city: supaCand.city || "Harare",
+              highestQualification: supaCand.highest_qualification || "Bachelors Degree",
+              fieldOfStudy: supaCand.field_of_study || "Information Technology",
+              yearsExperience: Number(supaCand.years_experience) || 0,
+              employmentStatus: supaCand.employment_status || "Unemployed",
+              monthlyIncomeBracket: supaCand.monthly_income_bracket || "$0 (Zero Income)",
+              hasDedicatedLaptop: Boolean(supaCand.has_dedicated_laptop),
+              primaryDevice: supaCand.primary_device || "Smartphone Only",
+              internetAccessType: supaCand.internet_access_type || "Mobile Data Bundles Only",
+              powerReliabilityHours: Number(supaCand.power_reliability_hours) || 6,
+              hasGlobalPaymentRail: Boolean(supaCand.has_global_payment_rail),
+              primaryGoal: supaCand.primary_goal || "International Remote Work",
+              currentSkills: supaCand.field_of_study ? [supaCand.field_of_study] : [],
+            },
+            assessment: {
+              domainCompetencyScore: 78,
+              digitalReadinessScore: 72,
+              remoteWorkLiteracyScore: 75,
+              infrastructureIndexScore: supaCand.has_dedicated_laptop ? 80 : 45,
+              overallScore: 72,
+              readinessTier: supaCand.has_dedicated_laptop
+                ? "Market-Ready (Direct Placement)"
+                : "Bridge-Ready (Hub + Rapid Upskilling)",
+              strengths: [],
+              criticalGaps: [],
+            },
+            pathway: {
+              recommendedTrack: supaCand.primary_goal || "International Remote Work",
+              executiveDiagnosis: `${supaCand.full_name} is registered for remote pathways.`,
+              infrastructureBridgePlan: "Pairing with partner innovation hubs.",
+              recommendedHub: {
+                id: "hub-1",
+                name: "B2C Coworking Space",
+                city: "Harare",
+                address: "Harare",
+                hasSolarBackup: true,
+                internetProvider: "Starlink",
+                avgSpeedMbps: 120,
+                availableWorkstations: 20,
+                laptopLoanAvailable: true,
+                dailyPassUsd: 0,
+                utarePartnerSubsidized: true,
+                operatingHours: "08:00 - 18:00",
+              },
+              assignedCoach: {
+                id: "coach-1",
+                name: "Tatenda Chigumba",
+                specialty: "Remote Work Logistics",
+                availability: "Next week",
+                bio: "Coach",
+              },
+              coachingAgenda: [],
+              upskillingMilestones: [],
+              targetRemoteRoles: [],
+              paymentRailGuidance: "",
+              tailoredResumeSummary: "",
+              generatedBy: "utare-deterministic-engine",
+            },
+            completedMilestones: [],
+            coachingStatus: "Pending Booking",
+            createdAt: supaCand.created_at || new Date().toISOString(),
+          };
+        }
+      } catch {}
+    }
     const employer = findEmployerByEmail(normalizedEmail);
 
     const sessionUser = {
