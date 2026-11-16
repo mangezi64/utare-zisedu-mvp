@@ -81,8 +81,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
+    const proto = req.headers.get("x-forwarded-proto") || (process.env.NODE_ENV === "production" ? "https" : "http");
+    const derivedHostOrigin = host ? `${proto}://${host}` : undefined;
+
     const origin =
       req.headers.get("origin") ||
+      derivedHostOrigin ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ||
       process.env.NEXT_PUBLIC_APP_URL ||
       "http://localhost:3000";
 
