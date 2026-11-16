@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import {
   BookOpen,
   Users,
@@ -77,7 +78,8 @@ export default function SkillsDevelopmentPage() {
   const ICONS = [BookOpen, Users, Mail, Check, Sparkles, Building2];
 
   return (
-    <div>
+    <div className="w-full min-h-screen">
+      <PageBreadcrumb current="Skills Development" />
       {/* Faith & Amanda's Page Hero */}
       <section className="page-hero">
         <span className="eyebrow">SKILLS DEVELOPMENT</span>

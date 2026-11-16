@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import { useViewMode } from "@/lib/view-mode-context";
 import {
   AICareerPathway,
@@ -148,7 +149,9 @@ export default function AssessmentAndPathwayPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-10">
+    <div className="w-full min-h-screen">
+      <PageBreadcrumb current="Diagnostic" />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-10">
       {/* Header */}
       <div className="space-y-3">
         <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
@@ -939,6 +942,7 @@ export default function AssessmentAndPathwayPage() {
           </div>
         </section>
       )}
+    </div>
     </div>
   );
 }

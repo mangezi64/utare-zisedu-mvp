@@ -1,7 +1,31 @@
-# UTARE ZEM AI — Release Notes (Live Database Sync, Versioned Credentials Vault, CV Photos & Employer AI Ranking)
+# UTARE ZEM AI — Release Notes
 
-**Release Date:** November 16, 2026  
+**Release Date:** November 16, 2026 (Evening Release — Post-Coach Feedback & Navigation Overhaul)  
 **Target Environments:** Vercel Production (`utare-zisedu-mvp.vercel.app`), Supabase Cloud PostgreSQL, and Containerized Local PostgreSQL (`utare-zisedu-db`)
+
+---
+
+## 7. Smart Two-Way Navigation, Admin Quick-Info Feature & Assistive AI Inclusivity (Challenge Release)
+* **Smart Two-Way Breadcrumb Navigation (`<PageBreadcrumb />`):**
+  - Integrated persistent, frosted-glass sub-navigation headers across all views (`/jobs`, `/assessment`, `/pathway`, `/opportunities`, `/hubs`, `/skills`, `/account`, `/employer`).
+  - Implemented smart `← Back` navigation with automatic `router.back()` and robust contextual fallbacks (`/account` for Candidates, `/admin` for Facilitators, `/employer` for Employers) so users never get stuck even when landing via direct links.
+  - Added directional journey shortcuts (`Next: View Career Pathway →`, `Next: Tailor CV & Job Match →`, `Next: Explore Opportunities →`, `Next: Find Nearest Partner Hub →`).
+  - Added mobile-optimized sticky touch target for small screens (<640px).
+* **Instant Session Hydration & Mobile Drawer Polish (`src/lib/view-mode-context.tsx` & `src/components/Navbar.tsx`):**
+  - Cached session summaries locally to eradicate navbar unauthenticated flicker on page reloads and route changes.
+  - Revamped mobile menu drawer with user avatar badge, role label, 1-click workspace jump button, and dedicated `Sign Out` button.
+* **Admin Candidate Quick-Info Modal (`<CandidateQuickInfoModal />`):**
+  - Facilitators can click candidate cards or the `👁️ View Info` button in `/admin` to inspect candidate profiles, education, hardware readiness (power reliability, device, connectivity, estimated weekly capacity), and verified credentials without launching the full career pathway drawer.
+  - Provides 1-click preview and download for all attached degrees, certificates, and generated CVs.
+* **Inclusivity & Assistive Tech (Cross Sector Innovation Challenge Differentiator):**
+  - **`src/components/AudioExplainer.tsx`:** Zero-bandwidth Web Speech API voice walkthrough introducing Utare ZEM AI, the diagnostic, tailored CV studio, and solar partner hubs across 4 chapters with speed controls, voice selection, oscillating audio waves, and synchronized transcript.
+  - **`src/components/AccessibilityControls.tsx`:** Floating accessibility suite providing WCAG AAA High Contrast mode, calibrated Colorblind filters (Deuteranopia, Protanopia, Tritanopia), font scaling, dyslexia-friendly spacing, and screen-reader page outline announcer.
+* **Aesthetic Brand Differentiation:**
+  - Shifted brand palette away from ALX Africa's dark forest green/cyan toward a proud Zimbabwean Sunrise Gold (`#d97706` / `#b45309`) and Deep Granite Slate (`#0f172a`), accented with emerald and terracotta.
+* **Week 6 Pitch Package & Aligned Team Defense:**
+  - Authored `docs/PITCH_DECK_WEEK6.md` (10-slide, 4-minute master presentation deck and timed speaker script).
+  - Authored `docs/TEAM_FAQ_UNIFORM.md` (Standardized Q&A defense cheat sheet for judges).
+  - Authored `docs/COACH_CATHERINE_ACTION_ITEMS.md` (Review countdown & team matrix).
 
 ---
 

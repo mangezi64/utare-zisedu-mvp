@@ -3,6 +3,8 @@ import Link from "next/link";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ViewModeProvider } from "@/lib/view-mode-context";
+import AudioExplainer from "@/components/AudioExplainer";
+import AccessibilityControls from "@/components/AccessibilityControls";
 
 export const metadata: Metadata = {
   title: "UTARE ZEM AI — Economic Mobility & Remote Bridge",
@@ -18,9 +20,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col antialiased">
+        {/* Skip to Main Content Link for Keyboard and Screen Reader Accessibility */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-emerald-600 focus:text-white focus:rounded-lg focus:shadow-xl focus:font-bold focus:outline-none focus:ring-2 focus:ring-white"
+        >
+          Skip to main content
+        </a>
+
         <ViewModeProvider>
           <Navbar />
-          <main className="flex-1">{children}</main>
+          <main id="main-content" className="flex-1">
+            {children}
+          </main>
           <footer className="footer no-print">
             <div className="footer-top">
               <Link
@@ -54,6 +66,10 @@ export default function RootLayout({
               <span>Zimbabwe Economic Mobility &amp; Remote Bridge</span>
             </div>
           </footer>
+
+          {/* Accessibility & Assistive Tech Suite */}
+          <AudioExplainer />
+          <AccessibilityControls />
         </ViewModeProvider>
       </body>
     </html>

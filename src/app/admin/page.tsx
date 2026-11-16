@@ -23,9 +23,12 @@ import {
   ArrowRight,
   SlidersHorizontal,
   Globe,
+  Eye,
 } from "lucide-react";
 import {
   AuditLogEntry,
+  CandidateCvArtifact,
+  CandidateDocument,
   EmployerRegistration,
   EmployerVerificationStatus,
   InnovationHub,
@@ -40,6 +43,7 @@ import {
 } from "@/lib/store";
 import { useViewMode } from "@/lib/view-mode-context";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
+import CandidateQuickInfoModal from "@/components/CandidateQuickInfoModal";
 
 type PublicAuthUser = Omit<
   StoredAuthUser,
@@ -60,6 +64,10 @@ export default function AdminConsolePage() {
   const [employers, setEmployers] = useState<EmployerRegistration[]>([]);
   const [authUsers, setAuthUsers] = useState<PublicAuthUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [allDocuments, setAllDocuments] = useState<CandidateDocument[]>([]);
+  const [allCvArtifacts, setAllCvArtifacts] = useState<CandidateCvArtifact[]>([]);
+  const [selectedCandidateForInfo, setSelectedCandidateForInfo] =
+    useState<StoredCandidateRecord | null>(null);
   const [upgradeEmailInput, setUpgradeEmailInput] = useState("");
   const [upgradeRoleInput, setUpgradeRoleInput] = useState<UserRole>("admin");
   const [adminResetEmail, setAdminResetEmail] = useState("");
@@ -158,7 +166,11 @@ export default function AdminConsolePage() {
       if (candRes.candidates) setCandidates(candRes.candidates);
       if (empRes && empRes.employers) setEmployers(empRes.employers);
       if (usersRes && usersRes.users) setAuthUsers(usersRes.users);
-      if (auditRes && auditRes.auditLogs) setAuditLogs(auditRes.auditLogs);
+      if (auditRes) {
+        if (auditRes.auditLogs) setAuditLogs(auditRes.auditLogs);
+        if (auditRes.documents) setAllDocuments(auditRes.documents);
+        if (auditRes.cvArtifacts) setAllCvArtifacts(auditRes.cvArtifacts);
+      }
       if (aiRes) {
         setAiStatus(aiRes);
         if (aiRes.model) setModelInput(aiRes.model);
@@ -1332,7 +1344,11 @@ export default function AdminConsolePage() {
                   className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                    <div className="space-y-1">
+                    <div
+                      className="space-y-1 cursor-pointer group/cand"
+                      onClick={() => setSelectedCandidateForInfo(cand)}
+                      title="Click to view candidate quick info"
+                    >
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded bg-emerald-100 text-emerald-900 px-2.5 py-0.5 text-xs font-bold">
                           {cand.profile.city}
@@ -1345,10 +1361,13 @@ export default function AdminConsolePage() {
                         </span>
                       </div>
 
-                      <h3 className="text-lg font-bold text-slate-900">
+                      <h3 className="text-lg font-bold text-slate-900 group-hover/cand:text-emerald-700 transition flex items-center gap-2">
                         {cand.profile.fullName} —{" "}
                         <span className="text-slate-600 font-normal">
                           {cand.profile.highestQualification} in {cand.profile.fieldOfStudy}
+                        </span>
+                        <span className="text-xs font-medium text-emerald-600 opacity-0 group-hover/cand:opacity-100 transition inline-flex items-center gap-1">
+                          <Eye className="h-3 w-3" /> Quick Info
                         </span>
                       </h3>
 
@@ -1382,10 +1401,19 @@ export default function AdminConsolePage() {
                       </span>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCandidateForInfo(cand)}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 border border-emerald-300 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 hover:border-emerald-400 transition shadow-2xs"
+                      >
+                        <Eye className="h-3.5 w-3.5 text-emerald-700" />
+                        👁️ View Info
+                      </button>
+
                       <Link
-                        href="/pathway"
-                        className="text-emerald-700 font-bold hover:underline"
+                        href={`/pathway?email=${encodeURIComponent(cand.profile.email)}`}
+                        className="text-slate-600 hover:text-emerald-700 font-semibold text-xs transition hover:underline"
                       >
                         View AI Pathway →
                       </Link>
@@ -1918,6 +1946,30 @@ export default function AdminConsolePage() {
             </form>
           </div>
         </section>
+      )}
+
+      {selectedCandidateForInfo && (
+        <CandidateQuickInfoModal
+          isOpen={Boolean(selectedCandidateForInfo)}
+          candidate={selectedCandidateForInfo}
+          onClose={() => setSelectedCandidateForInfo(null)}
+          documents={allDocuments}
+          cvArtifacts={allCvArtifacts}
+          applications={applications}
+          userRole={
+            authUsers.find(
+              (u) =>
+                u.email.toLowerCase() ===
+                selectedCandidateForInfo?.profile?.email?.toLowerCase()
+            )?.role || "candidate"
+          }
+          onOpenPathway={(cand) => {
+            setSelectedCandidateForInfo(null);
+            window.location.href = `/pathway?email=${encodeURIComponent(
+              cand.profile.email
+            )}`;
+          }}
+        />
       )}
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import {
   Briefcase,
   Search,
@@ -101,7 +102,8 @@ export default function OpportunitiesPage() {
   };
 
   return (
-    <div>
+    <div className="w-full min-h-screen">
+      <PageBreadcrumb current="Opportunities" />
       {/* Faith & Amanda's Page Hero */}
       <section className="page-hero">
         <span className="eyebrow">OPPORTUNITIES</span>

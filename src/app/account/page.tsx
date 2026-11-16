@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import {
   User,
   CheckCircle2,
@@ -171,7 +172,9 @@ export default function CandidateAccountPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="mx-auto max-w-lg py-20 px-4 text-center">
+      <div className="w-full min-h-screen">
+        <PageBreadcrumb current="My Workspace" />
+        <div className="mx-auto max-w-lg py-20 px-4 text-center">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 shadow-sm">
           <User className="h-8 w-8" />
         </div>
@@ -195,6 +198,7 @@ export default function CandidateAccountPage() {
             ← Or explore public remote opportunities first
           </Link>
         </div>
+      </div>
       </div>
     );
   }
@@ -442,7 +446,8 @@ export default function CandidateAccountPage() {
   const completedMilestones = candidate?.completedMilestones || [];
 
   return (
-    <div>
+    <div className="w-full min-h-screen">
+      <PageBreadcrumb current="My Workspace" />
       {/* Faith & Amanda's Main Dashboard Hero */}
       <section className="page-hero">
         <span className="eyebrow">MAIN DASHBOARD · CANDIDATE WORKSPACE</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import { SEED_INNOVATION_HUBS } from "@/lib/mock-data";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
 import { InnovationHub } from "@/types";
@@ -100,7 +101,8 @@ export default function HubsDirectoryPage() {
   }
 
   return (
-    <div>
+    <div className="w-full min-h-screen">
+      <PageBreadcrumb current="Hubs" />
       <section className="page-hero">
         <span className="eyebrow">PARTNER INNOVATION HUBS · INFRASTRUCTURE NETWORK</span>
         <h1>Partner Innovation &amp; Co-Working Hub Directory</h1>

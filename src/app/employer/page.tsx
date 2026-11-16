@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import {
   Building2,
   Briefcase,
@@ -121,7 +122,9 @@ export default function EmployerPortalPage() {
 
   if (!sessionLoading && !isEmployer && !isAdmin) {
     return (
-      <div className="mx-auto max-w-lg py-20 px-4 text-center">
+      <div className="w-full min-h-screen">
+        <PageBreadcrumb current="Employer Portal" />
+        <div className="mx-auto max-w-lg py-20 px-4 text-center">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-800 shadow-sm">
           <Building2 className="h-8 w-8" />
         </div>
@@ -147,6 +150,7 @@ export default function EmployerPortalPage() {
             Enrol as an Employer
           </Link>
         </div>
+      </div>
       </div>
     );
   }
@@ -254,7 +258,9 @@ export default function EmployerPortalPage() {
   });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+    <div className="w-full min-h-screen">
+      <PageBreadcrumb current="Employer Portal" />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       {/* Header Banner */}
       <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="space-y-2">
@@ -1157,6 +1163,7 @@ export default function EmployerPortalPage() {
             )}
         </section>
       )}
+    </div>
     </div>
   );
 }

@@ -1728,3 +1728,154 @@ body {
     margin: 0 !important;
   }
 }
+
+/* ==========================================================================
+   UTARE ZEM AI - ACCESSIBILITY & ASSISTIVE TECH STYLES
+   ========================================================================== */
+
+/* High Contrast Mode (WCAG AAA compliant: 7:1+ contrast ratio) */
+html.high-contrast {
+  --bg: #000000;
+  --soft: #121212;
+  --ink: #ffffff;
+  --muted: #e5e7eb;
+  --line: #ffffff;
+  --navy: #000000;
+  --navy-2: #141414;
+  --emerald: #00ff88;
+  --green: #00ff88;
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.high-contrast body {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.high-contrast .site-header,
+html.high-contrast header,
+html.high-contrast nav,
+html.high-contrast footer,
+html.high-contrast .footer {
+  background-color: #000000 !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+html.high-contrast a {
+  text-decoration: underline !important;
+  color: #5eead4 !important;
+}
+
+html.high-contrast button {
+  border-color: #ffffff !important;
+}
+
+html.high-contrast :focus-visible {
+  outline: 3px solid #ffff00 !important;
+  outline-offset: 3px !important;
+}
+
+html.high-contrast .card,
+html.high-contrast [class*="bg-white"],
+html.high-contrast [class*="bg-slate-50"] {
+  background-color: #0a0a0a !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+}
+
+html.high-contrast .text-muted,
+html.high-contrast [class*="text-slate-500"],
+html.high-contrast [class*="text-gray-500"] {
+  color: #e5e7eb !important;
+}
+
+/* Colorblind Simulation & Correction Filters */
+html.filter-deuteranopia {
+  filter: url(#utare-deuteranopia-filter) !important;
+}
+
+html.filter-protanopia {
+  filter: url(#utare-protanopia-filter) !important;
+}
+
+html.filter-tritanopia {
+  filter: url(#utare-tritanopia-filter) !important;
+}
+
+html.filter-monochrome {
+  filter: grayscale(100%) contrast(115%) !important;
+}
+
+/* Font Size Scaling */
+html.font-size-large {
+  font-size: 115% !important;
+}
+
+html.font-size-xl {
+  font-size: 130% !important;
+}
+
+/* Dyslexia-Friendly Reading Spacing */
+html.dyslexic-friendly {
+  letter-spacing: 0.05em !important;
+  word-spacing: 0.12em !important;
+  line-height: 1.8 !important;
+}
+
+html.dyslexic-friendly p,
+html.dyslexic-friendly span,
+html.dyslexic-friendly li {
+  line-height: 1.8 !important;
+}
+
+/* Reduced Motion */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Audio Visualizer Wave Animations */
+@keyframes audio-wave-anim {
+  0%, 100% {
+    transform: scaleY(0.25);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.audio-wave-bar {
+  transform-origin: bottom;
+}
+
+.animate-audio-bar-1 {
+  animation: audio-wave-anim 0.8s ease-in-out infinite;
+  animation-delay: 0.05s;
+}
+.animate-audio-bar-2 {
+  animation: audio-wave-anim 0.75s ease-in-out infinite;
+  animation-delay: 0.2s;
+}
+.animate-audio-bar-3 {
+  animation: audio-wave-anim 0.9s ease-in-out infinite;
+  animation-delay: 0.1s;
+}
+.animate-audio-bar-4 {
+  animation: audio-wave-anim 0.85s ease-in-out infinite;
+  animation-delay: 0.3s;
+}
+.animate-audio-bar-5 {
+  animation: audio-wave-anim 0.7s ease-in-out infinite;
+  animation-delay: 0.15s;
+}
+.animate-audio-bar-6 {
+  animation: audio-wave-anim 0.95s ease-in-out infinite;
+  animation-delay: 0.25s;
+}
+

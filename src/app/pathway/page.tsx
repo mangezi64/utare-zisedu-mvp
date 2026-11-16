@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import { StoredCandidateRecord } from "@/lib/store";
 import { useViewMode } from "@/lib/view-mode-context";
 import {
@@ -114,29 +115,32 @@ export default function PathwayStudioPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="mx-auto max-w-lg py-20 px-4 text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 shadow-sm">
-          <User className="h-8 w-8" />
-        </div>
-        <h1 className="text-2xl font-bold text-slate-900">Sign In to Access Your AI Pathway</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Your personalized career pathway, paired industry coach, and partner hub reservations are tied to your candidate account. Sign in to view your milestones or take the diagnostic assessment to create one.
-        </p>
-        <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
-          <Link
-            href="/login?redirect=/pathway"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition"
-          >
-            Candidate Sign In / Register
-          </Link>
-        </div>
-        <div className="mt-8 pt-6 border-t border-slate-200">
-          <Link
-            href="/assessment"
-            className="text-xs font-semibold text-emerald-700 hover:underline"
-          >
-            ← Or take the 6-Factor Skills Diagnostic first
-          </Link>
+      <div className="w-full min-h-screen">
+        <PageBreadcrumb current="Pathway" />
+        <div className="mx-auto max-w-lg py-20 px-4 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 shadow-sm">
+            <User className="h-8 w-8" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">Sign In to Access Your AI Pathway</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Your personalized career pathway, paired industry coach, and partner hub reservations are tied to your candidate account. Sign in to view your milestones or take the diagnostic assessment to create one.
+          </p>
+          <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+            <Link
+              href="/login?redirect=/pathway"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition"
+            >
+              Candidate Sign In / Register
+            </Link>
+          </div>
+          <div className="mt-8 pt-6 border-t border-slate-200">
+            <Link
+              href="/assessment"
+              className="text-xs font-semibold text-emerald-700 hover:underline"
+            >
+              ← Or take the 6-Factor Skills Diagnostic first
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -144,26 +148,29 @@ export default function PathwayStudioPage() {
 
   if (!record) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-16 text-center space-y-5">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
-          <Sparkles className="h-7 w-7" />
+      <div className="w-full min-h-screen">
+        <PageBreadcrumb current="Pathway" />
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center space-y-5">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+            <Sparkles className="h-7 w-7" />
+          </div>
+          <h1 className="text-2xl font-extrabold text-slate-900">
+            No Active Candidate Pathway Yet
+          </h1>
+          <p className="text-sm text-slate-600 max-w-lg mx-auto">
+            Complete the 60-second Candidate Intake & Readiness Diagnostic first
+            so our Gemini AI engine can generate your personalized upskilling
+            roadmap, match your nearest Partner Innovation Hub, and pair your
+            Human Coach.
+          </p>
+          <Link
+            href="/assessment"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-800"
+          >
+            Go to Step 1: Candidate Intake & Diagnostic{" "}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
-        <h1 className="text-2xl font-extrabold text-slate-900">
-          No Active Candidate Pathway Yet
-        </h1>
-        <p className="text-sm text-slate-600 max-w-lg mx-auto">
-          Complete the 60-second Candidate Intake & Readiness Diagnostic first
-          so our Gemini AI engine can generate your personalized upskilling
-          roadmap, match your nearest Partner Innovation Hub, and pair your
-          Human Coach.
-        </p>
-        <Link
-          href="/assessment"
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-800"
-        >
-          Go to Step 1: Candidate Intake & Diagnostic{" "}
-          <ArrowRight className="h-4 w-4" />
-        </Link>
       </div>
     );
   }
@@ -173,7 +180,9 @@ export default function PathwayStudioPage() {
   const progressPct = Math.round((completedCount / totalMilestones) * 100);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
+    <div className="w-full min-h-screen">
+      <PageBreadcrumb current="Pathway" />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       {/* Candidate Header Banner */}
       <div className="rounded-3xl bg-slate-900 p-6 sm:p-8 text-white space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -429,6 +438,7 @@ export default function PathwayStudioPage() {
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
+    </div>
     </div>
   );
 }

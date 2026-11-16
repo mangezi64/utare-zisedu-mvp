@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import PageBreadcrumb from "@/components/PageBreadcrumb";
 import { PRESET_PERSONAS, SEED_REMOTE_JOBS } from "@/lib/mock-data";
 import { useViewMode } from "@/lib/view-mode-context";
 import {
@@ -281,7 +282,9 @@ export default function RemoteJobsPage() {
         );
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
+    <div className="w-full min-h-screen">
+      <PageBreadcrumb />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       <div className="no-print flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-900">
@@ -1196,6 +1199,7 @@ export default function RemoteJobsPage() {
           );
         })}
       </div>
+    </div>
     </div>
   );
 }
