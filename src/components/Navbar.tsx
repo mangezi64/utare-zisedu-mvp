@@ -36,12 +36,12 @@ const PUBLIC_NAV_ITEMS = [
 
 const CANDIDATE_NAV_ITEMS = [
   { href: "/", label: "Overview", icon: Compass },
+  { href: "/account", label: "My Workspace", icon: User },
+  { href: "/jobs", label: "CV Studio", icon: Briefcase },
   { href: "/assessment", label: "Diagnostic", icon: Cpu },
   { href: "/pathway", label: "Pathway", icon: Route },
-  { href: "/opportunities", label: "Opportunities", icon: Briefcase },
-  { href: "/skills", label: "Skills", icon: BookOpen },
+  { href: "/opportunities", label: "Opportunities", icon: Globe },
   { href: "/hubs", label: "Hubs", icon: Building2 },
-  { href: "/account", label: "My Workspace", icon: User },
 ];
 
 const EMPLOYER_NAV_ITEMS = [
@@ -113,14 +113,19 @@ export default function Navbar() {
         >
           {navItems.map((item) => {
             const active = pathname === item.href;
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={active ? "active" : ""}
+                aria-current={active ? "page" : undefined}
+                className={`inline-flex items-center gap-1.5 ${
+                  active ? "active" : ""
+                }`}
               >
-                {item.label}
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span>{item.label}</span>
               </Link>
             );
           })}

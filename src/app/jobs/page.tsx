@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PRESET_PERSONAS, SEED_REMOTE_JOBS } from "@/lib/mock-data";
 import { useViewMode } from "@/lib/view-mode-context";
@@ -76,6 +76,7 @@ export default function RemoteJobsPage() {
   const [testingAi, setTestingAi] = useState(false);
 
   // CV & Cover Letter Studio State
+  const studioRef = useRef<HTMLElement | null>(null);
   const [activeJob, setActiveJob] = useState<RemoteJob | null>(null);
   const [studioTab, setStudioTab] = useState<"cv" | "letter" | "facts">("cv");
   const [cvDetails, setCvDetails] = useState<CvSourceDetails>(() =>
@@ -141,6 +142,9 @@ export default function RemoteJobsPage() {
   async function handleOpenStudio(job: RemoteJob) {
     setActiveJob(job);
     setStudioTab("cv");
+    setTimeout(() => {
+      studioRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
     await generateStudioDocuments(job, cvDetails);
   }
 
@@ -554,7 +558,10 @@ export default function RemoteJobsPage() {
 
       {/* CV & Application Letter Studio Drawer */}
       {activeJob && (
-        <section className="rounded-3xl border-2 border-emerald-600 bg-white p-6 sm:p-8 shadow-xl space-y-6">
+        <section
+          ref={studioRef}
+          className="scroll-mt-24 rounded-3xl border-2 border-emerald-600 bg-white p-6 sm:p-8 shadow-xl ring-4 ring-emerald-500/15 space-y-6"
+        >
           {!isAuthenticated && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Building2,
@@ -63,6 +63,8 @@ export default function EmployerPortalPage() {
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
 
   // Filters & active applicant modal
+  const dossierRef = useRef<HTMLElement | null>(null);
+  const jobFormRef = useRef<HTMLElement | null>(null);
   const [selectedJobFilter, setSelectedJobFilter] = useState<string>("all");
   const [selectedStatusFilter, setSelectedStatusFilter] =
     useState<string>("all");
@@ -294,7 +296,20 @@ export default function EmployerPortalPage() {
           </button>
           <button
             type="button"
-            onClick={() => setShowJobForm((v) => !v)}
+            onClick={() => {
+              setShowJobForm((v) => {
+                const next = !v;
+                if (next) {
+                  setTimeout(() => {
+                    jobFormRef.current?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                  }, 80);
+                }
+                return next;
+              });
+            }}
             className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-800 transition"
           >
             <PlusCircle className="h-4 w-4" />
@@ -334,7 +349,10 @@ export default function EmployerPortalPage() {
 
       {/* Post New Job Drawer */}
       {showJobForm && (
-        <section className="rounded-3xl border-2 border-emerald-600/40 bg-white p-6 sm:p-8 shadow-md space-y-6">
+        <section
+          ref={jobFormRef}
+          className="scroll-mt-24 rounded-3xl border-2 border-emerald-600/40 bg-white p-6 sm:p-8 shadow-md ring-4 ring-emerald-500/10 space-y-6"
+        >
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
               <h2 className="text-xl font-extrabold text-slate-900">
@@ -893,6 +911,12 @@ export default function EmployerPortalPage() {
                             setActiveDocTab(
                               app.generatedCv ? "cv" : "pitch"
                             );
+                            setTimeout(() => {
+                              dossierRef.current?.scrollIntoView({
+                                behavior: "smooth",
+                                block: "start",
+                              });
+                            }, 80);
                           }}
                           className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-800 transition"
                         >
@@ -911,7 +935,10 @@ export default function EmployerPortalPage() {
 
       {/* Full Application Inspection Drawer/Modal */}
       {activeApplicant && (
-        <section className="rounded-3xl border-2 border-slate-900 bg-white p-6 sm:p-8 shadow-xl space-y-6">
+        <section
+          ref={dossierRef}
+          className="scroll-mt-24 rounded-3xl border-2 border-slate-900 bg-white p-6 sm:p-8 shadow-xl ring-4 ring-emerald-500/15 space-y-6"
+        >
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">

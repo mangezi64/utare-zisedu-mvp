@@ -1629,8 +1629,13 @@ export default function AdminConsolePage() {
 
           {/* Admin Password Override / Reset by Email */}
           <form
+            id="admin-password-reset-form"
             onSubmit={handleAdminResetPassword}
-            className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 shadow-xs"
+            className={`scroll-mt-24 rounded-2xl border bg-white p-5 space-y-3 shadow-xs transition ${
+              adminResetEmail
+                ? "border-emerald-600 ring-4 ring-emerald-500/15"
+                : "border-slate-200"
+            }`}
           >
             <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
               <KeyRound className="h-3.5 w-3.5 text-emerald-700" />
@@ -1710,7 +1715,17 @@ export default function AdminConsolePage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setAdminResetEmail(u.email)}
+                        onClick={() => {
+                          setAdminResetEmail(u.email);
+                          setTimeout(() => {
+                            document
+                              .getElementById("admin-password-reset-form")
+                              ?.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                          }, 50);
+                        }}
                         className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition"
                       >
                         Reset Password

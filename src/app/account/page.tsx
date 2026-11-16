@@ -70,6 +70,18 @@ export default function CandidateAccountPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
+
+  function jumpToSection(sectionId: string) {
+    setHighlightedSection(sectionId);
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    setTimeout(() => {
+      setHighlightedSection((prev) => (prev === sectionId ? null : prev));
+    }, 2200);
+  }
 
   // Password Change state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -541,11 +553,47 @@ export default function CandidateAccountPage() {
         </div>
       </div>
 
+      {/* Quick Workspace Navigation Bar */}
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xs">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2">
+          Jump to:
+        </span>
+        {[
+          { id: "section-profile", label: "Profile & Hardware" },
+          { id: "section-password", label: "Password & Security" },
+          { id: "section-documents", label: `Degrees & Certs (${documents.length})` },
+          ...(cvArtifacts.length > 0
+            ? [{ id: "section-artifacts", label: `Saved CVs (${cvArtifacts.length})` }]
+            : []),
+          { id: "section-applications", label: `Applications (${applications.length})` },
+        ].map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => jumpToSection(item.id)}
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+              highlightedSection === item.id
+                ? "bg-emerald-700 text-white shadow-xs"
+                : "bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       {/* Main Grid: Left is Profile & Info, Right is Pathway, Hub & Applications */}
       <div className="grid gap-8 lg:grid-cols-12">
         {/* Left Column (5 cols): Profile Info / Edit Form */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+          <div
+            id="section-profile"
+            className={`scroll-mt-24 rounded-2xl border bg-white p-6 shadow-sm space-y-4 transition ${
+              highlightedSection === "section-profile"
+                ? "border-emerald-600 ring-4 ring-emerald-500/20"
+                : "border-slate-200"
+            }`}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-base font-bold text-slate-900">
                 Personal Credentials & Hardware Profile
@@ -773,7 +821,14 @@ export default function CandidateAccountPage() {
           </div>
 
           {/* Security & Password Update Card */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+          <div
+            id="section-password"
+            className={`scroll-mt-24 rounded-2xl border bg-white p-6 shadow-sm space-y-4 transition ${
+              highlightedSection === "section-password"
+                ? "border-emerald-600 ring-4 ring-emerald-500/20"
+                : "border-slate-200"
+            }`}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
                 <KeyRound className="h-4 w-4 text-emerald-700" />
@@ -1010,7 +1065,14 @@ export default function CandidateAccountPage() {
           )}
 
           {/* Degrees, Certificates & Supporting Documents Vault (Versioned) */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+          <div
+            id="section-documents"
+            className={`scroll-mt-24 rounded-2xl border bg-white p-6 shadow-sm space-y-4 transition ${
+              highlightedSection === "section-documents"
+                ? "border-emerald-600 ring-4 ring-emerald-500/20"
+                : "border-slate-200"
+            }`}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-emerald-700" />
@@ -1173,7 +1235,14 @@ export default function CandidateAccountPage() {
 
           {/* Saved Versioned Tailored CVs & Application Letters */}
           {cvArtifacts.length > 0 && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div
+              id="section-artifacts"
+              className={`scroll-mt-24 rounded-2xl border bg-white p-6 shadow-sm space-y-4 transition ${
+                highlightedSection === "section-artifacts"
+                  ? "border-emerald-600 ring-4 ring-emerald-500/20"
+                  : "border-slate-200"
+              }`}
+            >
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-emerald-700" />
@@ -1244,7 +1313,14 @@ export default function CandidateAccountPage() {
           )}
 
           {/* Job Applications Submitted */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+          <div
+            id="section-applications"
+            className={`scroll-mt-24 rounded-2xl border bg-white p-6 shadow-sm space-y-4 transition ${
+              highlightedSection === "section-applications"
+                ? "border-emerald-600 ring-4 ring-emerald-500/20"
+                : "border-slate-200"
+            }`}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-blue-600" />
