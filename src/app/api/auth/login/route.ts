@@ -9,9 +9,8 @@ import {
   confirmUserEmailByAddress,
   findAuthUserByEmail,
   findAuthUserByEmailFromDb,
-  findCandidateByEmail,
+  findCandidateByEmailAsync,
   findEmployerByEmail,
-  readStore,
   updateUserRole,
 } from "@/lib/store";
 import { getSupabaseAdmin, isSupabaseConfigured, supabase } from "@/lib/supabase/client";
@@ -165,68 +164,7 @@ export async function POST(req: NextRequest) {
     if (userRecord && userRecord.role !== finalRole) {
       updateUserRole(normalizedEmail, finalRole);
     }
-    let candidate = findCandidateByEmail(normalizedEmail);
-    if (!candidate && isSupabaseConfigured && supabase) {
-      try {
-        const { data: supaCand } = await supabase
-          .from("candidate_profiles")
-          .select("*")
-          .eq("email", normalizedEmail)
-          .maybeSingle();
-
-        if (supaCand) {
-          candidate = {
-            id: supaCand.id || `cand-${supaCand.user_id}`,
-            profile: {
-              fullName: supaCand.full_name,
-              email: supaCand.email,
-              phone: supaCand.phone || "",
-              city: supaCand.city || "Harare",
-              highestQualification: supaCand.highest_qualification || "Bachelors Degree",
-              fieldOfStudy: supaCand.field_of_study || "Information Technology",
-              yearsExperience: Number(supaCand.years_experience) || 0,
-              employmentStatus: supaCand.employment_status || "Unemployed",
-              monthlyIncomeBracket: supaCand.monthly_income_bracket || "$0 (Zero Income)",
-              hasDedicatedLaptop: Boolean(supaCand.has_dedicated_laptop),
-              primaryDevice: supaCand.primary_device || "Smartphone Only",
-              internetAccessType: supaCand.internet_access_type || "Mobile Data Bundles Only",
-              powerReliabilityHours: Number(supaCand.power_reliability_hours) || 6,
-              hasGlobalPaymentRail: Boolean(supaCand.has_global_payment_rail),
-              primaryGoal: supaCand.primary_goal || "International Remote Work",
-              currentSkills: supaCand.field_of_study ? [supaCand.field_of_study] : [],
-            },
-            assessment: {
-              domainCompetencyScore: 78,
-              digitalReadinessScore: 72,
-              remoteWorkLiteracyScore: 75,
-              infrastructureIndexScore: supaCand.has_dedicated_laptop ? 80 : 45,
-              overallScore: 72,
-              readinessTier: supaCand.has_dedicated_laptop
-                ? "Market-Ready (Direct Placement)"
-                : "Bridge-Ready (Hub + Rapid Upskilling)",
-              strengths: [],
-              criticalGaps: [],
-            },
-            pathway: {
-              recommendedTrack: supaCand.primary_goal || "International Remote Work",
-              executiveDiagnosis: `${supaCand.full_name} is registered for remote pathways.`,
-              infrastructureBridgePlan: "Pairing with partner innovation hubs.",
-              recommendedHub: readStore().hubs[0],
-              assignedCoach: readStore().coaches[0],
-              coachingAgenda: [],
-              upskillingMilestones: [],
-              targetRemoteRoles: [],
-              paymentRailGuidance: "",
-              tailoredResumeSummary: "",
-              generatedBy: "utare-deterministic-engine",
-            },
-            completedMilestones: [],
-            coachingStatus: "Pending Booking",
-            createdAt: supaCand.created_at || new Date().toISOString(),
-          };
-        }
-      } catch {}
-    }
+    const candidate = await findCandidateByEmailAsync(normalizedEmail);
     const employer = findEmployerByEmail(normalizedEmail);
 
     const sessionUser = {

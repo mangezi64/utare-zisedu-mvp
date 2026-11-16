@@ -4,12 +4,12 @@ import {
   generateAICareerPathway,
 } from "@/lib/gemini/pathway-engine";
 import { CandidateProfile } from "@/types";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
+import { getSupabaseServer } from "@/lib/supabase/client";
 import {
   readStore,
   saveCandidateEndToEnd,
   updateCandidateProgress,
-  findCandidateByEmail,
+  findCandidateByEmailAsync,
 } from "@/lib/store";
 import { getSessionFromRequest, unauthorizedResponse } from "@/lib/auth-guard";
 
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   if (session) {
     const targetEmail = isAdmin && emailParam ? emailParam : session.email;
-    activeCandidate = findCandidateByEmail(targetEmail);
+    activeCandidate = await findCandidateByEmailAsync(targetEmail);
     if (!activeCandidate && isAdmin && idParam) {
       activeCandidate =
         state.candidates.find((c) => c.id === idParam) || null;
@@ -74,9 +74,10 @@ export async function POST(req: NextRequest) {
 
     // 4. Also sync to Supabase if cloud credentials are configured
     let savedToSupabase = false;
-    if (isSupabaseConfigured && supabase) {
+    const sb = getSupabaseServer();
+    if (sb) {
       try {
-        const { data: candidateRow, error: candidateErr } = await supabase
+        const { data: candidateRow, error: candidateErr } = await sb
           .from("candidate_profiles")
           .upsert(
             {

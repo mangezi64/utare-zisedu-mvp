@@ -10,6 +10,7 @@ export const DEFAULT_BOOTSTRAP_SUPERUSERS: string[] = [
   "admin@utarezem.ai",
   "stewart@utare.co.zw",
   "stewart.mangezi@utare.co.zw",
+  "mangezi64@gmail.com",
 ];
 
 /**

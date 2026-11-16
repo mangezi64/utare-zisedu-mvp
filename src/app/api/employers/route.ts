@@ -10,8 +10,8 @@ import { isAdminRequest, adminUnauthorizedResponse } from "@/lib/auth-guard";
 import { validateEmail, validatePassword } from "@/lib/validation";
 import { checkEmailDomain } from "@/lib/email-domain-check";
 import { generateRandomToken, hashPassword } from "@/lib/password-hash";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
-import { EmployerRegistration, EmployerVerificationStatus } from "@/types";
+import { getSupabaseServer, isSupabaseConfigured } from "@/lib/supabase/client";
+import { EmployerVerificationStatus } from "@/types";
 
 export const runtime = "nodejs";
 
@@ -23,9 +23,10 @@ export async function GET(req: NextRequest) {
   const employers = [...getEmployerRegistrations()];
   const existingEmails = new Set(employers.map((e) => e.email.trim().toLowerCase()));
 
-  if (isSupabaseConfigured && supabase) {
+  const sb = getSupabaseServer();
+  if (sb) {
     try {
-      const { data: dbEmployers, error } = await supabase
+      const { data: dbEmployers, error } = await sb
         .from("employer_registrations")
         .select("*")
         .order("created_at", { ascending: false });

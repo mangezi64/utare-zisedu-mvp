@@ -31,6 +31,7 @@ import {
   SEED_SKILLS_COURSES,
 } from "@/lib/mock-data";
 import { query } from "@/lib/db";
+import { getSupabaseServer } from "@/lib/supabase/client";
 
 export interface StoredAuthUser {
   id: string;
@@ -175,6 +176,50 @@ export function findCandidateByEmail(email?: string | null): StoredCandidateReco
   );
 }
 
+export async function findCandidateByEmailAsync(
+  email?: string | null
+): Promise<StoredCandidateRecord | null> {
+  if (!email) return null;
+  const local = findCandidateByEmail(email);
+  if (local) return local;
+
+  const normalized = email.trim().toLowerCase();
+  const sb = getSupabaseServer();
+  if (sb) {
+    try {
+      const { data: p, error } = await sb
+        .from("candidate_profiles")
+        .select("*")
+        .ilike("email", normalized)
+        .maybeSingle();
+
+      if (!error && p) {
+        return registerOrUpdateCandidate({
+          fullName: p.full_name || "Candidate",
+          email: p.email,
+          phone: p.phone || "",
+          city: p.city || "Harare",
+          highestQualification: p.highest_qualification || "Bachelors Degree",
+          fieldOfStudy: p.field_of_study || "Information Technology",
+          yearsExperience: Number(p.years_experience) || 0,
+          employmentStatus: p.employment_status || "Unemployed",
+          monthlyIncomeBracket: p.monthly_income_bracket || "$0 (Zero Income)",
+          hasDedicatedLaptop: Boolean(p.has_dedicated_laptop),
+          primaryDevice: p.primary_device || "Smartphone Only",
+          internetAccessType: p.internet_access_type || "Mobile Data Bundles Only",
+          powerReliabilityHours: Number(p.power_reliability_hours) || 6,
+          hasGlobalPaymentRail: Boolean(p.has_global_payment_rail),
+          primaryGoal: p.primary_goal || "International Remote Work",
+          currentSkills: p.field_of_study ? [p.field_of_study] : [],
+        });
+      }
+    } catch {
+      // Ignore non-fatal lookup warning
+    }
+  }
+  return null;
+}
+
 export function findCandidateById(id?: string | null): StoredCandidateRecord | null {
   if (!id) return null;
   const state = readStore();
@@ -235,6 +280,31 @@ function syncAuthUserToPostgres(user: StoredAuthUser) {
       user.createdAt,
     ]
   ).catch(() => {});
+
+  const sb = getSupabaseServer();
+  if (sb) {
+    sb.from("auth_users")
+      .upsert(
+        {
+          id: user.id,
+          email: user.email.toLowerCase(),
+          name: user.name,
+          role: user.role,
+          password_hash: user.passwordHash,
+          email_confirmed: user.emailConfirmed,
+          confirmation_token: user.confirmationToken || null,
+          employer_id: user.employerId || null,
+          org_role: user.orgRole || null,
+          company_name: user.companyName || null,
+          created_at: user.createdAt,
+        },
+        { onConflict: "email" }
+      )
+      .then(
+        () => {},
+        () => {}
+      );
+  }
 }
 
 export function findAuthUserByEmail(email?: string | null): StoredAuthUser | null {
@@ -275,7 +345,6 @@ export async function findAuthUserByEmailFromDb(
           ? new Date(row.created_at).toISOString()
           : new Date().toISOString(),
       };
-      // Upsert into local store so that synchronous lookups within this container instance find it
       const state = readStore();
       const idx = state.users.findIndex(
         (u) => u.email.trim().toLowerCase() === normalized
@@ -290,6 +359,49 @@ export async function findAuthUserByEmailFromDb(
     }
   } catch (err) {
     console.warn("[PostgreSQL Auth Lookup Non-fatal Warning]:", err);
+  }
+
+  // Fallback to live Supabase Service-Role lookup
+  const sb = getSupabaseServer();
+  if (sb) {
+    try {
+      const { data: row, error } = await sb
+        .from("auth_users")
+        .select("*")
+        .ilike("email", normalized)
+        .maybeSingle();
+
+      if (!error && row) {
+        const user: StoredAuthUser = {
+          id: row.id,
+          email: row.email,
+          name: row.name,
+          role: row.role,
+          passwordHash: row.password_hash,
+          emailConfirmed: Boolean(row.email_confirmed),
+          confirmationToken: row.confirmation_token || undefined,
+          employerId: row.employer_id || undefined,
+          orgRole: row.org_role || undefined,
+          companyName: row.company_name || undefined,
+          createdAt: row.created_at
+            ? new Date(row.created_at).toISOString()
+            : new Date().toISOString(),
+        };
+        const state = readStore();
+        const idx = state.users.findIndex(
+          (u) => u.email.trim().toLowerCase() === normalized
+        );
+        if (idx >= 0) {
+          state.users[idx] = { ...state.users[idx], ...user };
+        } else {
+          state.users.push(user);
+        }
+        writeStore(state);
+        return user;
+      }
+    } catch {
+      // Ignore fallback error
+    }
   }
   return null;
 }
@@ -479,6 +591,36 @@ function syncCandidateToPostgres(profile: CandidateProfile) {
   ).catch((err: any) => {
     console.warn("[PostgreSQL Candidate Sync Warning]:", err?.message);
   });
+
+  const sb = getSupabaseServer();
+  if (sb) {
+    sb.from("candidate_profiles")
+      .upsert(
+        {
+          full_name: fullName,
+          email,
+          phone,
+          city,
+          highest_qualification: qual,
+          field_of_study: field,
+          years_experience: exp,
+          employment_status: empStatus,
+          monthly_income_bracket: income,
+          has_dedicated_laptop: hasLaptop,
+          primary_device: device,
+          internet_access_type: internet,
+          power_reliability_hours: power,
+          has_global_payment_rail: paymentRail,
+          primary_goal: goal,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "email" }
+      )
+      .then(
+        () => {},
+        () => {}
+      );
+  }
 }
 
 function syncJobApplicationToPostgres(app: JobApplicationRecord) {

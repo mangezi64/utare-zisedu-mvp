@@ -3,6 +3,7 @@ import {
   readStore,
   registerOrUpdateCandidate,
   findCandidateByEmail,
+  findCandidateByEmailAsync,
 } from "@/lib/store";
 import { CandidateProfile } from "@/types";
 import { validateEmail } from "@/lib/validation";
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   // Candidates can only fetch their own profile; admins can inspect any candidate
   const targetEmail = isAdmin && emailParam ? emailParam : session.email;
-  let candidate = findCandidateByEmail(targetEmail);
+  let candidate = await findCandidateByEmailAsync(targetEmail);
 
   if (!candidate && isAdmin && idParam) {
     candidate = state.candidates.find((c) => c.id === idParam) || null;

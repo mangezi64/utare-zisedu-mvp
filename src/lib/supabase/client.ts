@@ -62,3 +62,11 @@ export function getSupabaseAdmin(): SupabaseClient | null {
   }
   return adminClient;
 }
+
+/**
+ * Returns the Service-Role Supabase client when configured (bypassing RLS for
+ * trusted server-side API routes), or falls back to the public Supabase client.
+ */
+export function getSupabaseServer(): SupabaseClient | null {
+  return getSupabaseAdmin() || supabase;
+}

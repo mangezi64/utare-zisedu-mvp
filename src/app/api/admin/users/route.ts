@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   adminUnauthorizedResponse,
-   getSessionFromRequest,
+  getSessionFromRequest,
+  resolveBootstrapRole,
 } from "@/lib/auth-guard";
-import { findAuthUserByEmail, listAuthUsers, updateUserRole } from "@/lib/store";
+import {
+  createAuthUser,
+  findAuthUserByEmail,
+  findAuthUserByEmailFromDb,
+  listAuthUsers,
+  updateUserRole,
+} from "@/lib/store";
 import { getSupabaseAdmin } from "@/lib/supabase/client";
 import { UserRole } from "@/types";
 
@@ -29,10 +36,11 @@ export async function GET(req: NextRequest) {
           const emailNorm = (su.email || "").trim().toLowerCase();
           if (emailNorm && !existingEmails.has(emailNorm)) {
             existingEmails.add(emailNorm);
-            const assignedRole: UserRole =
+            const rawRole: UserRole =
               (su.app_metadata?.role as UserRole) ||
               (su.user_metadata?.account_type as UserRole) ||
               "candidate";
+            const assignedRole = resolveBootstrapRole(emailNorm, rawRole);
             users.push({
               id: su.id,
               email: su.email || "",
@@ -79,9 +87,41 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    // Hydrate target from DB or Supabase Auth if not in local store yet
+    let existingTarget =
+      findAuthUserByEmail(emailOrId) ||
+      (await findAuthUserByEmailFromDb(emailOrId));
+
+    const adminClient = getSupabaseAdmin();
+    if (!existingTarget && adminClient) {
+      try {
+        const { data: supaAuthData } = await adminClient.auth.admin.listUsers();
+        const su = supaAuthData?.users?.find(
+          (u) =>
+            u.id === emailOrId ||
+            (u.email && u.email.toLowerCase() === emailOrId.toLowerCase())
+        );
+        if (su && su.email) {
+          existingTarget = createAuthUser({
+            id: su.id,
+            email: su.email,
+            name:
+              (su.user_metadata?.full_name as string) ||
+              su.email.split("@")[0] ||
+              "User",
+            role:
+              (su.app_metadata?.role as UserRole) ||
+              (su.user_metadata?.account_type as UserRole) ||
+              "candidate",
+            passwordHash: "supabase_managed",
+            emailConfirmed: Boolean(su.email_confirmed_at),
+          });
+        }
+      } catch {}
+    }
+
     // Regular admins can upgrade normal users to 'admin', 'employer', or 'candidate'.
     // Only a 'superuser' can grant or modify the 'superuser' role.
-    const existingTarget = findAuthUserByEmail(emailOrId);
     if (
       session.role !== "superuser" &&
       (role === "superuser" || existingTarget?.role === "superuser")
@@ -107,7 +147,6 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Also sync role to Supabase Auth app_metadata if configured
-    const adminClient = getSupabaseAdmin();
     if (adminClient && updated.id) {
       try {
         await adminClient.auth.admin.updateUserById(updated.id, {

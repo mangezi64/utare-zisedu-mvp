@@ -5,7 +5,7 @@ import {
   signSessionToken,
   verifySessionToken,
 } from "@/lib/auth-session";
-import { findCandidateByEmail, findEmployerByEmail } from "@/lib/store";
+import { findCandidateByEmailAsync, findEmployerByEmail } from "@/lib/store";
 
 export const runtime = "nodejs";
 
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const candidate = findCandidateByEmail(session.email);
+  const candidate = await findCandidateByEmailAsync(session.email);
   const employer = findEmployerByEmail(session.email);
 
   const res = NextResponse.json({

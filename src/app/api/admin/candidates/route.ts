@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest, adminUnauthorizedResponse } from "@/lib/auth-guard";
-import { readStore, StoredCandidateRecord } from "@/lib/store";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
+import { JobApplicationRecord, readStore, StoredCandidateRecord } from "@/lib/store";
+import { getSupabaseServer } from "@/lib/supabase/client";
 
 export const runtime = "nodejs";
 
@@ -11,12 +11,14 @@ export async function GET(req: NextRequest) {
   }
 
   const state = readStore();
-  let candidateList: StoredCandidateRecord[] = [...state.candidates];
+  const candidateList: StoredCandidateRecord[] = [...state.candidates];
+  const applicationList: JobApplicationRecord[] = [...state.applications];
 
-  // Hydrate from live Supabase Postgres candidate_profiles
-  if (isSupabaseConfigured && supabase) {
+  // Hydrate from live Supabase Postgres using Service-Role client (bypasses RLS)
+  const sb = getSupabaseServer();
+  if (sb) {
     try {
-      const { data: dbProfiles, error } = await supabase
+      const { data: dbProfiles, error } = await sb
         .from("candidate_profiles")
         .select("*")
         .order("created_at", { ascending: false });
@@ -79,7 +81,17 @@ export async function GET(req: NextRequest) {
                   "2. Portfolio & Verified Competency Review",
                   "3. Live Interview & Technical Practice",
                 ],
-                upskillingMilestones: [],
+                upskillingMilestones: [
+                  {
+                    phase: "Phase 1: Hardware & Baseline",
+                    durationWeeks: 2,
+                    title: "Hardware Access & Payment Rail Setup",
+                    objective: "Secure reliable workstation at partner hub and configure Payoneer/Deel.",
+                    deliverable: "Active Deel account + verified Hub workstation booking",
+                    resources: ["Hub Onboarding Guide", "Global Payment Rails Primer"],
+                    lowBandwidthFriendly: true,
+                  },
+                ],
                 targetRemoteRoles: [
                   {
                     role: "Remote Associate",
@@ -99,6 +111,33 @@ export async function GET(req: NextRequest) {
           }
         }
       }
+
+      // Also hydrate job applications from Supabase
+      const { data: dbApps, error: appErr } = await sb
+        .from("job_applications")
+        .select("*")
+        .order("applied_at", { ascending: false });
+
+      if (!appErr && dbApps && dbApps.length > 0) {
+        const existingAppIds = new Set(applicationList.map((a) => a.id));
+        for (const a of dbApps) {
+          if (a.id && !existingAppIds.has(a.id)) {
+            existingAppIds.add(a.id);
+            applicationList.unshift({
+              id: a.id,
+              candidateId: a.candidate_id,
+              candidateName: a.candidate_name,
+              candidateEmail: a.candidate_email,
+              jobId: a.job_id,
+              jobTitle: a.job_title,
+              company: a.company,
+              tailoredResumePitch: a.tailored_resume_pitch,
+              appliedAt: a.applied_at || new Date().toISOString(),
+              status: a.status || "submitted",
+            });
+          }
+        }
+      }
     } catch (err) {
       console.warn("[Admin Candidates Supabase Fetch Warning]:", err);
     }
@@ -107,6 +146,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     total: candidateList.length,
     candidates: candidateList,
-    applications: state.applications,
+    applications: applicationList,
   });
 }

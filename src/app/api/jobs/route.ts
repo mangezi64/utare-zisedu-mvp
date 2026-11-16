@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFromRequest, isAdminRequest, unauthorizedResponse } from "@/lib/auth-guard";
 import {
-  findCandidateByEmail,
+  findCandidateByEmailAsync,
   readStore,
   submitJobApplicationToStore,
 } from "@/lib/store";
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   let activeCandidate = null;
   if (session) {
-    activeCandidate = findCandidateByEmail(session.email);
+    activeCandidate = await findCandidateByEmailAsync(session.email);
   }
 
   // Regular candidate/public users see only approved jobs; admins see all jobs

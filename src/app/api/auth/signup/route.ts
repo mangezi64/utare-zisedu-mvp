@@ -8,7 +8,7 @@ import {
   registerOrUpdateCandidate,
   saveEmployerRegistration,
 } from "@/lib/store";
-import { getSupabaseAdmin, isSupabaseConfigured, supabase } from "@/lib/supabase/client";
+import { getSupabaseAdmin, getSupabaseServer, isSupabaseConfigured, supabase } from "@/lib/supabase/client";
 import { resolveBootstrapRole } from "@/lib/bootstrap-roles";
 import { CandidateProfile } from "@/types";
 
@@ -235,8 +235,9 @@ export async function POST(req: NextRequest) {
       });
 
       // Sync candidate profile to live Supabase Postgres
-      if (isSupabaseConfigured && supabase) {
-        supabase
+      const sb = getSupabaseServer();
+      if (sb) {
+        sb
           .from("candidate_profiles")
           .upsert(
             {
@@ -286,8 +287,9 @@ export async function POST(req: NextRequest) {
     });
 
     // Sync auth user to live Supabase Postgres auth_users table
-    if (isSupabaseConfigured && supabase) {
-      supabase
+    const sbAuth = getSupabaseServer();
+    if (sbAuth) {
+      sbAuth
         .from("auth_users")
         .upsert(
           {

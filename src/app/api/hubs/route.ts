@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
-import { addHubToStore, findCandidateByEmail, readStore } from "@/lib/store";
+import { getSupabaseServer } from "@/lib/supabase/client";
+import { addHubToStore, findCandidateByEmailAsync, readStore } from "@/lib/store";
 
 export async function GET(req: NextRequest) {
   const state = readStore();
   const emailParam = req.nextUrl.searchParams.get("email");
-  const activeCandidate = emailParam ? findCandidateByEmail(emailParam) : null;
+  const activeCandidate = emailParam ? await findCandidateByEmailAsync(emailParam) : null;
 
-  if (isSupabaseConfigured && supabase) {
-    const { data, error } = await supabase
+  const sb = getSupabaseServer();
+  if (sb) {
+    const { data, error } = await sb
       .from("innovation_hubs")
       .select("*")
       .order("city", { ascending: true });
