@@ -1,4 +1,6 @@
 import Link from "next/link";
+import WatchDemoButton from "@/components/WatchDemoButton";
+import ZimbabweMapGraphic from "@/components/ZimbabweMapGraphic";
 import {
   SURVEY_BENCHMARKS,
   SEED_INNOVATION_HUBS,
@@ -102,6 +104,7 @@ export default function HomePage() {
                 Start Candidate Bridge
                 <ArrowRight className="h-4 w-4" />
               </Link>
+              <WatchDemoButton />
               <Link href="/hubs" className="button button-ghost">
                 Explore Partner Innovation Hubs
               </Link>
@@ -127,8 +130,11 @@ export default function HomePage() {
             <div className="map-ring ring-1" />
             <div className="map-ring ring-2" />
             <div className="map-center">
-              <span>ZW</span>
-              <small>ZIMBABWE</small>
+              <ZimbabweMapGraphic className="w-24 h-24 drop-shadow-[0_8px_20px_rgba(5,150,105,0.55)]" />
+              <div className="map-center-overlay">
+                <span>ZW</span>
+                <small>ZIMBABWE</small>
+              </div>
             </div>
             <span className="map-point point-1">
               <BookOpen className="h-4 w-4" />

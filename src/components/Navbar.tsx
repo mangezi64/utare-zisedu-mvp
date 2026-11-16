@@ -20,6 +20,7 @@ import {
   Mail,
   Menu,
   X,
+  Video,
 } from "lucide-react";
 import { useViewMode } from "@/lib/view-mode-context";
 
@@ -246,6 +247,20 @@ export default function Navbar() {
 
         {/* Right Side Desktop Auth & Role Controls */}
         <div className="header-end">
+          <button
+            type="button"
+            onClick={() =>
+              window.dispatchEvent(
+                new CustomEvent("utare-open-video-walkthrough")
+              )
+            }
+            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50/90 px-2.5 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100 transition shadow-sm"
+            title="Watch 2-Min Flow Demo"
+            aria-label="Watch interactive platform flow demo"
+          >
+            <Video className="h-3.5 w-3.5 text-amber-700" />
+            <span className="hidden sm:inline">Flow Demo</span>
+          </button>
           {isAdmin ? (
             <>
               {/* Desktop Controls */}

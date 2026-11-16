@@ -1,7 +1,26 @@
 # UTARE ZEM AI — Release Notes
 
-**Release Date:** November 16, 2026 (Evening Release — Post-Coach Feedback & Navigation Overhaul)  
+**Release Date:** November 16, 2026 (Night Release — Zimbabwe Map Radar, Video Walkthrough, Voice Humanization & Zero-Overflow Packaging)  
 **Target Environments:** Vercel Production (`utare-zisedu-mvp.vercel.app`), Supabase Cloud PostgreSQL, and Containerized Local PostgreSQL (`utare-zisedu-db`)
+
+---
+
+## 8. Zimbabwe Map Radar, Interactive Flow Video Walkthrough & Polished Page Packaging
+* **Authentic Zimbabwe Map Vector Graphic (`<ZimbabweMapGraphic />`):**
+  - Designed an SVG map of Zimbabwe's 10 provinces (Mashonaland, Matabeleland, Midlands, Masvingo, Manicaland, Bulawayo, and Harare) with emerald gradient styling and glow filters.
+  - Replaced the generic green rotated square inside the two concentric radar circles with the actual Zimbabwe map, centered with pulsing radar beacons for Harare, Bulawayo, and Mutare innovation hubs and a frosted "ZW ZIMBABWE" indicator badge.
+* **Interactive Flow & Video Walkthrough (`<FlowVideoWalkthrough />` & `<WatchDemoButton />`):**
+  - Integrated an interactive 5-step visual platform walkthrough demonstrating the end-to-end journey: Diagnostic Intake -> AI Pathway -> Tailored CV Studio -> Partner Innovation Hubs -> Remote Job Matching.
+  - Includes auto-advancing slide timer, play/pause, scrubbing, playback speed (1x, 1.25x, 1.5x), Closed Captions (CC) for deaf/hard-of-hearing users, and external video embed fallback for live pitch recordings.
+  - Accessible from hero primary actions ("Watch 2-Min Flow Demo"), top navigation drawer, and floating Accessibility suite.
+* **Humanized Natural AI Voice & Friendly Narration (`<AudioExplainer />`):**
+  - Completely rewrote all 4 explainer chapters in an empathetic, warm, conversational Zimbabwean tone.
+  - Calibrated speech synthesis parameters (`rate: 0.94`, `pitch: 1.02`) and neural voice detection priority (South African / British / Commonwealth natural voices) to eliminate robotic timbre.
+  - Removed Coach Catherine's name from candidate-facing copy, appropriately reserving her advisory role for founding team coaching.
+* **Zero Horizontal Scroll & Cohesive Viewport Packaging:**
+  - Completely eliminated the horizontal slide/scrollbar ("slite at bottom left to right") by enforcing `overflow-x: hidden; max-width: 100%;` and `box-sizing: border-box;` on `html`, `body`, and `main`.
+  - Introduced responsive navbar adaptation: hides icons and compacts link padding on intermediate screens (1041px - 1220px) and seamlessly transitions to the mobile hamburger drawer at ≤1040px, ensuring the "Create Account" button is never pushed off-screen.
+  - Streamlined hero card and top evidence section paddings so the landing page fits harmoniously above the fold across all standard laptop displays (1280x800, 1366x768, 1440x900) without awkward text truncation or overlapping floating widgets.
 
 ---
 

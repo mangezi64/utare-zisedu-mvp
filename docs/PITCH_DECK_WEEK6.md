@@ -346,7 +346,7 @@
 #### Spoken Script (Word-for-Word):
 > *"Our vision by the end of this 8-week challenge is audacious but achievable: our first cohort of 100 verified remote placements, injecting over $700,000 in foreign exchange directly into Zimbabwean households. `[pause 1s]`  
 > Today, our ask is for employer introductions into UK and European remote networks, legal mentorship to finalize our hub MOUs, and catalytic pilot grant backing.  
-> Thank you, Coach Catherine and esteemed judges. Our entire team is ready for your questions."* `[4:00 - Finish]`
+> Thank you, esteemed challenge judges and mentors. Our entire team is ready for your questions."* `[4:00 - Finish]`
 
 ---
 

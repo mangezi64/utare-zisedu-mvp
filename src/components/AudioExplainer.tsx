@@ -30,35 +30,35 @@ export interface AudioChapter {
 export const AUDIO_CHAPTERS: AudioChapter[] = [
   {
     id: "mission",
-    title: "1. Mission & The Remote Bridge",
-    shortTitle: "Mission",
-    tagline: "Connecting Zimbabwean talent to global opportunities",
+    title: "1. Welcome & Why We Built Utare",
+    shortTitle: "Welcome",
+    tagline: "Connecting Zimbabwean talent to global remote income",
     durationEstimate: "45s",
-    text: "Welcome to UTARE ZEM AI — Zimbabwe's Economic Mobility and Remote Bridge. Our mission is to unlock the dormant potential of Zimbabwean tertiary graduates and ambitious youth by connecting them directly with verified global and regional remote work. Across Zimbabwe, high-aptitude talent is held back by last-mile constraints like unstable electricity, costly internet, and credential bias. UTARE levels the playing field through AI-powered skills mapping, verified project portfolios, and guaranteed infrastructure access through our community innovation hubs.",
+    text: "Hi there, and a warm welcome to Utare. We built this platform right here in Zimbabwe because we understand firsthand how challenging it is for graduates and ambitious young professionals. You study hard, you graduate, but the local market has very few formal openings. Meanwhile, international companies are looking for talented, reliable remote workers every single day. Utare is your bridge to those global jobs. We help you showcase what you can actually do, build an authentic professional CV, and connect to solar-powered community hubs whenever power or internet lets you down.",
   },
   {
     id: "diagnostic",
-    title: "2. The AI Career Diagnostic",
+    title: "2. The Friendly Career Diagnostic",
     shortTitle: "Diagnostic",
-    tagline: "Skills-based assessment without credential bias",
+    tagline: "Discover your true remote superpowers",
     durationEstimate: "40s",
-    text: "The journey begins with our AI Career Diagnostic. Instead of relying solely on traditional paper degrees, our diagnostic assesses your actual problem-solving aptitude, technical competencies, and remote workplace communication readiness. Through real-world simulation tasks, we identify your competitive strengths and match you to high-demand tracks—including cloud development, data operations, technical support, and generative AI workflow engineering.",
+    text: "Your journey starts with our Career Diagnostic. Please don't worry, this isn't a stressful exam or academic test. Think of it as a helpful chat that maps your practical strengths, digital skills, and problem-solving abilities. Whether your background is in engineering, business, or the humanities, our AI diagnostic matches your natural aptitude to high-demand remote roles, like cloud development, data operations, customer support, or digital project coordination.",
   },
   {
     id: "cv-studio",
     title: "3. Tailored CV Studio",
     shortTitle: "CV Studio",
-    tagline: "ATS-optimized, evidence-backed resumes",
+    tagline: "Resumes that get you real interviews",
     durationEstimate: "40s",
-    text: "Next is our Tailored CV Studio. Generic resumes often get filtered out by automated Applicant Tracking Systems. UTARE transforms your assessment results and project deliverables into high-impact, industry-standard CV artifacts. Every competency claim is backed by verified portfolio evidence and skill badges, giving international employers immediate confidence to interview and hire Zimbabwean talent.",
+    text: "Next is the Tailored CV Studio. Let's be honest, generic resumes often get lost in automated company filters. Utare fixes that. We translate your assessment highlights and real-world project skills into a clean, professional, ATS-friendly CV. You can download your tailored CV and cover letter in Microsoft Word or PDF with a single click, ready to impress international hiring managers.",
   },
   {
     id: "hubs-coaching",
-    title: "4. Partner Hubs & Human Coaching",
-    shortTitle: "Hubs & Coaches",
-    tagline: "Solar power, Starlink internet & human mentorship",
-    durationEstimate: "50s",
-    text: "Finally, UTARE eliminates the physical barriers to remote work. Through our network of Partner Innovation Hubs across Harare, Bulawayo, Mutare, Gweru, and Chitungwiza, members access solar-backed power, high-speed Starlink internet, and dedicated workstations. Paired with personalized human mentorship from coaches like Catherine Mapomba and our peer cohort network, UTARE supports you from day one of learning right through to your first international paycheck.",
+    title: "4. Solar Hubs & Community Support",
+    shortTitle: "Hubs & Community",
+    tagline: "Reliable power, fast Wi-Fi, and peer mentorship",
+    durationEstimate: "45s",
+    text: "Finally, we remove the daily infrastructure headaches of remote work. Through our partner innovation hubs across Harare, Bulawayo, Mutare, and other towns, you get access to solar electricity, fast Starlink internet, and comfortable desks to do your work. Combined with our peer community and verified mentors, you'll have all the support you need from your first application all the way to your first remote paycheck.",
   },
 ];
 
@@ -103,12 +103,37 @@ export default function AudioExplainer() {
         if (available && available.length > 0) {
           setVoices(available);
           voicesRef.current = available;
-          // Look for warm/natural English voices
+          // Look for warm, natural, human English voices
           const preferred =
             available.find((v) => v.lang.startsWith("en-ZA")) ||
-            available.find((v) => v.lang.startsWith("en-GB") && v.name.toLowerCase().includes("natural")) ||
+            available.find(
+              (v) =>
+                (v.name.toLowerCase().includes("premium") ||
+                  v.name.toLowerCase().includes("enhanced")) &&
+                v.lang.startsWith("en")
+            ) ||
+            available.find(
+              (v) =>
+                v.name.toLowerCase().includes("natural") &&
+                v.lang.startsWith("en")
+            ) ||
+            available.find(
+              (v) =>
+                (v.name.toLowerCase().includes("samantha") ||
+                  v.name.toLowerCase().includes("serena") ||
+                  v.name.toLowerCase().includes("karen") ||
+                  v.name.toLowerCase().includes("daniel") ||
+                  v.name.toLowerCase().includes("oliver") ||
+                  v.name.toLowerCase().includes("stephanie")) &&
+                v.lang.startsWith("en")
+            ) ||
+            available.find(
+              (v) =>
+                v.name.toLowerCase().includes("google") &&
+                v.lang.startsWith("en")
+            ) ||
             available.find((v) => v.lang.startsWith("en-GB")) ||
-            available.find((v) => v.lang.startsWith("en-US") && v.name.toLowerCase().includes("natural")) ||
+            available.find((v) => v.lang.startsWith("en-US")) ||
             available.find((v) => v.lang.startsWith("en"));
           if (preferred && !selectedVoiceURIRef.current) {
             setSelectedVoiceURI(preferred.voiceURI);
@@ -154,8 +179,9 @@ export default function AudioExplainer() {
       if (!chapter) return;
 
       const utterance = new SpeechSynthesisUtterance(chapter.text);
-      utterance.rate = speechRateRef.current;
-      utterance.pitch = 1.0;
+      // Gentle, relaxed conversational human cadence
+      utterance.rate = Math.max(0.75, speechRateRef.current * 0.94);
+      utterance.pitch = 1.02;
 
       const activeVoices = voicesRef.current;
       const voiceUri = selectedVoiceURIRef.current;
@@ -613,6 +639,22 @@ export default function AudioExplainer() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* Visual Interactive Video Demo Alternative */}
+          <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+            <span className="text-slate-400">Prefer a visual video walkthrough?</span>
+            <button
+              type="button"
+              onClick={() => {
+                handleStop();
+                setIsOpen(false);
+                window.dispatchEvent(new CustomEvent("utare-open-video-walkthrough"));
+              }}
+              className="text-amber-400 hover:text-amber-300 font-bold underline underline-offset-2 flex items-center gap-1 transition"
+            >
+              Watch Video Flow Demo 🎥
+            </button>
           </div>
         </section>
       )}

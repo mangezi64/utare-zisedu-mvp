@@ -16,6 +16,7 @@ import {
   Radio,
   FileText,
   Activity,
+  Video,
 } from "lucide-react";
 
 export type ColorblindMode = "none" | "deuteranopia" | "protanopia" | "tritanopia" | "monochrome";
@@ -535,6 +536,31 @@ export default function AccessibilityControls() {
                   >
                     {prefs.verboseAnnouncements && <Check className="w-3 h-3 text-emerald-400" />}
                     Verbose Live Alerts
+                  </button>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2 mt-3 pt-3 border-t border-slate-700/60">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      window.dispatchEvent(new CustomEvent("utare-open-audio-explainer"));
+                    }}
+                    className="flex-1 py-2 px-3 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <Volume2 className="w-3.5 h-3.5" />
+                    Audio Tour (Voice)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      window.dispatchEvent(new CustomEvent("utare-open-video-walkthrough"));
+                    }}
+                    className="flex-1 py-2 px-3 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <Video className="w-3.5 h-3.5" />
+                    Interactive Video Demo
                   </button>
                 </div>
               </div>

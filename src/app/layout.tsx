@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import { ViewModeProvider } from "@/lib/view-mode-context";
 import AudioExplainer from "@/components/AudioExplainer";
 import AccessibilityControls from "@/components/AccessibilityControls";
+import FlowVideoWalkthrough from "@/components/FlowVideoWalkthrough";
 
 export const metadata: Metadata = {
   title: "UTARE ZEM AI — Economic Mobility & Remote Bridge",
@@ -67,9 +68,10 @@ export default function RootLayout({
             </div>
           </footer>
 
-          {/* Accessibility & Assistive Tech Suite */}
+          {/* Accessibility, Video Walkthrough & Assistive Tech Suite */}
           <AudioExplainer />
           <AccessibilityControls />
+          <FlowVideoWalkthrough />
         </ViewModeProvider>
       </body>
     </html>

@@ -57,14 +57,14 @@ describe("CandidateQuickInfoModal Integration & Quick Info Architecture", () => 
       },
       assignedCoach: {
         id: "coach-1",
-        fullName: "Coach Catherine",
+        fullName: "Tariro Moyo (Vetted Industry Mentor)",
         title: "Senior Career Architect",
         organization: "Utare ZEM AI",
         specialtyTrack: "Tech Career Mobility",
         bio: "Specialist in remote career transitions.",
         city: "Harare",
         availableSlotsWeekly: 5,
-        calBookingLink: "https://cal.com/coach-catherine",
+        calBookingLink: "https://cal.com/utare-mentor-tariro",
       },
       coachingAgenda: ["Profile polish", "Interview prep"],
       upskillingMilestones: [
@@ -251,7 +251,7 @@ describe("CandidateQuickInfoModal Integration & Quick Info Architecture", () => 
 
   it("verifies pathway summary details and coach/hub pairings", () => {
     expect(mockCandidate.pathway.recommendedTrack).toBe("Full-Stack Software Development");
-    expect(mockCandidate.pathway.assignedCoach.fullName).toBe("Coach Catherine");
+    expect(mockCandidate.pathway.assignedCoach.fullName).toBe("Tariro Moyo (Vetted Industry Mentor)");
     expect(mockCandidate.pathway.recommendedHub.name).toBe("Harare Innovation Hub");
     expect(mockCandidate.pathway.recommendedHub.hasSolarBackup).toBe(true);
     expect(mockCandidate.pathway.targetRemoteRoles[0].role).toBe("Frontend Engineer");
