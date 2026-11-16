@@ -7,100 +7,197 @@ import {
 } from "@/lib/mock-data";
 import {
   ArrowRight,
-  Cpu,
+  Compass,
+  Sparkles,
   Building2,
-  Users,
   Briefcase,
-  ShieldCheck,
-  Wifi,
-  Laptop,
-  Globe,
+  BookOpen,
+  Users,
+  Check,
 } from "lucide-react";
+
+const STAGES = [
+  {
+    n: "01",
+    icon: Compass,
+    title: "Intake & Diagnostic",
+    text: "Map your qualifications, experience, interests and last-mile infrastructure barriers across a 6-factor readiness diagnostic.",
+    href: "/assessment",
+  },
+  {
+    n: "02",
+    icon: Sparkles,
+    title: "AI Pathway & Coach",
+    text: "Explore tailored 90-day career directions powered by Gemini AI and paired with a 1-on-1 Zimbabwean industry mentor.",
+    href: "/pathway",
+  },
+  {
+    n: "03",
+    icon: Building2,
+    title: "Partner Hubs",
+    text: "Access solar-powered, Starlink-connected workspaces, equipment loan pools, and community support across Zimbabwe.",
+    href: "/hubs",
+  },
+  {
+    n: "04",
+    icon: Briefcase,
+    title: "Remote Jobs & CV",
+    text: "Generate grounded, ATS-ready CVs and application letters and explore verified local and global work opportunities.",
+    href: "/jobs",
+  },
+];
+
+const CHALLENGES = [
+  {
+    text: "Limited local employment opportunities & opaque hiring walls",
+    icon: Briefcase,
+  },
+  {
+    text: "Access to international remote work & global employers",
+    icon: Building2,
+  },
+  {
+    text: "Mismatch between qualifications and income opportunities (84.6%)",
+    icon: Compass,
+  },
+  {
+    text: "Relevant digital, AI, and remote collaboration skills",
+    icon: Sparkles,
+  },
+  {
+    text: "Connectivity, laptop equipment and power infrastructure (73.9%)",
+    icon: Users,
+  },
+  {
+    text: "Cross-border work and international payment rails (86.4%)",
+    icon: ArrowRight,
+  },
+];
 
 export default function HomePage() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-14">
-      {/* Hero Banner */}
-      <section className="relative overflow-hidden rounded-3xl bg-slate-900 px-6 py-12 text-white shadow-xl sm:px-12 sm:py-16">
-        <div className="max-w-3xl space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3.5 py-1 text-xs font-semibold text-emerald-300">
-            <span>UTARE ZEM AI — Economic Mobility Ecosystem</span>
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl leading-tight">
-            Bridging Zimbabwe’s{" "}
-            <span className="text-emerald-400">
-              Credential-to-Livelihood Paradox
+    <div>
+      {/* Faith & Amanda's Split Hero Panel with Animated Zimbabwe Radar Visual */}
+      <section className="hero-wrap">
+        <div className="hero-panel">
+          <div className="hero-text">
+            <span className="eyebrow eyebrow-light">
+              UTARE ZEM AI · ECONOMIC MOBILITY ECOSYSTEM
             </span>
-          </h1>
-          <p className="text-base text-slate-300 sm:text-lg leading-relaxed">
-            While <strong>82.6%</strong> of surveyed Zimbabwean talent hold
-            university degrees, <strong>43.5%</strong> remain unemployed and{" "}
-            <strong>84.6%</strong> of workers are trapped in misaligned survival
-            gigs. Utare ZEM AI converts dormant tertiary credentials into
-            global and local earning power through AI career pathways, human
-            coaching, and solar-powered local innovation hubs.
-          </p>
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link
-              href="/assessment"
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3.5 text-sm font-bold text-slate-950 shadow-sm transition hover:bg-emerald-400"
-            >
-              Start Candidate Diagnostic & Roadmap
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/opportunities"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              Browse Verified Opportunities
-            </Link>
-            <Link
-              href="/employers"
-              className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/60 px-5 py-3.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-900/80"
-            >
-              Hire Zimbabwean Talent
-            </Link>
-            <Link
-              href="/demo/index.html"
-              target="_blank"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3.5 text-xs font-medium text-slate-300 transition hover:text-white"
-            >
-              Launch Static Demo (Walkthrough) ↗
-            </Link>
+            <h1>
+              Bridging Zimbabwe&apos;s{" "}
+              <em>Credential-to-Livelihood Paradox</em>
+            </h1>
+            <p>
+              Zimbabwe has talented graduates and skilled individuals—with{" "}
+              <strong>82.6%</strong> of surveyed talent holding university
+              degrees—yet <strong>43.5%</strong> remain unemployed and{" "}
+              <strong>84.6%</strong> of workers are trapped in misaligned
+              survival gigs. UTARE bridges this gap through AI career guidance,
+              human coaching, solar-powered partner hubs, and access to local
+              and international earning opportunities.
+            </p>
+            <div className="hero-actions">
+              <Link href="/assessment" className="button button-green">
+                Start Candidate Bridge
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/hubs" className="button button-ghost">
+                Explore Partner Innovation Hubs
+              </Link>
+              <Link href="/opportunities" className="button button-ghost">
+                Browse Opportunities
+              </Link>
+            </div>
+            <div className="hero-note">
+              <Check className="h-4 w-4" />
+              <span>
+                Practical readiness, verified competency, and infrastructure
+                access connecting Zimbabwean talent to global &amp; local work.
+              </span>
+            </div>
+          </div>
+
+          {/* Zimbabwe ("ZW") Radial Global Reach Illustration */}
+          <div
+            className="hero-visual"
+            aria-label="Illustration of Zimbabwe connected to global opportunities"
+          >
+            <div className="visual-grid" />
+            <div className="map-ring ring-1" />
+            <div className="map-ring ring-2" />
+            <div className="map-center">
+              <span>ZW</span>
+              <small>ZIMBABWE</small>
+            </div>
+            <span className="map-point point-1">
+              <BookOpen className="h-4 w-4" />
+            </span>
+            <span className="map-point point-2">
+              <Briefcase className="h-4 w-4" />
+            </span>
+            <span className="map-point point-3">
+              <Building2 className="h-4 w-4" />
+            </span>
+            <span className="map-line line-1" />
+            <span className="map-line line-2" />
+            <span className="map-line line-3" />
+            <div className="map-label">
+              Connected pathways
+              <br />
+              <b>Local roots · Global reach</b>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Empirical Survey Benchmarks */}
-      <section className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">
-              Empirical Research Grounding: UTARE Mobility Survey
-            </h2>
-            <p className="text-sm text-slate-600">
-              Why traditional job boards fail Zimbabwean graduates—and what our
-              architecture solves directly.
+      {/* Empirical Survey Grounding Section */}
+      <section className="survey-section">
+        <div className="survey-intro">
+          <div className="section-heading">
+            <span className="eyebrow">EVIDENCE WITH CONTEXT</span>
+            <h2>Empirical Grounding: UTARE Mobility Survey</h2>
+            <p>
+              Why traditional job boards fail Zimbabwean graduates—and how our
+              triple-bottleneck architecture directly addresses hardware,
+              mentorship, and payment isolation.
             </p>
           </div>
-          <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-            Challenge Track: Future of Work & Grassroots Mobility
-          </span>
+          <div className="survey-placeholder mt-5">
+            <span className="survey-mark">
+              <BookOpen className="h-4 w-4" />
+            </span>
+            <div>
+              <b>Verified Empirical Cohort Findings</b>
+              <p>
+                Grounded in the UTARE User Journey &amp; Economic Mobility
+                Survey across tertiary graduates, TVET artisans, and early-career
+                professionals in Zimbabwe.
+              </p>
+            </div>
+            <span className="data-status">VERIFIED DATA</span>
+          </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3.5 sm:grid-cols-2">
           {SURVEY_BENCHMARKS.map((item) => (
             <div
               key={item.label}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              className="rounded-xl border border-[#e1e7ec] bg-white p-5 shadow-sm"
             >
-              <div className="text-3xl font-extrabold text-emerald-700">
+              <div
+                className="text-3xl font-extrabold"
+                style={{ color: "var(--green)", fontFamily: "var(--heading)" }}
+              >
                 {item.metric}
               </div>
-              <div className="mt-1 text-sm font-bold text-slate-900">
+              <div
+                className="mt-1 text-sm font-bold"
+                style={{ color: "var(--navy)" }}
+              >
                 {item.label}
               </div>
-              <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+              <p className="mt-1.5 text-xs text-[#667085] leading-relaxed">
                 {item.detail}
               </p>
             </div>
@@ -108,145 +205,157 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* The Triple Bottleneck vs. Utare Solution Architecture */}
-      <section className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
-            <Laptop className="h-5 w-5" />
-          </div>
-          <h3 className="text-base font-bold text-slate-900">
-            1. Last-Mile Hardware & Power Bridge
-          </h3>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            <strong>73.9%</strong> lack reliable broadband and{" "}
-            <strong>100%</strong> of surveyed small business owners lack a
-            dedicated laptop. Our intake flags hardware deficits and pairs
-            candidates with solar-backed, Starlink-equipped local Innovation
-            Hubs.
+      {/* 4-Stage Candidate Journey */}
+      <section className="journey-section section-pad">
+        <div className="section-heading">
+          <span className="eyebrow">A CLEAR NEXT STEP</span>
+          <h2>Your Pathway to Economic Mobility</h2>
+          <p>
+            A guided 4-stage experience that helps candidates make informed
+            decisions and overcome practical barriers at every step.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-            <Cpu className="h-5 w-5" />
-          </div>
-          <h3 className="text-base font-bold text-slate-900">
-            2. Gemini AI Pathway + Human Coaching
-          </h3>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            Bypasses opaque local hiring (47.8% cite rigid 1–3 year experience
-            walls) by combining a dynamic <strong>Gemini AI</strong> upskilling
-            roadmap with 1-on-1 Zimbabwean industry mentors ({SEED_COACHES.length}{" "}
-            active coaches).
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-3">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-            <Globe className="h-5 w-5" />
-          </div>
-          <h3 className="text-base font-bold text-slate-900">
-            3. Global Payment Rails & Verified Jobs
-          </h3>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            <strong>86.4%</strong> of remote job seekers are locked out of
-            international payment systems. We curate remote roles with verified
-            Deel, Payoneer, and USD Nostro payout compatibility alongside AI
-            resume tailoring.
-          </p>
+        <div className="journey-grid">
+          {STAGES.map((s) => {
+            const Icon = s.icon;
+            return (
+              <article key={s.n} className="journey-card">
+                <span className="icon-tile">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className="step-number">{s.n}</span>
+                <h3>{s.title}</h3>
+                <p>{s.text}</p>
+                <Link href={s.href} className="text-link">
+                  Explore this stage <ArrowRight className="h-4 w-4" />
+                </Link>
+              </article>
+            );
+          })}
         </div>
       </section>
 
-      {/* Interactive MVP Modules Grid */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-900">
-          MVP End-to-End Architecture & Team Workstreams
-        </h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="flex flex-col justify-between rounded-2xl border border-emerald-200 bg-emerald-50/50 p-6">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="rounded-md bg-emerald-700 px-2.5 py-1 text-xs font-semibold text-white">
-                  Tasks #1, #2 & #3
-                </span>
-                <Users className="h-5 w-5 text-emerald-700" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">
-                Smart Intake, Assessment & AI Coach Pairing
-              </h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Captures academic credentials & ZESA/laptop constraints, scores
-                readiness across 4 dimensions, generates a personalized Gemini
-                AI upskilling pathway, and pairs the candidate with a human
-                coach.
-              </p>
-              <p className="text-xs font-medium text-slate-500">
-                Leads: Stewart Mangezi & Munashe
+      {/* Turning Qualifications into Economic Opportunity */}
+      <section className="mobility-section">
+        <div className="mobility-inner">
+          <div className="mobility-copy">
+            <div className="section-heading">
+              <span className="eyebrow">WHY THIS BRIDGE MATTERS</span>
+              <h2>Turning Qualifications into Economic Opportunity</h2>
+              <p>
+                The platform is designed around practical barriers faced by
+                Zimbabwean talent. Progress takes collaboration across
+                candidates, employers, mentors, and local hub partners.
               </p>
             </div>
-            <Link
-              href="/assessment"
-              className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-emerald-800 hover:underline"
-            >
-              Open Intake & AI Pathway Studio <ArrowRight className="h-4 w-4" />
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/how-it-works" className="button button-green">
+                Learn how it works <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/employers" className="button">
+                For Employers &amp; Partners
+              </Link>
+            </div>
           </div>
 
-          <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="rounded-md bg-slate-800 px-2.5 py-1 text-xs font-semibold text-white">
-                  Task #4
-                </span>
-                <Building2 className="h-5 w-5 text-slate-700" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">
-                Partner Innovation Hub Directory
-              </h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Maps solar-powered, Starlink-connected hubs in Harare, Bulawayo,
-                Mutare, and Gweru where candidates without home broadband or
-                laptops can train and execute remote work.
-              </p>
-              <p className="text-xs font-medium text-slate-500">
-                Leads: Munashe & Amanda
-              </p>
-            </div>
-            <Link
-              href="/hubs"
-              className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 hover:underline"
-            >
-              Browse & Enlist Partner Hubs <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+          <ul className="challenge-list">
+            {CHALLENGES.map((c) => {
+              const Icon = c.icon;
+              return (
+                <li key={c.text}>
+                  <span className="icon-tile icon-small">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span>{c.text}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
 
-          <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="rounded-md bg-slate-800 px-2.5 py-1 text-xs font-semibold text-white">
-                  Task #5
-                </span>
-                <Briefcase className="h-5 w-5 text-slate-700" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">
-                Curated Remote Job Feed & AI Resume Builder
-              </h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Verified remote roles accessible to Zimbabwean talent ({SEED_REMOTE_JOBS.length}{" "}
-                active pipelines) with transparent Deel/Payoneer payout rails
-                and instant AI resume tailoring.
-              </p>
-              <p className="text-xs font-medium text-slate-500">
-                Leads: Kudakwashe, Amanda & Dev Team
-              </p>
-            </div>
-            <Link
-              href="/jobs"
-              className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 hover:underline"
-            >
-              View Verified Remote Jobs <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+      {/* Support for the Whole Journey */}
+      <section className="features-section section-pad">
+        <div className="section-heading">
+          <span className="eyebrow">A CONNECTED SUPPORT SYSTEM</span>
+          <h2>Support for the whole journey</h2>
+          <p>
+            Career guidance, human coaching, and practical infrastructure access
+            work together to help candidates move forward.
+          </p>
+        </div>
+
+        <div className="feature-grid">
+          <article className="feature-card">
+            <span className="icon-tile">
+              <Compass className="h-5 w-5" />
+            </span>
+            <h3>Career Pathway Guidance</h3>
+            <p>
+              Explore structured 90-day directions powered by Gemini AI that
+              connect your academic background with high-demand opportunity
+              areas.
+            </p>
+          </article>
+
+          <article className="feature-card">
+            <span className="icon-tile">
+              <Users className="h-5 w-5" />
+            </span>
+            <h3>Human Coaching &amp; Professional Development</h3>
+            <p>
+              Build confidence and practical readiness with{" "}
+              {SEED_COACHES.length} verified Zimbabwean mentors and free modular
+              skills courses.
+            </p>
+          </article>
+
+          <article className="feature-card">
+            <span className="icon-tile">
+              <Building2 className="h-5 w-5" />
+            </span>
+            <h3>Partner Innovation Hubs</h3>
+            <p>
+              Connect with {SEED_INNOVATION_HUBS.length} community spaces across
+              Harare, Bulawayo, Mutare, Gweru, and Masvingo offering solar power,
+              Starlink broadband, and PC loans.
+            </p>
+          </article>
+
+          <article className="feature-card">
+            <span className="icon-tile">
+              <Briefcase className="h-5 w-5" />
+            </span>
+            <h3>Remote Employment &amp; CV Preparation</h3>
+            <p>
+              Prepare humanized ATS CVs and application letters and apply across{" "}
+              {SEED_REMOTE_JOBS.length}+ verified roles with Deel, Payoneer, and
+              USD Nostro rails.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      {/* Closing CTA */}
+      <section className="closing-cta">
+        <div>
+          <span className="eyebrow eyebrow-light">
+            YOUR NEXT STEP STARTS HERE
+          </span>
+          <h2>Your Qualifications Should Open Doors to Opportunity.</h2>
+          <p>
+            Build your skills, explore career pathways, and connect to verified
+            economic opportunities.
+          </p>
+        </div>
+        <div className="closing-actions">
+          <Link href="/assessment" className="button button-green">
+            Start Candidate Bridge <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link href="/opportunities" className="button button-ghost">
+            Explore Remote Opportunities
+          </Link>
         </div>
       </section>
     </div>

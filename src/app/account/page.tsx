@@ -167,7 +167,22 @@ export default function CandidateAccountPage() {
   const completedMilestones = candidate?.completedMilestones || [];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+    <div>
+      {/* Faith & Amanda's Main Dashboard Hero */}
+      <section className="page-hero">
+        <span className="eyebrow">MAIN DASHBOARD · CANDIDATE WORKSPACE</span>
+        <h1>
+          Welcome, {profile.fullName.split(" ")[0]}. Your next step starts
+          here.
+        </h1>
+        <p>
+          Your UTARE overview brings your 6-factor diagnostic, 90-day AI career
+          pathway, matched innovation hub pass, and opportunity applications
+          into one place.
+        </p>
+      </section>
+
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       {statusMessage && (
         <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-xs sm:text-sm font-semibold text-emerald-900 shadow-sm flex items-center justify-between">
           <span>✓ {statusMessage}</span>
@@ -709,6 +724,7 @@ export default function CandidateAccountPage() {
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

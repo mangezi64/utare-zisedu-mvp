@@ -1,6 +1,6 @@
 # Architecture & Team Development Guide
 
-This document details how each module in `utare-zisedu-mvp` works and how team members can collaborate cleanly across our 5 MVP pillars.
+This document details how each module in `utare-zisedu-mvp` works and how team members collaborate cleanly across our platform pillars.
 
 ---
 
@@ -8,56 +8,53 @@ This document details how each module in `utare-zisedu-mvp` works and how team m
 
 ```mermaid
 flowchart TD
-    Candidate["Zimbabwean Candidate / Graduate"] --> Intake["1. Smart Intake & Infrastructure Profile (/assessment)"]
-    Intake --> Diagnostic["2. 4D Readiness & Competency Diagnostic (/api/pathway)"]
-    Diagnostic --> Engine["3. Gemini AI Career Pathway Engine (src/lib/gemini/pathway-engine.ts)"]
-    
-    Engine --> Coach["Human Coach Pairing (Tariro, Farai, Rudo, Tendai)"]
-    Engine --> Hub["4. Partner Innovation Hub Match (/hubs & /api/hubs)"]
-    Engine --> Roadmap["8-Week Low-Bandwidth Upskilling Roadmap"]
-    Engine --> Jobs["5. Verified Remote Jobs & AI Resume Builder (/jobs)"]
+    Visitor["Public Visitor / Candidate / Employer"] --> Auth["Unified Auth & Role Guard (/login, src/middleware.ts)"]
+    Auth --> CandidateFlow["Candidate Flow (/assessment -> /pathway -> /hubs -> /jobs)"]
+    Auth --> EmployerFlow["Scoped Employer Portal (/employer & /api/employer/portal)"]
+    Auth --> AdminFlow["Facilitator & Admin Console (/admin & /api/admin/*)"]
 
-    Diagnostic -.-> Supabase[("Supabase PostgreSQL (supabase/schema.sql)")]
-    Hub -.-> Supabase
+    CandidateFlow --> Engine["Gemini 2.5 AI Pathway Engine (src/lib/gemini/pathway-engine.ts)"]
+    Engine --> Coach["1-on-1 Human Coach Pairing"]
+    Engine --> Hub["Partner Innovation Hub Match (/hubs)"]
+    Engine --> Studio["Grounded ATS CV & Cover Letter Studio (/jobs)"]
+
+    CandidateFlow -.-> Store[("PostgreSQL / Connected Store (src/lib/store.ts & supabase/schema.sql)")]
+    EmployerFlow -.-> Store
+    AdminFlow -.-> Store
 ```
 
 ---
 
-## 2. Detailed Documentation of Core Files
+## 2. Detailed Documentation of Core Layers
 
-### A. Container & Configuration Layer
-- **`Dockerfile.dev`**: Development image using `node:20-alpine`. Sets `WATCHPACK_POLLING=true` so file changes made on macOS or Windows trigger Next.js Fast Refresh immediately inside Linux containers.
-- **`Dockerfile`**: Production multi-stage Dockerfile (`deps` → `builder` → `runner`) configured with Next.js `output: "standalone"` for lightweight cloud deployment (Cloud Run, Railway, Render, or Fly.io).
-- **`docker-compose.yml`**: Maps port `3000:3000`, loads `.env.local`, mounts the repository into `/app`, and keeps `node_modules` isolated in a named volume.
+### A. Unified Frontend Design System (`src/app/globals.css`, `styles.css`, `src/components/Navbar.tsx`)
+Designed by **Faith Wenzira** and **Amanda**, the visual identity is integrated directly across all Next.js pages (`src/app/*`) as well as the standalone walkthrough (`/demo/index.html`):
+- **Brand Identity & Typography:** Uses `Manrope` (headings) and `Inter` (body), deep navy (`#101a33`), emerald (`#0faf83` / `#08785f`), and soft slate (`#f5f8f8`), anchored by the `U` brand mark with its signature emerald dot.
+- **Custom Illustrations:** CSS-rendered Zimbabwe (`ZW`) radial global-reach map on the Overview page (`/`) and orbital talent/skills/opportunity graphic on the split-screen Login/Register page (`/login`).
+- **Interactive Page Templates:** Consistent `.page-hero` headers, `.journey-card` and `.journey-row` stages, `.values-band` mission/vision cards, `.team-grid` 6-person team showcase, 4-way `.filter-bar` on `/opportunities`, and interactive lesson progress modals on `/skills`.
 
-### B. Database Layer (`supabase/schema.sql` & `src/lib/supabase/client.ts`)
-- **`supabase/schema.sql`**: Defines 6 PostgreSQL tables:
-  1. `innovation_hubs`: Solar backup status, Starlink/Fiber speeds, workstation counts, and laptop loan availability.
-  2. `coaches`: Industry mentors mapped by specialty track and weekly availability.
-  3. `candidate_profiles`: Stores qualification, field of study, current employment alignment, income bracket, and infrastructure constraints (`has_dedicated_laptop`, `internet_access_type`, `power_reliability_hours`, `has_global_payment_rail`).
-  4. `skills_assessments`: Stores 0–100 scores across Domain Competency, Digital Readiness, Remote Work Literacy, and Infrastructure Index.
-  5. `ai_career_pathways`: Stores the Gemini-generated roadmap, paired `assigned_coach_id`, and `recommended_hub_id`.
-  6. `remote_jobs`: Verified remote opportunities with `supported_payment_rails`.
-- **`src/lib/supabase/client.ts`**: Exports `supabase` and `isSupabaseConfigured`. Automatically detects whether `.env.local` has valid Supabase keys and falls back to seed data if not configured yet.
+### B. Authentication, Session Security & Role-Based Access (`src/lib/auth-session.ts`, `src/lib/auth-guard.ts`, `src/middleware.ts`)
+- **Password Security (`src/lib/password-hash.ts`):** Hashes passwords with `PBKDF2-SHA256` (100,000 iterations, random 16-byte salt) and constant-time comparison.
+- **Signed Sessions (`src/lib/auth-session.ts`):** Signs `HttpOnly`, `SameSite=Lax` cookies (`utare_session`) using Web Crypto `HMAC-SHA256` compatible with both Node.js API routes and Next.js Edge Middleware.
+- **Strict Role Separation:**
+  - `candidate`: Can complete diagnostics, generate AI pathways, reserve hub desks, tailor CVs, and apply to jobs.
+  - `employer`: Self-registers with email confirmation; requires a one-time admin verification before posted roles publish publicly; views only applicants for their own jobs with private candidate fields stripped.
+  - `admin` / `superuser`: Assigned strictly on the backend (via `SUPERUSER_EMAILS`/`ADMIN_EMAILS` env vars, the `/admin` **Team & User Roles** tab, or `scripts/manage-user.mjs`).
 
-### C. Task #3: AI Pathway & Human Coach Pairing (`src/lib/gemini/pathway-engine.ts`)
-- **`computeAssessmentScores(profile, quizAnswers)`**:
-  - Calculates the 4 readiness scores and classifies the candidate into one of three tiers:
-    - `Market-Ready (Direct Placement)`
-    - `Bridge-Ready (Hub + Rapid Upskilling)`
-    - `Foundation Track (Hardware Bridge + Intensive Coaching)`
-- **`matchNearestHub(city)`**:
-  - Pairs the candidate with the closest solar/Starlink Partner Innovation Hub (Harare, Bulawayo, Mutare, Gweru) to solve their power or laptop deficit.
-- **`matchBestCoach(profile)`**:
-  - Pairs the candidate with the right Zimbabwean human mentor based on their degree and goal (e.g., Eng. Farai Ncube for STEM/CS, Tariro Moyo for Operations/Humanities, Rudo Chikwanda for Finance/Payment Rails, Tendai Mutasa for Grassroots SMEs).
-- **`generateAICareerPathway(profile, assessment)`**:
-  - Calls Google's `@google/genai` SDK (`gemini-2.5-flash`) with a structured JSON prompt tailored to Zimbabwe's economic mobility context. Includes an automatic deterministic fallback if `GEMINI_API_KEY` is not set.
+### C. Container & Database Persistence Layer (`supabase/schema.sql`, `src/lib/db.ts`, `src/lib/store.ts`)
+- **`supabase/schema.sql`**: Defines 9 PostgreSQL tables (`innovation_hubs`, `coaches`, `candidate_profiles`, `skills_assessments`, `ai_career_pathways`, `remote_jobs`, `job_applications`, `employer_inquiries`, `contact_inquiries`) with seed data.
+- **`src/lib/store.ts`**: Synchronizes state across PostgreSQL and a resilient file/in-memory store (automatically falling back to `/tmp` on read-only serverless platforms like Vercel).
+
+### D. AI Pathway & Grounded Document Studio (`src/lib/gemini/pathway-engine.ts`, `src/lib/documents/*`)
+- **`computeAssessmentScores(profile, quizAnswers)`**: Scores Domain Competency, Digital Readiness, Remote Work Literacy, and Infrastructure Index (`0–100`) and classifies candidates into `Market-Ready (Direct Placement)`, `Bridge-Ready (Hub + Rapid Upskilling)`, or `Foundation Track (Hardware Bridge + Intensive Coaching)`.
+- **`generateAICareerPathway(profile, assessment)`**: Calls `@google/genai` (`gemini-2.5-flash`) with a structured schema and deterministic offline fallback.
+- **Anti-AI-Slop Document Studio (`src/lib/documents/humanizer.ts`, `cv-writer.ts`, `cover-letter-writer.ts`, `docx-export.ts`)**: Generates grounded ATS CVs and Zimbabwean business application letters with `.docx` binary export.
 
 ---
 
 ## 3. Git Workflow for the Team
 
-To prevent merge conflicts across Stewart, Munashe, Amanda, and Kudakwashe:
+To prevent merge conflicts across Stewart, Faith, Amanda, Munashe, and Kudakwashe:
 
 1. **Always pull latest `main` before starting work:**
    ```bash
@@ -66,8 +63,9 @@ To prevent merge conflicts across Stewart, Munashe, Amanda, and Kudakwashe:
    ```
 2. **Create a feature branch named after your task:**
    - Stewart: `git checkout -b feat/task-3-ai-coaching`
-   - Munashe: `git checkout -b feat/task-4-hub-directory`
+   - Faith: `git checkout -b feat/frontend-walkthrough-and-ui`
    - Amanda: `git checkout -b feat/ui-and-supabase-schema`
+   - Munashe: `git checkout -b feat/task-4-hub-directory`
    - Kudakwashe: `git checkout -b docs/competitor-analysis-and-jobs`
-3. **Test inside the Docker container (`docker compose up --build`) before committing.**
+3. **Run quality checks (`npm run lint && npm run typecheck && npm run test:ci && npm run build`) before committing.**
 4. **Open a Pull Request into `main` on GitHub.**

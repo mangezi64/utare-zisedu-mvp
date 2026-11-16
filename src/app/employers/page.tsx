@@ -3,18 +3,34 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  Building2,
   CheckCircle2,
   Globe,
   Sun,
   ShieldCheck,
   ArrowRight,
-  Send,
   Users,
 } from "lucide-react";
 import PasswordInput from "@/components/PasswordInput";
 import { validatePassword } from "@/lib/validation";
 import { useViewMode } from "@/lib/view-mode-context";
+
+const STEPS = [
+  {
+    num: "01",
+    title: "Share your needs",
+    text: "Describe roles, required skills, working arrangements, and timezone overlap clearly.",
+  },
+  {
+    num: "02",
+    title: "Support readiness",
+    text: "Candidates are pre-assessed on English fluency, digital literacy, and paired with solar-backed Starlink hubs.",
+  },
+  {
+    num: "03",
+    title: "Explore a fit",
+    text: "Post verified opportunities and review tailored applications through a transparent, scoped Employer Portal.",
+  },
+];
 
 export default function EmployersPage() {
   const { isEmployer, isAdmin } = useViewMode();
@@ -96,155 +112,187 @@ export default function EmployersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-12">
-      {/* Hero */}
-      <section className="rounded-3xl bg-slate-900 px-6 py-12 text-white shadow-xl sm:px-12 sm:py-16">
-        <div className="max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3.5 py-1 text-xs font-semibold text-emerald-300">
-            <Building2 className="h-3.5 w-3.5" />
-            For Global &amp; Local Employers
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl leading-tight">
-            Hire Verified, Remote-Ready{" "}
-            <span className="text-emerald-400">Zimbabwean Talent.</span>
-          </h1>
-          <p className="text-base text-slate-300 sm:text-lg leading-relaxed">
-            Overcome recruitment friction and access an untapped pool of
-            tertiary-educated, fluent English-speaking professionals. Every
-            Utare candidate is verified for competency, paired with a
-            solar-backed Starlink workstation, and compliant with international
-            payment rails.
-          </p>
-          <div className="flex flex-wrap gap-3 pt-2">
-            {isEmployer || isAdmin ? (
+    <div>
+      {/* Faith & Amanda's Page Hero */}
+      <section className="page-hero">
+        <span className="eyebrow">FOR EMPLOYERS &amp; PARTNERS</span>
+        <h1>Connect with talent ready to grow.</h1>
+        <p>
+          UTARE bridges organisations and verified Zimbabwean talent—combining
+          tertiary academic credentials, practical competency diagnostics,
+          solar-backed Starlink workstations, and international payment rail
+          compatibility.
+        </p>
+
+        <div className="hero-actions">
+          {isEmployer || isAdmin ? (
+            <Link href="/employer" className="button button-green">
+              Open Employer Portal &amp; Applicants
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : (
+            <>
               <Link
-                href="/employer"
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-400 transition"
+                href="/login?tab=register&role=employer"
+                className="button button-green"
               >
-                Open Employer Portal &amp; Applicants
+                Create Employer Account
                 <ArrowRight className="h-4 w-4" />
               </Link>
-            ) : (
-              <>
-                <Link
-                  href="/login?tab=register&role=employer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-400 transition"
-                >
-                  Create Employer Account
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/login?redirect=/employer"
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition"
-                >
-                  Employer Sign In
-                </Link>
-              </>
-            )}
-          </div>
+              <Link href="/login?redirect=/employer" className="button">
+                Employer Sign In
+              </Link>
+            </>
+          )}
         </div>
       </section>
 
-      {/* 4 Value Pillars */}
-      <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-2">
-          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 font-bold">
-            <Globe className="h-4 w-4" />
-          </div>
-          <h3 className="font-bold text-slate-900 text-sm">
-            CAT (GMT+2) Timezone
-          </h3>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Full 6–8 hour direct working overlap with UK, European, and South
-            African business hours.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-2">
-          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-700 font-bold">
-            <Sun className="h-4 w-4" />
-          </div>
-          <h3 className="font-bold text-slate-900 text-sm">
-            Infrastructure Guaranteed
-          </h3>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Zero dropouts. Candidates operate from verified local hubs with 100%
-            solar microgrids &amp; Starlink.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-2">
-          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-700 font-bold">
-            <ShieldCheck className="h-4 w-4" />
-          </div>
-          <h3 className="font-bold text-slate-900 text-sm">
-            Verified Competency
-          </h3>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Pre-assessed across English fluency, digital literacy, and practical
-            domain problem solving.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-2">
-          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-700 font-bold">
-            <Users className="h-4 w-4" />
-          </div>
-          <h3 className="font-bold text-slate-900 text-sm">
-            Compliant EOR &amp; Rails
-          </h3>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Seamless contractor hiring via Deel, Payoneer, Wise, or direct USD
-            Nostro wire transfers.
-          </p>
-        </div>
-      </section>
-
-      {/* Enrolment & Account Creation Form */}
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-10 shadow-sm space-y-6">
+      {/* Two-Column Intro */}
+      <section className="content-section two-col employer-intro">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900">
-            Enrol Your Organization &amp; Post Remote Roles
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-600 mt-1">
-            Register your company below. Include a password to create your
-            Employer Portal account so you can post available roles and review
-            applications directly.
-          </p>
+          <div className="section-heading">
+            <span className="eyebrow">WHY CONSIDER ZIMBABWEAN TALENT?</span>
+            <h2>Skills, perspective and potential</h2>
+            <p>
+              Zimbabwean candidates bring strong educational backgrounds,
+              fluent English communication, and practical motivation to
+              contribute. UTARE makes those capabilities easier to verify,
+              equip, and connect.
+            </p>
+          </div>
         </div>
 
-        {successMessage && (
-          <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm font-semibold text-emerald-900 shadow-sm space-y-2">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-              <span>{successMessage}</span>
-            </div>
-            {confirmationPath && (
-              <div>
-                <Link
-                  href={confirmationPath}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition"
-                >
-                  Confirm Email &amp; Open Employer Portal{" "}
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
+        <div className="prose">
+          <p>
+            Employers can collaborate by sharing clear role requirements,
+            posting remote or hybrid opportunities, and reviewing pre-assessed
+            candidates through transparent processes.
+          </p>
+          <p>
+            Every candidate on the platform is evaluated across a 6-factor
+            readiness diagnostic and supported with local partner hub
+            infrastructure to eliminate power or connectivity disruptions.
+          </p>
+          <div className="flex flex-wrap gap-3 mt-4">
+            <a href="#employer-enquiry-form" className="button button-green">
+              Register employer interest <ArrowRight className="h-4 w-4" />
+            </a>
+            <Link href="/contact" className="button">
+              Start a conversation
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* 3-Step Employer Process */}
+      <section className="partner-options employer-steps">
+        {STEPS.map((s) => (
+          <article key={s.num}>
+            <span className="eyebrow">COLLABORATION PROCESS · {s.num}</span>
+            <h3>{s.title}</h3>
+            <p>{s.text}</p>
+          </article>
+        ))}
+      </section>
+
+      {/* 4 Operational Guarantees */}
+      <section className="content-section" style={{ paddingTop: "20px", paddingBottom: "20px" }}>
+        <div className="feature-grid">
+          <article className="feature-card">
+            <span className="icon-tile">
+              <Globe className="h-5 w-5" />
+            </span>
+            <h3>CAT (GMT+2) Timezone</h3>
+            <p>
+              Full 6–8 hour direct working overlap with UK, European, and South
+              African business hours.
+            </p>
+          </article>
+
+          <article className="feature-card">
+            <span className="icon-tile">
+              <Sun className="h-5 w-5" />
+            </span>
+            <h3>Infrastructure Guaranteed</h3>
+            <p>
+              Candidates operate from verified local hubs with 100% solar
+              microgrids, Starlink broadband, and PC loans.
+            </p>
+          </article>
+
+          <article className="feature-card">
+            <span className="icon-tile">
+              <ShieldCheck className="h-5 w-5" />
+            </span>
+            <h3>Verified Competency</h3>
+            <p>
+              Pre-assessed across English fluency, digital literacy, async
+              workflows, and domain problem solving.
+            </p>
+          </article>
+
+          <article className="feature-card">
+            <span className="icon-tile">
+              <Users className="h-5 w-5" />
+            </span>
+            <h3>Compliant EOR &amp; Rails</h3>
+            <p>
+              Seamless contractor onboarding via Deel, Payoneer, Wise, or
+              direct USD Nostro wire transfers.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      {/* Employer Enquiry & Portal Enrolment Form */}
+      <section
+        id="employer-enquiry-form"
+        className="content-section employer-form-section"
+      >
+        <div>
+          <div className="section-heading">
+            <span className="eyebrow">EMPLOYER ENQUIRY &amp; PORTAL</span>
+            <h2>Tell us how you&apos;d like to collaborate</h2>
+            <p>
+              Register your organisation below to save your hiring inquiry to
+              our PostgreSQL database. Include a password to activate your
+              Employer Portal account so you can post jobs and review
+              applicants directly.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="form-card form-stack">
+          {successMessage && (
+            <div className="rounded-xl border border-[#c2e2d4] bg-[#eaf5f0] p-4 text-xs font-semibold text-[#101a33] space-y-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-[#08785f]" />
+                <span>{successMessage}</span>
               </div>
-            )}
-          </div>
-        )}
+              {confirmationPath && (
+                <div>
+                  <Link
+                    href={confirmationPath}
+                    className="button button-green"
+                    style={{ minHeight: "36px", padding: "0 14px", fontSize: "11.5px" }}
+                  >
+                    Confirm Email &amp; Open Employer Portal{" "}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
 
-        {errorMessage && (
-          <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm font-semibold text-rose-900 shadow-sm">
-            ✕ {errorMessage}
-          </div>
-        )}
+          {errorMessage && (
+            <div className="rounded-xl border border-rose-300 bg-rose-50 p-3.5 text-xs font-semibold text-rose-900">
+              ✕ {errorMessage}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Company Name *
-              </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="field">
+              <span>Organisation name *</span>
               <input
                 type="text"
                 required
@@ -253,114 +301,81 @@ export default function EmployersPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, companyName: e.target.value })
                 }
-                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm"
               />
-            </div>
+            </label>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Contact Person Name *
-              </label>
+            <label className="field">
+              <span>Contact person *</span>
               <input
                 type="text"
                 required
-                placeholder="e.g. Sarah Jenkins (Head of Operations)"
+                placeholder="e.g. Sarah Jenkins (Head of Ops)"
                 value={formData.contactPerson}
                 onChange={(e) =>
                   setFormData({ ...formData, contactPerson: e.target.value })
                 }
-                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm"
               />
-            </div>
+            </label>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Work Email *
-              </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="field">
+              <span>Contact email *</span>
               <input
                 type="email"
                 required
-                placeholder="sarah@company.com"
+                placeholder="you@organisation.org"
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm"
               />
-            </div>
+            </label>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Create Portal Password (Optional — enables Employer Portal)
-              </label>
-              <PasswordInput
-                value={formData.password}
-                onChange={(password) => setFormData({ ...formData, password })}
-                placeholder="Strong password (8+ chars, upper/lower/num/symbol)"
-                autoComplete="new-password"
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Company Website
-              </label>
+            <label className="field">
+              <span>Company website</span>
               <input
                 type="url"
-                placeholder="https://company.com"
+                placeholder="https://organisation.org"
                 value={formData.website}
                 onChange={(e) =>
                   setFormData({ ...formData, website: e.target.value })
                 }
-                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm"
               />
-            </div>
+            </label>
+          </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Industry
-              </label>
+          <div className="field">
+            <span>
+              Create Portal Password (Optional — enables Employer Portal sign-in)
+            </span>
+            <PasswordInput
+              value={formData.password}
+              onChange={(password) => setFormData({ ...formData, password })}
+              placeholder="Strong password (8+ chars, upper/lower/num/symbol)"
+              autoComplete="new-password"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="field">
+              <span>Industry</span>
               <input
                 type="text"
                 value={formData.industry}
                 onChange={(e) =>
                   setFormData({ ...formData, industry: e.target.value })
                 }
-                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm"
               />
-            </div>
-          </div>
+            </label>
 
-          <div className="grid gap-6 sm:grid-cols-3">
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Roles of Interest (e.g. Data Annotation, Virtual Assistance,
-                Python)
-              </label>
-              <input
-                type="text"
-                value={formData.rolesInterested}
-                onChange={(e) =>
-                  setFormData({ ...formData, rolesInterested: e.target.value })
-                }
-                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Preferred Hiring Model
-              </label>
+            <label className="field">
+              <span>Partnership &amp; hiring model</span>
               <select
                 value={formData.hiringModel}
                 onChange={(e) =>
                   setFormData({ ...formData, hiringModel: e.target.value })
                 }
-                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white"
               >
                 <option value="100% Remote Contract">
                   100% Remote Contract
@@ -371,33 +386,45 @@ export default function EmployersPage() {
                 <option value="Freelance / Task-based">
                   Freelance / Task-based
                 </option>
+                <option value="Skills & Hub Partnership">
+                  Skills &amp; Hub Partnership
+                </option>
               </select>
-            </div>
+            </label>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Specific Requirements or Notes
-            </label>
+          <label className="field">
+            <span>Roles of interest</span>
+            <input
+              type="text"
+              placeholder="e.g. Digital Operations, Data Analysis, Software Engineering"
+              value={formData.rolesInterested}
+              onChange={(e) =>
+                setFormData({ ...formData, rolesInterested: e.target.value })
+              }
+            />
+          </label>
+
+          <label className="field">
+            <span>How might you work with UTARE?</span>
             <textarea
-              rows={3}
-              placeholder="Tell us about your team size, required tool proficiencies, or target onboarding dates..."
+              rows={4}
+              placeholder="Share details about your hiring needs, required skills, or partnership interest..."
               value={formData.additionalNotes}
               onChange={(e) =>
                 setFormData({ ...formData, additionalNotes: e.target.value })
               }
-              className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm"
             />
-          </div>
+          </label>
 
-          <div className="flex justify-end">
+          <div>
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-800 transition shadow-sm disabled:opacity-50"
+              className="button button-green"
             >
-              <Send className="h-4 w-4" />
-              {submitting ? "Registering..." : "Enrol Organization"}
+              {submitting ? "Registering..." : "Register interest"}
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </form>

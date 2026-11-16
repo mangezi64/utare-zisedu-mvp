@@ -4,24 +4,36 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   BookOpen,
-  CheckCircle2,
-  Clock,
+  Users,
+  Mail,
+  Check,
   Sparkles,
+  Building2,
   ArrowRight,
-  GraduationCap,
-  Layers,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { SkillsCourse } from "@/types";
 import { SEED_SKILLS_COURSES } from "@/lib/mock-data";
 
+const PROGRESS_STORAGE_KEY = "utare-demo-course-progress";
+
 export default function SkillsDevelopmentPage() {
   const [courses, setCourses] = useState<SkillsCourse[]>(SEED_SKILLS_COURSES);
-  const [expandedCourseId, setExpandedCourseId] = useState<string | null>("course-01");
+  const [progress, setProgress] = useState<Record<string, number>>({});
+  const [activeCourse, setActiveCourse] = useState<SkillsCourse | null>(null);
   const [enrolledCourseId, setEnrolledCourseId] = useState<string | null>(null);
 
   useEffect(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(PROGRESS_STORAGE_KEY) || "{}"
+      );
+      if (saved && typeof saved === "object") {
+        setProgress(saved);
+      }
+    } catch {
+      // ignore storage errors
+    }
+
     fetch("/api/skills")
       .then((r) => r.json())
       .then((data) => {
@@ -32,127 +44,250 @@ export default function SkillsDevelopmentPage() {
       .catch(() => {});
   }, []);
 
-  function handleEnroll(id: string) {
-    setEnrolledCourseId(id);
+  const saveProgress = (next: Record<string, number>) => {
+    setProgress(next);
+    try {
+      localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const advanceLesson = (course: SkillsCourse) => {
+    const total = course.lessons?.length || 4;
+    const current = progress[course.title] || 0;
+    const nextCount = Math.min(total, current + 1);
+    saveProgress({ ...progress, [course.title]: nextCount });
+  };
+
+  const resetCourseProgress = (course: SkillsCourse) => {
+    const next = { ...progress };
+    delete next[course.title];
+    saveProgress(next);
+  };
+
+  const handleEnroll = (course: SkillsCourse) => {
+    setEnrolledCourseId(course.id);
+    if ((progress[course.title] || 0) === 0) {
+      advanceLesson(course);
+    }
     setTimeout(() => setEnrolledCourseId(null), 6000);
-  }
+  };
+
+  const ICONS = [BookOpen, Users, Mail, Check, Sparkles, Building2];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-10">
-      {/* Header */}
-      <div className="space-y-3">
-        <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
-          <BookOpen className="h-3.5 w-3.5 text-emerald-700" />
-          Practical Competency Upskilling
-        </div>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">
-          Skills Development Pathways & Free Modules
-        </h1>
-        <p className="max-w-3xl text-sm text-slate-600 leading-relaxed">
-          Target the exact missing skills identified in your readiness diagnostic.
-          All courses are low-bandwidth friendly, fully subsidized for Zimbabwean youth,
-          and paired with partner innovation hub workstations.
+    <div>
+      {/* Faith & Amanda's Page Hero */}
+      <section className="page-hero">
+        <span className="eyebrow">SKILLS DEVELOPMENT</span>
+        <h1>Build the skills that help you move forward.</h1>
+        <p>
+          Explore digital literacy, remote work readiness, professional
+          communication, digital productivity, technical skills, and
+          entrepreneurship through structured, low-bandwidth learning pathways.
         </p>
-      </div>
+      </section>
 
-      {enrolledCourseId && (
-        <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm font-semibold text-emerald-900 shadow-sm flex items-center justify-between">
-          <span>✓ Enrolled successfully! Course materials and exercises are ready in your candidate workspace.</span>
-          <Link href="/account" className="text-xs text-emerald-700 underline font-bold">
-            View in My Workspace →
-          </Link>
+      {/* Skills Pathways Directory */}
+      <section className="content-section">
+        <div className="directory-top">
+          <div className="section-heading" style={{ marginBottom: 0 }}>
+            <span className="eyebrow">LEARNING PATHWAYS</span>
+            <h2>Skills development modules</h2>
+            <p>
+              Open any course below to view its lesson outline, track module
+              completion, and link progress with your candidate bridge.
+            </p>
+          </div>
+          <span className="demo-pill">FREE · SUBSIDIZED ACCESS</span>
         </div>
-      )}
 
-      {/* Courses Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {courses.map((c) => {
-          const isExpanded = expandedCourseId === c.id;
-          return (
-            <div
-              key={c.id}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs hover:border-emerald-300 hover:shadow-md transition flex flex-col justify-between space-y-4"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="rounded-full bg-emerald-100 text-emerald-900 px-2.5 py-0.5 font-bold uppercase tracking-wider text-[10px]">
-                    {c.category}
+        {enrolledCourseId && (
+          <div className="mb-5 rounded-xl border border-[#c2e2d4] bg-[#eaf5f0] p-4 text-xs font-semibold text-[#101a33] flex items-center justify-between">
+            <span>
+              ✓ Enrolled in course! Module exercises and progress are synced in
+              your workspace.
+            </span>
+            <Link href="/account" className="text-link">
+              Open My Workspace <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        )}
+
+        <div className="course-grid">
+          {courses.map((c, idx) => {
+            const Icon = ICONS[idx % ICONS.length];
+            const lessons = c.lessons || [];
+            const totalLessons = lessons.length || 4;
+            const done = Math.min(totalLessons, progress[c.title] || 0);
+            const pct = Math.round((done / totalLessons) * 100);
+
+            return (
+              <article key={c.id} className="course-card">
+                <div>
+                  <span className="icon-tile">
+                    <Icon className="h-5 w-5" />
                   </span>
-                  <span className="text-emerald-700 font-extrabold text-[11px]">
-                    {c.costType}
-                  </span>
+                  <span className="eyebrow">{c.category}</span>
+                  <h3>{c.title}</h3>
+                  <p>{c.description}</p>
+
+                  {c.skillsTaught && c.skillsTaught.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {c.skillsTaught.map((sk) => (
+                        <span
+                          key={sk}
+                          className="rounded bg-[#f0f5f4] px-2 py-0.5 text-[10.5px] font-semibold text-[#344054]"
+                        >
+                          {sk}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">{c.title}</h3>
-                  <p className="text-xs text-slate-500 mt-1">{c.provider}</p>
-                </div>
-
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  {c.description}
-                </p>
-
-                {/* Skills Chips */}
-                <div className="space-y-1.5 pt-1">
-                  <span className="text-[11px] font-semibold text-slate-400 block uppercase">
-                    Skills Covered:
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {c.skillsTaught.map((sk) => (
-                      <span
-                        key={sk}
-                        className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700"
-                      >
-                        {sk}
-                      </span>
-                    ))}
+                  <div className="course-progress">
+                    <div>
+                      <span>Module progress</span>
+                      <b>
+                        {done}/{totalLessons} lessons
+                      </b>
+                    </div>
+                    <div className="progress-track">
+                      <span style={{ width: `${pct}%` }} />
+                    </div>
                   </div>
-                </div>
 
-                {/* Lesson Outline Toggle */}
-                {c.lessons && c.lessons.length > 0 && (
-                  <div className="pt-2 border-t border-slate-100">
+                  <div className="course-foot">
+                    <span>
+                      {c.durationWeeks} wks · {totalLessons} sample lessons
+                    </span>
                     <button
                       type="button"
-                      onClick={() => setExpandedCourseId(isExpanded ? null : c.id)}
-                      className="flex items-center justify-between w-full text-xs font-semibold text-slate-700 hover:text-emerald-700"
+                      className="text-link"
+                      onClick={() => setActiveCourse(c)}
                     >
-                      <span>Lesson Outline ({c.lessons.length} modules)</span>
-                      {isExpanded ? (
-                        <ChevronUp className="h-3.5 w-3.5" />
-                      ) : (
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      )}
+                      Course details <ArrowRight className="h-3.5 w-3.5" />
                     </button>
-                    {isExpanded && (
-                      <ol className="mt-2 space-y-1 text-xs text-slate-600 list-decimal list-inside bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        {c.lessons.map((lesson, idx) => (
-                          <li key={idx} className="leading-relaxed">
-                            {lesson}
-                          </li>
-                        ))}
-                      </ol>
-                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
 
-              <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
-                <span className="text-xs text-slate-500 flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" /> {c.durationWeeks} weeks
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleEnroll(c.id)}
-                  className="rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition shadow-xs"
-                >
-                  Start Course Free
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {/* Course Details & Interactive Lesson Modal */}
+      {activeCourse && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveCourse(null);
+          }}
+        >
+          <div className="simple-modal course-modal">
+            <button
+              type="button"
+              className="modal-close"
+              aria-label="Close"
+              onClick={() => setActiveCourse(null)}
+            >
+              ×
+            </button>
+
+            <span className="eyebrow">{activeCourse.category}</span>
+            <h2>{activeCourse.title}</h2>
+            <p>{activeCourse.description}</p>
+
+            {(() => {
+              const lessons = activeCourse.lessons || [];
+              const total = lessons.length || 4;
+              const done = Math.min(total, progress[activeCourse.title] || 0);
+              const pct = Math.round((done / total) * 100);
+
+              return (
+                <>
+                  <div className="course-progress">
+                    <div>
+                      <span>Your module progress</span>
+                      <b>
+                        {done}/{total} lessons completed
+                      </b>
+                    </div>
+                    <div className="progress-track">
+                      <span style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+
+                  <h3>Module lessons</h3>
+                  <ol>
+                    {lessons.map((lesson, i) => (
+                      <li
+                        key={lesson}
+                        className={i < done ? "lesson-done" : ""}
+                      >
+                        {lesson} {i < done ? "✓" : ""}
+                      </li>
+                    ))}
+                  </ol>
+
+                  <div className="flex flex-wrap gap-2.5 mt-4">
+                    <button
+                      type="button"
+                      disabled={done >= total}
+                      onClick={() => advanceLesson(activeCourse)}
+                      className="button button-green course-advance"
+                      style={{ flex: 1 }}
+                    >
+                      {done >= total
+                        ? "All lessons completed ✓"
+                        : "Mark next lesson complete"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleEnroll(activeCourse)}
+                      className="button"
+                    >
+                      Save to Workspace
+                    </button>
+                  </div>
+
+                  {done > 0 && (
+                    <div className="mt-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => resetCourseProgress(activeCourse)}
+                        className="text-button"
+                      >
+                        Reset lesson progress
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Skills Notice Band */}
+      <section className="content-section skills-note">
+        <div className="notice-band">
+          <Building2 className="h-5 w-5" />
+          <div>
+            <b>Connected to Partner Innovation Hubs &amp; AI Pathways</b>
+            <p>
+              All skills modules are accessible offline-first and subsidized at
+              partner innovation hubs across Harare, Bulawayo, Mutare, Gweru,
+              and Masvingo with solar power and Starlink broadband.
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

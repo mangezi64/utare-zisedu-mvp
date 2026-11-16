@@ -1,101 +1,136 @@
 import Link from "next/link";
 import {
   Compass,
-  Cpu,
+  Sparkles,
   Building2,
   Briefcase,
   ArrowRight,
-  Sparkles,
-  CheckCircle2,
 } from "lucide-react";
 
 const STAGES = [
   {
-    step: "01",
-    title: "Intake & Diagnostic",
+    n: "01",
     icon: Compass,
-    color: "emerald",
-    desc: "Map your academic credentials, practical experience, career goals, and last-mile hardware barriers (device, electricity hours, mobile data).",
+    title: "Intake & Diagnostic",
+    explanation:
+      "Share your qualifications, experience, interests, skills and current infrastructure barriers (device ownership, electricity hours, broadband access) in a guided 6-factor intake.",
+    detail:
+      "Scores readiness into three clear tiers: Market-Ready (Direct Placement), Upskill Bridge Needed, or Infrastructure & Hub Priority.",
     href: "/assessment",
-    cta: "Take Diagnostic",
+    cta: "Launch Diagnostic",
   },
   {
-    step: "02",
+    n: "02",
+    icon: Sparkles,
     title: "AI Pathway & Human Coach",
-    icon: Cpu,
-    color: "blue",
-    desc: "Synthesize a personalized 90-day upskilling roadmap matched with a 1-on-1 industry mentor from the Zimbabwean diaspora.",
+    explanation:
+      "Synthesize a custom 90-day career roadmap powered by Google Gemini 2.5 and discuss next steps with a matched 1-on-1 Zimbabwean industry coach.",
+    detail:
+      "Combines interactive milestone tracking with direct mentor session booking and competency verification.",
     href: "/pathway",
-    cta: "View Pathway",
+    cta: "Open AI Pathway",
   },
   {
-    step: "03",
-    title: "Partner Innovation Hubs",
+    n: "03",
     icon: Building2,
-    color: "purple",
-    desc: "Eliminate load-shedding and data costs with subsidized daily passes to solar-powered, Starlink-backed local innovation hubs with PC loan pools.",
+    title: "Partner Innovation Hubs",
+    explanation:
+      "Connect with partner innovation hubs across Harare, Bulawayo, Mutare, Gweru, and Masvingo offering 100% solar power, Starlink broadband, and workstation loan pools.",
+    detail:
+      "Eliminates load-shedding and data costs for candidates operating without home broadband or a dedicated laptop.",
     href: "/hubs",
-    cta: "Explore Hubs",
+    cta: "Explore Partner Hubs",
   },
   {
-    step: "04",
-    title: "Remote Jobs, ATS CV & Verification",
+    n: "04",
     icon: Briefcase,
-    color: "amber",
-    desc: "Generate anti-AI-slop, humanized CVs and application letters grounded strictly in your facts, and apply for verified international roles with Deel/Payoneer rails.",
+    title: "Remote Jobs & Grounded ATS CV Studio",
+    explanation:
+      "Generate grounded, anti-AI-slop ATS CVs and formal Zimbabwean application letters with 1-click Word (.docx) export, and apply to verified remote and local roles.",
+    detail:
+      "All curated opportunities support verified international payment rails (Deel, Payoneer, Wise, and USD Nostro).",
     href: "/opportunities",
-    cta: "Browse Roles",
+    cta: "Explore Opportunities",
   },
 ];
 
 export default function HowItWorksPage() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-12">
-      {/* Header */}
-      <div className="text-center max-w-3xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
-          The 4-Stage Mobility Journey
-        </div>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">
-          How UTARE ZEM AI Works
-        </h1>
-        <p className="text-sm text-slate-600 leading-relaxed">
-          From dormant academic credential to productive global or local earner.
-          Here is our end-to-end framework built for the realities of Zimbabwe.
+    <div>
+      {/* Page Hero */}
+      <section className="page-hero">
+        <span className="eyebrow">HOW IT WORKS</span>
+        <h1>A guided path from skills to opportunity.</h1>
+        <p>
+          UTARE connects four stages to help candidates understand their
+          starting point, build practical readiness, overcome infrastructure
+          barriers, and access verified earning pathways.
         </p>
-      </div>
+      </section>
 
-      {/* 4 Cards Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {/* 4 Journey Rows */}
+      <section className="content-section journey-detail">
         {STAGES.map((s) => {
           const Icon = s.icon;
           return (
-            <div
-              key={s.step}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col justify-between space-y-4 hover:border-emerald-300 hover:shadow-md transition"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-3xl font-black text-slate-200">{s.step}</span>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-emerald-700">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                </div>
-                <h3 className="text-lg font-bold text-slate-900">{s.title}</h3>
-                <p className="text-xs text-slate-600 leading-relaxed">{s.desc}</p>
+            <article key={s.n} className="journey-row">
+              <div className="journey-row-icon">
+                <span className="icon-tile">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span>{s.n}</span>
               </div>
 
-              <Link
-                href={s.href}
-                className="inline-flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-800 hover:bg-emerald-50 hover:text-emerald-900 transition border border-slate-200"
-              >
-                <span>{s.cta}</span>
-                <ArrowRight className="h-3.5 w-3.5" />
+              <div>
+                <span className="eyebrow">STAGE {s.n} · LIVE MODULE</span>
+                <h2>{s.title}</h2>
+                <p>{s.explanation}</p>
+                <p className="muted">{s.detail}</p>
+              </div>
+
+              <Link href={s.href} className="text-link">
+                {s.cta} <ArrowRight className="h-4 w-4" />
               </Link>
-            </div>
+            </article>
           );
         })}
-      </div>
+      </section>
+
+      {/* Operational Notice Band */}
+      <section className="notice-band">
+        <Sparkles className="h-5 w-5" />
+        <div>
+          <b>Fully Connected End-to-End Platform</b>
+          <p>
+            Every stage above is live and connected to our PostgreSQL database
+            and background Gemini AI engine. Candidates can complete the
+            diagnostic, track 90-day milestones, book a hub workstation, and
+            export tailored Word (`.docx`) CVs &amp; cover letters.
+          </p>
+        </div>
+      </section>
+
+      {/* Compact CTA */}
+      <section className="content-section compact-cta">
+        <div>
+          <div className="section-heading" style={{ marginBottom: 0 }}>
+            <span className="eyebrow">START WHERE YOU ARE</span>
+            <h2>Take the first step when you&apos;re ready</h2>
+            <p>
+              A short diagnostic helps organize your academic credentials,
+              practical skills, and infrastructure needs.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/assessment" className="button button-green">
+            Start Candidate Bridge <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link href="/jobs" className="button">
+            Open CV &amp; Cover Letter Studio
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

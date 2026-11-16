@@ -1,12 +1,12 @@
-# UTARE ZEM AI — Economic Mobility Bridge MVP
+# UTARE ZEM AI — Economic Mobility & Remote Bridge Platform
 
-> **Converting dormant Zimbabwean tertiary talent into productive earners by bridging last-mile hardware, competency verification, AI upskilling paired with human coaching, and direct remote market access.**
+> **Converting dormant Zimbabwean tertiary & vocational talent into productive earners by bridging last-mile hardware, competency verification, AI upskilling paired with human coaching, and direct remote market access.**
 
 ---
 
 ## 1. Executive Summary & Problem Context
 
-In Zimbabwe, high academic qualification no longer translates into economic mobility. According to the **UTARE User Journey & Economic Mobility Survey ($N = 23$)**:
+In Zimbabwe, high academic qualification no longer translates automatically into economic mobility. Grounded in the **UTARE User Journey & Economic Mobility Survey**:
 - **82.6%** of respondents hold university degrees (**91.3%** hold tertiary qualifications).
 - **43.5%** remain unemployed and **56.5%** earn $\le \$300$/month (with **30.4%** earning zero income).
 - Among those working, **84.6%** are trapped in completely misaligned survival gigs (**38.5%**) or partially aligned roles (**46.2%**), leaving only **15.4%** working in their trained discipline.
@@ -23,8 +23,8 @@ In Zimbabwe, high academic qualification no longer translates into economic mobi
 ### Option A: Full Next.js Platform with Containerized PostgreSQL Database (Recommended)
 
 Runs identically across macOS, Windows (WSL2), and Linux using Docker Compose with zero host environment pollution:
-- **`web`**: Next.js 14 frontend, dynamic routes, and REST API server (Port `3000`).
-- **`db`**: Containerized PostgreSQL 16 Alpine database with pre-seeded Zimbabwe hubs, coaches, and curriculum (Port `5432`).
+- **`web`**: Next.js 14 frontend featuring **Faith Wenzira & Amanda's unified design system** (`Manrope` & `Inter` typography, deep navy `#101a33` & emerald `#0faf83` palette, animated `ZW` global-reach radar map, and orbital login graphic), dynamic routes, and REST API server (Port `3000`).
+- **`db`**: Containerized PostgreSQL 16 Alpine database with pre-seeded Zimbabwe hubs, coaches, courses, and empirical cohort data (Port `5432`).
 
 #### Step 1: Clone the Repository
 ```bash
@@ -32,17 +32,20 @@ git clone https://github.com/mangezi64/utare-zisedu-mvp.git
 cd utare-zisedu-mvp
 ```
 
-#### Step 2: Configure Your Local Environment & Gemini Key
+#### Step 2: Configure Your Local Environment
 ```bash
 cp .env.example .env.local
 ```
-To enable live **Google Gemini 2.5** in the background (keeping keys hidden from end-user candidates), edit `.env.local`:
+To enable live **Google Gemini 2.5** in the background and configure session signing or bootstrap admin accounts, edit `.env.local`:
 ```bash
 GEMINI_API_KEY="AIzaSyYourActualKeyHere"
 GEMINI_MODEL="gemini-2.5-flash"
 DATABASE_URL="postgresql://utare_user:utare_password@db:5432/utare_db"
+AUTH_SESSION_SECRET="replace-with-a-random-32-byte-secret"
+SUPERUSER_EMAILS="your-email@domain.com"
+ADMIN_EMAILS="facilitator@domain.com"
 ```
-*(Note: The platform includes a built-in **Zimbabwe Survey Seed & Deterministic Fallback Engine**, so it runs 100% out-of-the-box even before you paste live `GEMINI_API_KEY` credentials!)*
+*(Note: The platform includes a built-in **Zimbabwe Survey Seed & Deterministic Fallback Engine**, so it runs 100% out-of-the-box even before you paste live `GEMINI_API_KEY` or `SUPABASE` credentials!)*
 
 #### Step 3: Start the Containers & Enable Pre-Push CI Hooks
 ```bash
@@ -50,56 +53,54 @@ docker compose up -d --build
 make install-hooks
 ```
 - Open **[http://localhost:3000](http://localhost:3000)** in your browser for the full Next.js platform.
-- Open **[http://localhost:3000/demo/index.html](http://localhost:3000/demo/index.html)** for the connected frontend walkthrough.
+- Open **[http://localhost:3000/demo/index.html](http://localhost:3000/demo/index.html)** for the preserved standalone hash-routed walkthrough.
 
 ---
 
 ### Option B: Standalone Frontend Walkthrough Demonstration
 
-Open `index.html` in any modern browser without needing a build step or package installation. The walkthrough uses responsive client-side routing:
+Open `index.html` in any modern browser without needing a build step or package installation. The walkthrough uses responsive client-side hash routing:
 
-- `#/` — Login demonstration
+- `#/` — Login & Registration demonstration
 - `#/overview` — Homepage & Problem Context
 - `#/dashboard` — Candidate main dashboard
-- `#/about` — About Us & Mission
+- `#/about` — About Us, Our Story & 6-Person Team
 - `#/how-it-works` — 4-Stage Candidate Journey
 - `#/opportunities` — 4-Way filterable remote opportunities
 - `#/skills` — Modular skills development pathways
 - `#/employers` — For Employers (submits to live `/api/employers` & PostgreSQL when server is active)
 - `#/contact` — Contact & Hub Inquiries (submits to live `/api/contact` & PostgreSQL when server is active)
 
-#### Demonstration Credentials
-- **Email:** `demo@utarezem.ai`
-- **Password:** `Demo123!`
-
 ---
 
-## 3. Core Platform Capabilities (Candidate View vs. Admin Console)
+## 3. Core Platform Capabilities & Role-Based Portals
 
-### A. Candidate Experience (`Candidate View`)
-- **Executive Overview (`/`):** Live empirical data from the 23-respondent survey, core value proposition, and mobility stages.
-- **Smart Intake & Diagnostic (`/assessment`):** 6-factor readiness assessment evaluating English proficiency, digital literacy, internet access, device ownership, electricity availability, and work experience. Classifies into 3 clear tiers:
-  - 🟢 **Remote Ready** (Direct placement track)
-  - 🟡 **Needs Upskilling** (Targeted micro-credentials & software bridges)
-  - 🔴 **Needs Infrastructure Support** (Partner hub placement & hardware subsidy)
-- **Opportunities (`/opportunities`):** Remote job vacancies with 4-way filtering by Category (Data, Operations, Marketing, Finance, Customer Support, Software), Industry, Level (Entry, Mid, Experienced), and Arrangement (Remote, Hybrid, Onsite).
-- **Skills Development (`/skills`):** Modular upskilling curriculum across Virtual Assistance, Digital Operations, Data Analytics, and Customer Support.
-- **For Employers (`/employers`):** Employer talent inquiry form that registers hiring needs and persists directly to the containerized PostgreSQL database.
-- **Contact Us (`/contact`):** Hub partner and general inquiry form with real-time database persistence.
-- **How It Works (`/how-it-works`) & About Us (`/about`):** 4-stage mobility walkthrough and mission statement.
-- **Candidate Workspace (`/account`):** Personal profile management, matched innovation hub pass, 90-day AI upskilling roadmap, and application tracking.
+### A. Public & Candidate Experience (`candidate` role)
+- **Executive Overview (`/`):** Unified hero banner with the animated Zimbabwe (`ZW`) global-reach radar graphic, empirical survey benchmarks, 4-stage `"01–04"` mobility cards, and challenge checklist.
+- **About Us (`/about`):** *"Six young people, one shared challenge"* story (Mastercard Foundation Scholars & USAP alumnus context), Mission/Vision/Proposal band, `01–04` challenge cards, and the 6-person team showcase.
+- **How It Works (`/how-it-works`):** 4-stage mobility walkthrough linking directly into each live platform module.
+- **Smart Intake & 6-Factor Diagnostic (`/assessment`):** Evaluates English proficiency, digital literacy, internet access, device ownership, electricity availability, and work experience. Classifies into 3 readiness tiers (`Market-Ready`, `Bridge-Ready`, `Foundation Track`).
+- **Interactive 90-Day AI Career Pathway (`/pathway`):** Powered by Google Gemini 2.5 with 1-on-1 Zimbabwean mentor booking and milestone completion tracking.
+- **Opportunities Explorer (`/opportunities`):** Pre-screened remote, hybrid, and local roles with 4-way filtering (`Category`, `Industry`, `Experience level`, `Work arrangement`), role detail modals, and 1-click links to the CV Studio.
+- **Skills Development (`/skills`):** Subsidized modular courses across Digital Literacy, Remote Work Readiness, Communication, Productivity, Technical Skills, and Entrepreneurship with interactive lesson progress modals.
+- **Partner Innovation Hubs (`/hubs`):** Directory of solar-powered, Starlink-connected hubs across Harare, Bulawayo, Mutare, Gweru, and Masvingo with workstation reservation.
+- **Candidate Workspace (`/account`):** Personal dashboard, hardware/credential profile editor, matched hub pass, 90-day milestones, and job application status tracker.
 - **Grounded ATS CV & Application Letter Studio (`/jobs`):**
   - Generates structured, ATS-friendly CVs and formal Zimbabwean business application letters grounded strictly in candidate facts (zero fabricated employers or dates).
   - **Anti-AI-Slop Humanizer (`src/lib/documents/humanizer.ts`):** Strips 45+ AI clichés and scores every document from `0–100` for natural human tone.
   - **One-Click Downloads:** Export ready-to-send **Word (`.docx`)** files, **A4 Print/PDF**, or plain text.
-  - **Clean End-User UI:** API keys, model pickers, and multi-user demo switchers are hidden in Candidate View.
 
-### B. Facilitator & Admin Operations Console (`/admin`)
-Switch to **`Admin Console`** in the top navigation bar to access:
-- **Remote Jobs & AI Discovery (`/api/admin/jobs`):** Run AI remote job discovery or add jobs manually/via link; review `Pending Review` roles and click **Approve & Publish** to make them visible to candidates.
-- **Partner Hub Enlistment (`/api/admin/hubs`):** Enlist and manage co-working hubs across Harare, Bulawayo, Mutare, Gweru, Masvingo, and Chinhoyi.
-- **Registered Candidates Cohort (`/api/admin/candidates`):** Inspect all candidate intakes, readiness tiers, hardware deficits, and applications.
-- **Employer Inquiries:** Review employer talent leads submitted via `/employers`.
+### B. Scoped Employer Portal (`/employer` — `employer` role)
+- **Self-Registration & One-Time Admin Verification (`/login?tab=register&role=employer` & `/employers`):** Employers register with email confirmation. Once an admin verifies the company once, all current and future job postings from that employer auto-publish.
+- **Job Pipeline Management (`/employer`):** Post new remote/hybrid roles, archive filled roles, or delete listings.
+- **Scoped Applicant Review:** View applicants strictly for the employer's own jobs, inspect tailored resume pitches, and update applicant status (`under_review`, `shortlisted`, `rejected`, `hired`). Strict server-side scoping strips all private candidate fields (phone, income bracket, hardware deficits, and internal diagnostic scores).
+
+### C. Facilitator & Admin Operations Console (`/admin` — `admin` & `superuser` roles)
+- **Employer Verification:** Review and verify or reject registered employer accounts.
+- **Remote Jobs & AI Discovery (`/api/admin/jobs`):** Run AI remote job discovery or add jobs manually; review `Pending Review` roles and click **Approve & Publish**.
+- **Partner Hub Enlistment (`/api/admin/hubs`):** Enlist and manage co-working hubs across Zimbabwe.
+- **Registered Candidates Cohort (`/api/admin/candidates`):** Inspect candidate intakes, readiness tiers, hardware deficits, and applications.
+- **Team & User Roles (`/api/admin/users`):** Upgrade any registered teammate or user account to `admin` directly from the UI (or via `scripts/manage-user.mjs`).
 - **Live Gemini AI Diagnostics (`/api/ai/status`):** Test live model latency and switch between `gemini-2.5-flash` and `gemini-2.5-pro`.
 
 ---
@@ -113,30 +114,36 @@ utare-zisedu-mvp/
 ├── .githooks/
 │   └── pre-push                   # Automatic local 5-gate CI check before every git push
 ├── scripts/
-│   ├── pre-push-ci-check.sh       # Runs ESLint, Typecheck, Vitest (20 tests) & Next.js build in Docker
+│   ├── manage-user.mjs            # Backend CLI to create/promote/demote admin, superuser & employer accounts
+│   ├── pre-push-ci-check.sh       # Runs ESLint, Typecheck, Vitest (22 tests) & Next.js build in Docker
 │   └── safe-pr-merge.sh           # Runs local CI + remote GitHub Actions check before merging a PR
 ├── Dockerfile.dev                 # Development container (Node 20 LTS Alpine + hot-reload polling)
 ├── Dockerfile                     # Multi-stage production container build
 ├── docker-compose.yml             # Orchestrates web container and postgres:16-alpine db container
 ├── Makefile                       # Shortcuts: make up, make ci-local, make safe-merge, make install-hooks
-├── .env.example                   # Template for Gemini AI & PostgreSQL environment variables
+├── .env.example                   # Template for Gemini AI, PostgreSQL & Auth environment variables
 ├── supabase/
 │   └── schema.sql                 # Full PostgreSQL schema with 9 tables + Zimbabwe Hubs & Coaches seed data
 ├── index.html                     # Standalone frontend walkthrough entry point
 ├── app.js                         # Walkthrough client logic connected to Next.js REST API
-├── styles.css                     # Responsive styling for standalone walkthrough
+├── styles.css                     # Faith & Amanda's core CSS design system
 ├── design/
-│   └── demo-app/                  # Preserved original contributor design files
+│   └── demo-app/                  # Preserved contributor static walkthrough files
 ├── public/
-│   └── demo/                      # Static demo hosted at http://localhost:3000/demo/index.html
+│   └── demo/                      # Static walkthrough hosted at /demo/index.html
 └── src/
-    ├── __tests__/                 # 5 Vitest suites (20 automated unit & integration tests)
+    ├── __tests__/                 # 5 Vitest suites (22 automated unit & integration tests)
+    ├── middleware.ts              # Server-side route protection for /admin, /employer, /account, /pathway
     ├── types/
-    │   └── index.ts               # Core TypeScript interfaces for all platform modules
+    │   └── index.ts               # Core TypeScript interfaces for all platform modules & roles
     ├── lib/
+    │   ├── auth-session.ts        # Web Crypto HMAC-SHA256 signed HttpOnly session token utilities
+    │   ├── auth-guard.ts          # Server-side role & admin/employer authorization guards
+    │   ├── password-hash.ts       # PBKDF2-SHA256 password hashing and constant-time verification
+    │   ├── validation.ts          # Email format/disposable/MX checks & password strength validator
     │   ├── db.ts                  # PostgreSQL connection pool with graceful offline fallback
-    │   ├── store.ts               # Two-way sync: PostgreSQL DB + in-memory store
-    │   ├── view-mode-context.tsx  # Global Candidate View vs. Admin Console state provider
+    │   ├── store.ts               # Two-way sync: PostgreSQL DB + serverless-safe file/memory store
+    │   ├── view-mode-context.tsx  # Global authenticated session & role state provider
     │   ├── mock-data.ts           # Empirical survey benchmarks, 6 archetypes, hubs, coaches & jobs
     │   ├── gemini/
     │   │   ├── client.ts          # Shared live Gemini 2.5 JSON schema client with timeout & fallback
@@ -147,22 +154,29 @@ utare-zisedu-mvp/
     │       ├── cover-letter-writer.ts # Grounded Zimbabwean business application letter writer
     │       └── docx-export.ts     # Word (.docx) binary exporter
     ├── components/
-    │   └── Navbar.tsx             # Responsive navbar with Candidate View / Admin Console switcher
+    │   ├── Navbar.tsx             # Unified header with "U" brand mark & role-aware navigation
+    │   ├── PasswordInput.tsx      # Accessible password input with show/hide toggle
+    │   └── ZimbabweCitySelect.tsx # Searchable Zimbabwean towns, growth points & diaspora combobox
     └── app/
-        ├── page.tsx               # Executive Overview & Empirical Survey Dashboard
-        ├── about/page.tsx         # About UTARE ZEM AI & Survey Context
+        ├── globals.css            # Faith & Amanda's design system integrated with Tailwind CSS
+        ├── layout.tsx             # Root layout with Manrope/Inter fonts & dark navy footer
+        ├── page.tsx               # Executive Overview with ZW radar map & empirical survey data
+        ├── about/page.tsx         # About Us, "Six young people" story, values band & 6-person team
         ├── how-it-works/page.tsx  # 4-Stage Mobility Journey Walkthrough
-        ├── opportunities/page.tsx # 4-Way Filterable Remote Opportunities
-        ├── skills/page.tsx        # Skills Development Course Directory
-        ├── employers/page.tsx     # Employer Interest Registration (PostgreSQL backed)
+        ├── opportunities/page.tsx # 4-Way Filterable Opportunities with detail modal & CV Studio links
+        ├── skills/page.tsx        # Skills Development Directory with interactive lesson progress modal
+        ├── employers/page.tsx     # For Employers & Partners + PostgreSQL / Portal enrolment form
+        ├── employer/page.tsx      # Scoped Employer Portal: post roles & manage applicants
         ├── contact/page.tsx       # Partner & General Inquiries (PostgreSQL backed)
-        ├── account/page.tsx       # Candidate Workspace: Profile, Hub Pass, Milestones & Applications
-        ├── admin/page.tsx         # Admin Console: Hub Enlistment, AI Job Approval & Cohort Directory
+        ├── login/page.tsx         # Split-screen orbital visual Sign In & Candidate/Employer Registration
+        ├── auth/callback/page.tsx # Email verification callback handler
+        ├── account/page.tsx       # Candidate Main Dashboard & Workspace
+        ├── admin/page.tsx         # Facilitator & Admin Console (Employers, Jobs, Hubs, Cohort, User Roles)
         ├── assessment/page.tsx    # Smart Intake, 6-Factor Diagnostic & AI Coach Pairing
         ├── pathway/page.tsx       # Interactive 90-Day AI Career Roadmap & Mentor Booking
-        ├── hubs/page.tsx          # Partner Innovation Hub Directory
+        ├── hubs/page.tsx          # Partner Innovation Hub Directory & Workstation Booking
         ├── jobs/page.tsx          # Verified Remote Jobs + ATS CV & Application Letter Studio
-        └── api/                   # REST API routes (/api/employers, /api/skills, /api/contact, etc.)
+        └── api/                   # REST API routes (/api/auth/*, /api/employer/*, /api/admin/*, etc.)
 ```
 
 ---
@@ -170,10 +184,11 @@ utare-zisedu-mvp/
 ## 5. Local CI & Safe PR Merge Workflow for Contributors
 
 To guarantee `main` never breaks on merge:
-- **Run full CI locally inside Docker:**
+- **Run full CI locally:**
   ```bash
-  make ci-local
+  npm run lint && npm run typecheck && npm run test:ci && npm run build
   ```
+  *(Or inside Docker: `make ci-local`)*
 - **Verify local CI + GitHub Actions and merge your PR safely:**
   ```bash
   make safe-merge
@@ -183,17 +198,20 @@ To guarantee `main` never breaks on merge:
 
 ## 6. Team Task Assignments & Module Ownership
 
-| Team Member | Assigned Tasks | Primary Files / Directories |
+| Team Member | Assigned Tasks & Contributions | Primary Files / Directories |
 | :--- | :--- | :--- |
-| **Stewart Mangezi** | **Task #3** (Candidate accounts, profile management, skills assessment flow, AI path suggestion paired with human coaching) & Repository Architecture | `src/lib/gemini/pathway-engine.ts`, `src/app/assessment/page.tsx`, `src/app/api/pathway/route.ts`, Docker setup |
-| **Munashe** | **Tasks #3 & #4** (Co-managing candidate intake & Partner Innovation Hub mapping/enlistment) | `src/app/hubs/page.tsx`, `src/app/api/hubs/route.ts`, `src/lib/mock-data.ts` |
-| **Amanda & Dev Team** | **Frontend Architecture & Database Setup** (Next.js / Tailwind UI polish & Supabase schema deployment) | `supabase/schema.sql`, `src/lib/supabase/client.ts`, `src/components/` |
-| **Kudakwashe & Team** | **Competitor Analysis & Market Validation** (Evaluating local/global platforms & curating remote job criteria) | `src/app/jobs/page.tsx`, `docs/` |
+| **Stewart Mangezi** | **Task #3 & Platform Architecture** (Candidate accounts, 6-factor readiness diagnostic, Gemini AI pathway engine, human coach pairing, auth/security & Docker setup) | `src/lib/gemini/pathway-engine.ts`, `src/app/assessment/page.tsx`, `src/lib/auth-session.ts`, `src/app/admin/page.tsx` |
+| **Faith Wenzira** | **Frontend Experience & UI Design** (Visual identity, `Manrope`/`Inter` design system, `ZW` hero & orbital graphics, interactive candidate walkthrough, Opportunities & Skills UI) | `styles.css`, `src/app/globals.css`, `src/app/page.tsx`, `src/app/about/page.tsx`, `src/app/opportunities/page.tsx`, `src/app/skills/page.tsx` |
+| **Amanda** | **Frontend Architecture & Database Setup** (UI/UX co-design, responsive page layouts, Partner Hub interface polish & PostgreSQL / Supabase schema deployment) | `supabase/schema.sql`, `src/lib/supabase/client.ts`, `src/components/Navbar.tsx`, `src/app/globals.css` |
+| **Munashe** | **Tasks #3 & #4** (Co-managing candidate diagnostic intake & Partner Innovation Hub mapping/enlistment across Zimbabwe) | `src/app/hubs/page.tsx`, `src/app/api/hubs/route.ts`, `src/lib/mock-data.ts` |
+| **Kudakwashe** | **Task #5: Competitor Analysis & Market Validation** (Evaluating local/global platforms & curating verified remote job criteria and payment rails) | `src/app/jobs/page.tsx`, `src/app/opportunities/page.tsx`, `docs/` |
 
 ---
 
 ## 7. Detailed Documentation Links
 
 - **[Container & Setup Guide](docs/CONTAINER_AND_SETUP_GUIDE.md)** — How to run, debug, and manage the Docker environment on macOS, Windows (WSL2), and Linux.
-- **[Architecture & Team Development Guide](docs/ARCHITECTURE_AND_TEAM_GUIDE.md)** — How each file works, how Supabase & Gemini AI connect, and our Git branching workflow.
-- **[Personal GitHub Setup (`mangezi64`)](docs/GITHUB_PERSONAL_ACCOUNT_GUIDE.md)** — How this repo is isolated from the Odyssey work account (`smangezi`) and how to push to `https://github.com/mangezi64/utare-zisedu-mvp`.
+- **[Architecture & Team Development Guide](docs/ARCHITECTURE_AND_TEAM_GUIDE.md)** — How each file works, how Faith & Amanda's design system, PostgreSQL, and Gemini AI connect, and our Git workflow.
+- **[Internal Role Provisioning & Test Accounts](docs/TEST_ACCOUNTS.md)** — How to provision `superuser`, `admin`, and `employer` roles via the UI or `scripts/manage-user.mjs`.
+- **[CI/CD & Branch Protection Guide](docs/CI_TESTING_AND_BRANCH_PROTECTION.md)** — Automated lint, typecheck, Vitest suites, and PR governance.
+- **[Personal GitHub Setup (`mangezi64`)](docs/GITHUB_PERSONAL_ACCOUNT_GUIDE.md)** — Repository-local Git configuration for `https://github.com/mangezi64/utare-zisedu-mvp`.

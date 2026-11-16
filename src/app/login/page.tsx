@@ -14,6 +14,8 @@ import {
   AlertCircle,
   Building2,
   Globe,
+  BookOpen,
+  Users,
 } from "lucide-react";
 import { useViewMode } from "@/lib/view-mode-context";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
@@ -220,79 +222,150 @@ function LoginForm() {
     regConfirmPassword.length > 0 && regConfirmPassword !== regPassword;
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-xl">
-        {/* Header Branding */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-700 text-white shadow-md">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <div className="text-left">
-              <span className="text-xl font-extrabold tracking-tight text-slate-900">
-                UTARE <span className="text-emerald-700">ZEM AI</span>
-              </span>
-              <p className="text-xs text-slate-500">
-                Zimbabwe Economic Mobility & Remote Bridge
-              </p>
-            </div>
+    <div className="login-page">
+      {/* Faith & Amanda's Left Split-Screen Visual with Animated Orbital Nodes */}
+      <section className="login-visual">
+        <div className="login-visual-inner">
+          <Link
+            href="/"
+            className="brand brand-light"
+            aria-label="UTARE ZEM AI overview"
+          >
+            <span className="brand-mark">U</span>
+            <span>
+              <b>UTARE</b> ZEM AI
+              <small>Zimbabwe Economic Mobility &amp; Remote Bridge</small>
+            </span>
           </Link>
-          <h1 className="mt-6 text-2xl font-bold tracking-tight text-slate-900">
+
+          <div className="login-copy">
+            <span className="eyebrow eyebrow-light">
+              ECONOMIC MOBILITY, WITH POSSIBILITY
+            </span>
+            <h1>
+              Bridging Zimbabwe&apos;s Credentials to{" "}
+              <em>Economic Opportunity.</em>
+            </h1>
+            <p>
+              Helping Zimbabwean talent access AI career pathways, develop
+              practical skills, connect with solar-backed innovation hubs, and
+              reach opportunities beyond geographical boundaries.
+            </p>
+
+            {/* Orbital Node Visual Graphic */}
+            <div className="visual-graphic" aria-hidden="true">
+              <div className="graphic-orbit orbit-a" />
+              <div className="graphic-orbit orbit-b" />
+              <div className="graphic-core">
+                <Building2 className="h-8 w-8" />
+              </div>
+              <span className="graphic-node node-a">
+                <BookOpen className="h-4 w-4" />
+              </span>
+              <span className="graphic-node node-b">
+                <Briefcase className="h-4 w-4" />
+              </span>
+              <span className="graphic-node node-c">
+                <Users className="h-4 w-4" />
+              </span>
+              <div className="graphic-caption">
+                <span className="pulse" /> Talent, skills &amp; opportunity in
+                motion
+              </div>
+            </div>
+          </div>
+
+          <div className="login-footnote">
+            Connected to PostgreSQL persistence &amp; PBKDF2-SHA256 verified
+            session authentication.
+          </div>
+        </div>
+      </section>
+
+      {/* Right Side: Live Sign In & Account Creation Form */}
+      <section className="login-form-side">
+        <div className="login-form-wrap">
+          <div className="mobile-brand">
+            <Link href="/" className="brand">
+              <span className="brand-mark">U</span>
+              <span>
+                <b>UTARE</b> ZEM AI
+                <small>Zimbabwe Economic Mobility &amp; Remote Bridge</small>
+              </span>
+            </Link>
+          </div>
+
+          {/* Tab Switcher */}
+          <div
+            className="flex gap-2 mb-5 p-1 rounded-xl"
+            style={{ background: "#eaf0ed" }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setTab("login");
+                setLoginError("");
+                setRegisterSuccess("");
+              }}
+              className={`button ${tab === "login" ? "button-green" : ""}`}
+              style={{
+                flex: 1,
+                minHeight: "38px",
+                padding: "0 12px",
+                fontSize: "12px",
+                ...(tab !== "login"
+                  ? { background: "white", color: "#334155" }
+                  : {}),
+              }}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTab("register");
+                setLoginError("");
+                setRegisterSuccess("");
+              }}
+              className={`button ${tab === "register" ? "button-green" : ""}`}
+              style={{
+                flex: 1,
+                minHeight: "38px",
+                padding: "0 12px",
+                fontSize: "12px",
+                ...(tab !== "register"
+                  ? { background: "white", color: "#334155" }
+                  : {}),
+              }}
+            >
+              Create Account
+            </button>
+          </div>
+
+          <span className="eyebrow">
             {tab === "login"
-              ? "Sign In to Your Account"
+              ? "WELCOME TO YOUR NEXT STEP"
               : accountType === "employer"
-              ? "Create Employer Account"
-              : "Create Candidate Account"}
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
+              ? "START YOUR EMPLOYER PARTNERSHIP"
+              : "START YOUR CANDIDATE BRIDGE"}
+          </span>
+          <h2>
             {tab === "login"
-              ? "Sign in with your verified credentials to access your workspace or console."
+              ? "Sign in to continue"
               : accountType === "employer"
-              ? "Enrol your organization to post remote roles and review applicants."
-              : "Create your account to bridge credentials into verified remote work."}
+              ? "Create employer account"
+              : "Create your account"}
+          </h2>
+          <p className="login-intro">
+            {tab === "login"
+              ? "Access your candidate diagnostic, AI career roadmap, employer portal, or facilitator console."
+              : accountType === "employer"
+              ? "Register your organisation to post remote roles and review verified applicants."
+              : "Register to save your profile, take the readiness diagnostic, and apply for remote work."}
           </p>
-        </div>
 
-        {/* Tab Switcher */}
-        <div className="flex rounded-xl bg-slate-200/80 p-1 mb-6 text-xs sm:text-sm font-semibold">
-          <button
-            type="button"
-            onClick={() => {
-              setTab("login");
-              setLoginError("");
-              setRegisterSuccess("");
-            }}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg transition ${
-              tab === "login"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <User className="h-4 w-4 text-emerald-700" />
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setTab("register");
-              setLoginError("");
-              setRegisterSuccess("");
-            }}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg transition ${
-              tab === "register"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <GraduationCap className="h-4 w-4 text-emerald-700" />
-            Create Account
-          </button>
-        </div>
-
-        {/* Card Body */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
           {loginError && (
-            <div className="mb-6 rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200 space-y-2">
+            <div className="mb-5 rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200 space-y-2">
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
                 <span>{loginError}</span>
@@ -303,7 +376,8 @@ function LoginForm() {
                     href={confirmationPath}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-red-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-800 transition"
                   >
-                    Confirm Email Address Now <ArrowRight className="h-3.5 w-3.5" />
+                    Confirm Email Address Now{" "}
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
               )}
@@ -311,12 +385,12 @@ function LoginForm() {
           )}
 
           {registerSuccess && (
-            <div className="mb-6 rounded-lg bg-emerald-50 p-4 text-xs text-emerald-900 border border-emerald-200 space-y-3">
+            <div className="mb-5 rounded-lg bg-[#eaf5f0] p-4 text-xs text-[#101a33] border border-[#c2e2d4] space-y-3">
               <div className="flex items-start gap-2">
-                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-700 mt-0.5" />
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-[#08785f] mt-0.5" />
                 <div>
                   <p className="font-bold">{registerSuccess}</p>
-                  <p className="mt-1 text-emerald-800">
+                  <p className="mt-1 text-[#2e4a3d]">
                     Once your email is confirmed, you will be signed in to your
                     workspace automatically.
                   </p>
@@ -326,40 +400,38 @@ function LoginForm() {
                 <div>
                   <Link
                     href={confirmationPath}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition shadow-xs"
+                    className="button button-green"
+                    style={{
+                      minHeight: "36px",
+                      padding: "0 14px",
+                      fontSize: "11.5px",
+                    }}
                   >
-                    Verify Email &amp; Continue <ArrowRight className="h-3.5 w-3.5" />
+                    Verify Email &amp; Continue{" "}
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
               )}
             </div>
           )}
 
-          {/* TAB 1: Unified Sign In (Candidates, Employers, Admins) */}
+          {/* TAB 1: Unified Sign In */}
           {tab === "login" && (
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <input
-                    type="email"
-                    required
-                    autoComplete="email"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="you@domain.com"
-                    className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
-              </div>
+            <form onSubmit={handleSignIn} className="form-stack">
+              <label className="field">
+                <span>Email address</span>
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="you@example.com"
+                />
+              </label>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Password
-                </label>
+              <div className="field">
+                <span>Password</span>
                 <PasswordInput
                   value={loginPassword}
                   onChange={setLoginPassword}
@@ -370,13 +442,13 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={isLoggingIn}
-                className="w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                className="button button-wide button-green disabled:opacity-50"
               >
                 {isLoggingIn ? "Signing In..." : "Sign In"}
                 <ArrowRight className="h-4 w-4" />
               </button>
 
-              <p className="text-center text-xs text-slate-500 pt-2">
+              <p className="text-center text-xs text-[#667085] pt-2">
                 Don&apos;t have an account yet?{" "}
                 <button
                   type="button"
@@ -384,7 +456,7 @@ function LoginForm() {
                     setTab("register");
                     setLoginError("");
                   }}
-                  className="font-bold text-emerald-700 hover:underline"
+                  className="text-button"
                 >
                   Create an account
                 </button>
@@ -394,7 +466,7 @@ function LoginForm() {
 
           {/* TAB 2: Create Account (Candidate or Employer) */}
           {tab === "register" && (
-            <form onSubmit={handleRegister} className="space-y-4">
+            <form onSubmit={handleRegister} className="form-stack">
               {/* Role selector: Candidate vs Employer */}
               <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1 text-xs font-semibold">
                 <button
@@ -402,7 +474,7 @@ function LoginForm() {
                   onClick={() => setAccountType("candidate")}
                   className={`flex items-center justify-center gap-1.5 rounded-lg py-2 transition ${
                     accountType === "candidate"
-                      ? "bg-white text-emerald-800 shadow-xs"
+                      ? "bg-white text-[#08785f] shadow-xs font-bold"
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
@@ -414,7 +486,7 @@ function LoginForm() {
                   onClick={() => setAccountType("employer")}
                   className={`flex items-center justify-center gap-1.5 rounded-lg py-2 transition ${
                     accountType === "employer"
-                      ? "bg-white text-blue-800 shadow-xs"
+                      ? "bg-white text-[#101a33] shadow-xs font-bold"
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
@@ -424,87 +496,67 @@ function LoginForm() {
               </div>
 
               {accountType === "employer" && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Company / Organization Name *
-                  </label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <input
-                      type="text"
-                      required
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      placeholder="e.g. Savannah Tech Labs UK"
-                      className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {accountType === "employer"
-                    ? "Contact Person Full Name *"
-                    : "Full Name *"}
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                <label className="field">
+                  <span>Company / Organization name *</span>
                   <input
                     type="text"
                     required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder={
-                      accountType === "employer"
-                        ? "e.g. Sarah Jenkins"
-                        : "e.g. Farai Nyoni"
-                    }
-                    className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    placeholder="e.g. Savannah Tech Labs UK"
                   />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {accountType === "employer"
-                    ? "Work Email Address *"
-                    : "Email Address *"}
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <input
-                    type="email"
-                    required
-                    autoComplete="email"
-                    value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    onBlur={() => setRegEmailTouched(true)}
-                    placeholder={
-                      accountType === "employer"
-                        ? "sarah@company.com"
-                        : "farai.nyoni@gmail.com"
-                    }
-                    aria-invalid={showRegEmailError || undefined}
-                    className={`w-full rounded-lg border pl-10 pr-4 py-2 text-sm focus:outline-none ${
-                      showRegEmailError
-                        ? "border-red-400 focus:border-red-500"
-                        : "border-slate-300 focus:border-emerald-600"
-                    }`}
-                  />
-                </div>
+              )}
+
+              <label className="field">
+                <span>
+                  {accountType === "employer"
+                    ? "Contact person full name *"
+                    : "Full name *"}
+                </span>
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder={
+                    accountType === "employer"
+                      ? "e.g. Sarah Jenkins"
+                      : "e.g. Farai Nyoni"
+                  }
+                />
+              </label>
+
+              <div className="field">
+                <span>
+                  {accountType === "employer"
+                    ? "Work email address *"
+                    : "Email address *"}
+                </span>
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  onBlur={() => setRegEmailTouched(true)}
+                  placeholder={
+                    accountType === "employer"
+                      ? "sarah@company.com"
+                      : "farai.nyoni@gmail.com"
+                  }
+                  aria-invalid={showRegEmailError || undefined}
+                />
                 {showRegEmailError && (
-                  <p className="mt-1 text-[11px] text-red-600">
+                  <p className="text-[11px] text-red-600 m-0">
                     {regEmailCheck.error}
                   </p>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Password *
-                  </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="field">
+                  <span>Password *</span>
                   <PasswordInput
                     required
                     value={regPassword}
@@ -514,10 +566,8 @@ function LoginForm() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Confirm Password *
-                  </label>
+                <div className="field">
+                  <span>Confirm password *</span>
                   <PasswordInput
                     required
                     value={regConfirmPassword}
@@ -527,7 +577,7 @@ function LoginForm() {
                     invalid={confirmMismatch}
                   />
                   {confirmMismatch && (
-                    <p className="mt-1 text-[11px] text-red-600">
+                    <p className="text-[11px] text-red-600 m-0">
                       Passwords do not match.
                     </p>
                   )}
@@ -576,98 +626,74 @@ function LoginForm() {
 
               {accountType === "candidate" ? (
                 <>
-                  <div className="space-y-4">
-                    <ZimbabweCitySelect
-                      value={city}
-                      onChange={setCity}
-                      label="City / Town in Zimbabwe *"
-                      required
-                    />
+                  <ZimbabweCitySelect
+                    value={city}
+                    onChange={setCity}
+                    label="City / Town in Zimbabwe *"
+                    required
+                  />
 
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Highest Qualification *
-                      </label>
-                      <div className="relative">
-                        <GraduationCap className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                        <select
-                          value={qualification}
-                          onChange={(e) => setQualification(e.target.value)}
-                          className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none bg-white"
-                        >
-                          <option value="Bachelors Degree">
-                            Bachelors Degree
-                          </option>
-                          <option value="HND / Higher National Diploma">
-                            Higher National Diploma
-                          </option>
-                          <option value="Masters Degree">Masters Degree</option>
-                          <option value="National Diploma (ND) / TVET / Polytech">
-                            National Diploma
-                          </option>
-                          <option value="A-Level / High School Leaver">
-                            A-Level Certificate
-                          </option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Field of Study / Discipline
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label className="field">
+                      <span>Highest qualification *</span>
+                      <select
+                        value={qualification}
+                        onChange={(e) => setQualification(e.target.value)}
+                      >
+                        <option value="Bachelors Degree">
+                          Bachelors Degree
+                        </option>
+                        <option value="HND / Higher National Diploma">
+                          Higher National Diploma
+                        </option>
+                        <option value="Masters Degree">Masters Degree</option>
+                        <option value="National Diploma (ND) / TVET / Polytech">
+                          National Diploma
+                        </option>
+                        <option value="A-Level / High School Leaver">
+                          A-Level Certificate
+                        </option>
+                      </select>
                     </label>
-                    <div className="relative">
-                      <Briefcase className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+
+                    <label className="field">
+                      <span>Field of study</span>
                       <input
                         type="text"
                         value={fieldOfStudy}
                         onChange={(e) => setFieldOfStudy(e.target.value)}
-                        placeholder="e.g. Accounting, Computer Science, Marketing"
-                        className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
+                        placeholder="e.g. Computer Science"
                       />
-                    </div>
+                    </label>
                   </div>
                 </>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Company Website
-                    </label>
-                    <div className="relative">
-                      <Globe className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                      <input
-                        type="url"
-                        value={website}
-                        onChange={(e) => setWebsite(e.target.value)}
-                        placeholder="https://company.com"
-                        className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
-                      />
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className="field">
+                    <span>Company website</span>
+                    <input
+                      type="url"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                      placeholder="https://company.com"
+                    />
+                  </label>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Industry
-                    </label>
+                  <label className="field">
+                    <span>Industry</span>
                     <input
                       type="text"
                       value={industry}
                       onChange={(e) => setIndustry(e.target.value)}
                       placeholder="Technology & SaaS"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none"
                     />
-                  </div>
+                  </label>
 
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Preferred Hiring Model
-                    </label>
+                  <label className="field sm:col-span-2">
+                    <span>Preferred hiring model</span>
                     <select
                       value={hiringModel}
                       onChange={(e) => setHiringModel(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:border-emerald-600 focus:outline-none"
                     >
                       <option value="100% Remote Contract">
                         100% Remote Contract
@@ -679,55 +705,49 @@ function LoginForm() {
                         Freelance / Task-based
                       </option>
                     </select>
-                  </div>
+                  </label>
                 </div>
               )}
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={
-                    isSubmitting ||
-                    !pwStrength.isValid ||
-                    confirmMismatch ||
-                    !regConfirmPassword
-                  }
-                  className="w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting
-                    ? "Verifying email & creating account..."
-                    : accountType === "employer"
-                    ? "Create Employer Account"
-                    : "Create Candidate Account"}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={
+                  isSubmitting ||
+                  !pwStrength.isValid ||
+                  confirmMismatch ||
+                  !regConfirmPassword
+                }
+                className="button button-wide button-green disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting
+                  ? "Verifying email & creating account..."
+                  : accountType === "employer"
+                  ? "Create Employer Account & Start Partnership"
+                  : "Create Account & Start Bridge"}
+                <ArrowRight className="h-4 w-4" />
+              </button>
 
-              <p className="text-center text-xs text-slate-500 pt-2">
+              <p className="text-center text-xs text-[#667085] pt-2">
                 Already registered?{" "}
                 <button
                   type="button"
                   onClick={() => setTab("login")}
-                  className="font-bold text-emerald-700 hover:underline"
+                  className="text-button"
                 >
                   Sign in to your account
                 </button>
               </p>
             </form>
           )}
-        </div>
 
-        {/* Public Website Navigation Notice */}
-        <p className="mt-6 text-center text-xs text-slate-500">
-          Want to browse without logging in?{" "}
-          <Link
-            href="/"
-            className="font-semibold text-emerald-700 hover:underline"
-          >
-            Explore public website &amp; overview
-          </Link>
-        </p>
-      </div>
+          <p className="mt-5 text-center text-xs text-[#667085]">
+            Want to browse without logging in?{" "}
+            <Link href="/" className="text-link">
+              Explore public website &amp; overview
+            </Link>
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
@@ -736,9 +756,9 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-8">
-          <div className="flex items-center gap-3 text-slate-600 font-semibold text-sm">
-            <Sparkles className="h-5 w-5 text-emerald-700 animate-spin" />
+        <div className="min-h-screen bg-[#f5f8f8] flex items-center justify-center p-8">
+          <div className="flex items-center gap-3 text-[#202b3c] font-semibold text-sm">
+            <Sparkles className="h-5 w-5 text-[#08785f] animate-spin" />
             Loading sign in portal...
           </div>
         </div>

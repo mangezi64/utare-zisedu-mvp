@@ -100,32 +100,29 @@ export default function HubsDirectoryPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
-            Task #4 — Infrastructure Partner Network (Lead: Munashe)
-          </div>
-          <h1 className="text-3xl font-extrabold text-slate-900">
-            Partner Innovation & Co-Working Hub Directory
-          </h1>
-          <p className="max-w-2xl text-sm text-slate-600">
-            Solving the <strong>73.9% broadband deficit</strong> and{" "}
-            <strong>100% SME laptop bottleneck</strong> by connecting Utare
-            candidates with verified local hubs featuring solar backup,
-            high-speed Starlink/Fiber, and workstation access.
-          </p>
+    <div>
+      <section className="page-hero">
+        <span className="eyebrow">PARTNER INNOVATION HUBS · INFRASTRUCTURE NETWORK</span>
+        <h1>Partner Innovation &amp; Co-Working Hub Directory</h1>
+        <p>
+          Solving the <strong>73.9% broadband deficit</strong> and{" "}
+          <strong>100% SME laptop bottleneck</strong> by connecting UTARE
+          candidates with verified local hubs featuring solar backup, high-speed
+          Starlink/Fiber, and workstation access.
+        </p>
+        <div className="hero-actions">
+          <button
+            type="button"
+            onClick={() => setShowEnlistForm(!showEnlistForm)}
+            className="button button-green"
+          >
+            <PlusCircle className="h-4 w-4" />
+            {showEnlistForm ? "Close Enlistment Form" : "Enlist New Partner Hub"}
+          </button>
         </div>
+      </section>
 
-        <button
-          type="button"
-          onClick={() => setShowEnlistForm(!showEnlistForm)}
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-800"
-        >
-          <PlusCircle className="h-4 w-4" />
-          {showEnlistForm ? "Close Enlistment Form" : "Enlist New Partner Hub"}
-        </button>
-      </div>
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
 
       {/* Active Candidate Hub Match Banner */}
       {activeCandidate && (
@@ -371,6 +368,7 @@ export default function HubsDirectoryPage() {
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );
