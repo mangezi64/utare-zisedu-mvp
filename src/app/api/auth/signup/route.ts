@@ -260,8 +260,10 @@ export async function POST(req: NextRequest) {
             },
             { onConflict: "email" }
           )
-          .then(() => {})
-          .catch(() => {});
+          .then(
+            () => {},
+            () => {}
+          );
       }
     }
 
@@ -300,8 +302,10 @@ export async function POST(req: NextRequest) {
           },
           { onConflict: "email" }
         )
-        .then(() => {})
-        .catch(() => {});
+        .then(
+          () => {},
+          () => {}
+        );
     }
 
     const confirmationPath = `/auth/callback?token=${encodeURIComponent(

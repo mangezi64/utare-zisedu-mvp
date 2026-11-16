@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest, adminUnauthorizedResponse } from "@/lib/auth-guard";
-import { readStore } from "@/lib/store";
-
-import { NextRequest, NextResponse } from "next/server";
-import { isAdminRequest, adminUnauthorizedResponse } from "@/lib/auth-guard";
 import { readStore, StoredCandidateRecord } from "@/lib/store";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
 
