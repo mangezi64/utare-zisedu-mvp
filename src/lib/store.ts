@@ -244,6 +244,56 @@ export function findAuthUserByEmail(email?: string | null): StoredAuthUser | nul
   return state.users.find((u) => u.email.trim().toLowerCase() === normalized) || null;
 }
 
+export async function findAuthUserByEmailFromDb(
+  email?: string | null
+): Promise<StoredAuthUser | null> {
+  if (!email) return null;
+  const normalized = email.trim().toLowerCase();
+  try {
+    const res = await query<any>(
+      `SELECT id, email, name, role, password_hash, email_confirmed,
+              confirmation_token, employer_id, org_role, company_name, created_at
+       FROM public.auth_users
+       WHERE LOWER(email) = $1
+       LIMIT 1;`,
+      [normalized]
+    );
+    if (res && res.rows && res.rows.length > 0) {
+      const row = res.rows[0];
+      const user: StoredAuthUser = {
+        id: row.id,
+        email: row.email,
+        name: row.name,
+        role: row.role,
+        passwordHash: row.password_hash,
+        emailConfirmed: Boolean(row.email_confirmed),
+        confirmationToken: row.confirmation_token || undefined,
+        employerId: row.employer_id || undefined,
+        orgRole: row.org_role || undefined,
+        companyName: row.company_name || undefined,
+        createdAt: row.created_at
+          ? new Date(row.created_at).toISOString()
+          : new Date().toISOString(),
+      };
+      // Upsert into local store so that synchronous lookups within this container instance find it
+      const state = readStore();
+      const idx = state.users.findIndex(
+        (u) => u.email.trim().toLowerCase() === normalized
+      );
+      if (idx >= 0) {
+        state.users[idx] = { ...state.users[idx], ...user };
+      } else {
+        state.users.push(user);
+      }
+      writeStore(state);
+      return user;
+    }
+  } catch (err) {
+    console.warn("[PostgreSQL Auth Lookup Non-fatal Warning]:", err);
+  }
+  return null;
+}
+
 export function findAuthUserById(id?: string | null): StoredAuthUser | null {
   if (!id) return null;
   const state = readStore();

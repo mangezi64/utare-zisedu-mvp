@@ -8,6 +8,7 @@ import {
 import {
   confirmUserEmailByAddress,
   findAuthUserByEmail,
+  findAuthUserByEmailFromDb,
   findCandidateByEmail,
   findEmployerByEmail,
 } from "@/lib/store";
@@ -40,6 +41,9 @@ export async function POST(req: NextRequest) {
     }
 
     let userRecord = findAuthUserByEmail(normalizedEmail);
+    if (!userRecord) {
+      userRecord = await findAuthUserByEmailFromDb(normalizedEmail);
+    }
     let resolvedRole: UserRole | undefined = userRecord?.role;
     let resolvedName = userRecord?.name;
     let resolvedId = userRecord?.id;
