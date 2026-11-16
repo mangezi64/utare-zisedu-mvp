@@ -40,27 +40,44 @@ const CANDIDATE_NAV_ITEMS = [
   { href: "/account", label: "My Workspace", icon: User },
 ];
 
+const EMPLOYER_NAV_ITEMS = [
+  { href: "/", label: "Overview", icon: Compass },
+  { href: "/employer", label: "Employer Portal", icon: Globe },
+  { href: "/opportunities", label: "Job Board", icon: Briefcase },
+  { href: "/hubs", label: "Partner Hubs", icon: Building2 },
+];
+
 const ADMIN_NAV_ITEMS = [
   { href: "/", label: "Overview", icon: Compass },
   { href: "/admin", label: "Admin Console", icon: Shield },
   { href: "/opportunities", label: "Opportunities", icon: Briefcase },
   { href: "/hubs", label: "Partner Hubs", icon: Building2 },
-  { href: "/employers", label: "Employer Inquiries", icon: Globe },
+  { href: "/employers", label: "Employers", icon: Globe },
   { href: "/assessment", label: "Intake Simulator", icon: Cpu },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, isAdmin, isCandidate, logout } = useViewMode();
+  const {
+    user,
+    isAuthenticated,
+    isAdmin,
+    isSuperuser,
+    isEmployer,
+    isCandidate,
+    logout,
+  } = useViewMode();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push("/");
   };
 
   const navItems = isAdmin
     ? ADMIN_NAV_ITEMS
+    : isEmployer
+    ? EMPLOYER_NAV_ITEMS
     : isAuthenticated
     ? CANDIDATE_NAV_ITEMS
     : PUBLIC_NAV_ITEMS;
@@ -108,11 +125,13 @@ export default function Navbar() {
         {/* Right side authentication & account actions */}
         <div className="flex items-center gap-2.5">
           {isAdmin ? (
-            /* Logged in as Admin */
+            /* Logged in as Admin or Superuser */
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-900 shadow-sm">
                 <Shield className="h-3.5 w-3.5 text-amber-700" />
-                <span className="hidden sm:inline">Admin:</span>
+                <span className="hidden sm:inline">
+                  {isSuperuser ? "Superuser:" : "Admin:"}
+                </span>
                 <span>{user?.name?.split(" ")[0] || "Facilitator"}</span>
               </span>
               <Link
@@ -120,6 +139,35 @@ export default function Navbar() {
                 className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-amber-700"
               >
                 Admin Console
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="Sign Out"
+                aria-label="Sign out"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700 transition shadow-sm"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            </div>
+          ) : isEmployer && user ? (
+            /* Logged in as Employer */
+            <div className="flex items-center gap-2">
+              <Link
+                href="/employer"
+                className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50/80 px-2.5 py-1.5 text-xs font-semibold text-blue-900 hover:bg-blue-100 transition shadow-sm"
+              >
+                <Building2 className="h-3.5 w-3.5 text-blue-700" />
+                <span className="hidden sm:inline font-bold">
+                  {user.companyName || user.name}
+                </span>
+              </Link>
+              <Link
+                href="/employer"
+                className="rounded-lg bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800"
+              >
+                Employer Portal
               </Link>
               <button
                 type="button"
@@ -204,7 +252,7 @@ export default function Navbar() {
 
       {isAdmin && (
         <div className="border-t border-amber-200 bg-amber-50/95 px-4 py-1 text-center text-[11px] font-semibold text-amber-900">
-          🛠️ Facilitator &amp; Admin Console Active — Hub enlistment, job approvals &amp; candidate management enabled.
+          🛠️ {isSuperuser ? "Superuser" : "Facilitator & Admin"} Console Active — Employer verification, hub enlistment, job moderation &amp; cohort oversight enabled.
         </div>
       )}
     </header>

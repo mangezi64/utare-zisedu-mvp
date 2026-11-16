@@ -8,6 +8,23 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- -----------------------------------------------------------------------------
+-- 0. AUTHENTICATED USERS & BACKEND-ASSIGNED ROLES (v2)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.auth_users (
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'candidate' CHECK (role IN ('candidate', 'employer', 'admin', 'superuser')),
+  password_hash TEXT NOT NULL,
+  email_confirmed BOOLEAN NOT NULL DEFAULT false,
+  confirmation_token TEXT,
+  employer_id TEXT,
+  org_role TEXT CHECK (org_role IN ('org_admin', 'org_member')),
+  company_name TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- -----------------------------------------------------------------------------
 -- 1. INNOVATION HUBS (Task #4: Infrastructure Partner Network - Munashe)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.innovation_hubs (
@@ -117,6 +134,8 @@ CREATE TABLE IF NOT EXISTS public.remote_jobs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
   company TEXT NOT NULL,
+  employer_id TEXT,
+  employer_email TEXT,
   category TEXT NOT NULL,
   compensation_usd_monthly TEXT NOT NULL,
   supported_payment_rails TEXT[] NOT NULL DEFAULT '{}', -- e.g. {'Deel', 'Payoneer', 'Wise', 'Crypto/USDC'}
@@ -125,6 +144,7 @@ CREATE TABLE IF NOT EXISTS public.remote_jobs (
   is_async_friendly BOOLEAN NOT NULL DEFAULT true,
   description TEXT NOT NULL,
   application_url TEXT,
+  status TEXT NOT NULL DEFAULT 'approved' CHECK (status IN ('approved', 'pending_review', 'archived')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -135,18 +155,29 @@ CREATE TABLE IF NOT EXISTS public.job_applications (
   id TEXT PRIMARY KEY,
   candidate_id TEXT NOT NULL,
   candidate_name TEXT NOT NULL,
+  candidate_email TEXT,
+  candidate_city TEXT,
+  candidate_qualification TEXT,
+  candidate_field_of_study TEXT,
+  candidate_skills TEXT[] DEFAULT '{}',
+  candidate_readiness_tier TEXT,
   job_id TEXT NOT NULL,
   job_title TEXT NOT NULL,
   company TEXT NOT NULL,
+  employer_id TEXT,
   tailored_resume_pitch TEXT,
+  generated_cv JSONB,
+  generated_cover_letter JSONB,
+  status TEXT NOT NULL DEFAULT 'submitted' CHECK (status IN ('submitted', 'under_review', 'shortlisted', 'rejected', 'hired')),
   applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- -----------------------------------------------------------------------------
--- 7. EMPLOYER INTEREST REGISTRATIONS (Meeting Demo & Industry Partnerships)
+-- 7. EMPLOYER INTEREST REGISTRATIONS & PORTAL ACCOUNTS
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.employer_registrations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id TEXT,
   company_name TEXT NOT NULL,
   contact_person TEXT NOT NULL,
   email TEXT NOT NULL,
@@ -157,6 +188,8 @@ CREATE TABLE IF NOT EXISTS public.employer_registrations (
   estimated_hires INTEGER NOT NULL DEFAULT 1,
   timezone_overlap_needed TEXT NOT NULL DEFAULT 'CAT (GMT+2) / UK-EU overlap',
   additional_notes TEXT,
+  verification_status TEXT NOT NULL DEFAULT 'pending' CHECK (verification_status IN ('pending', 'verified', 'rejected')),
+  verified_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

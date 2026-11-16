@@ -8,7 +8,17 @@ import {
   addJobToStore,
   updateJobStatus,
   deleteJobFromStore,
+  createAuthUser,
+  verifyUserEmailByToken,
+  updateUserRole,
+  saveEmployerRegistration,
+  updateEmployerVerificationStatus,
+  submitJobApplicationToStore,
+  getEmployerApplicants,
+  updateApplicationStatus,
 } from "@/lib/store";
+import { hashPassword, verifyPassword } from "@/lib/password-hash";
+import { signSessionToken, verifySessionToken } from "@/lib/auth-session";
 import { CandidateProfile, InnovationHub, RemoteJob } from "@/types";
 
 describe("Admin & Candidate Account Store Integration", () => {
@@ -111,5 +121,133 @@ describe("Admin & Candidate Account Store Integration", () => {
     deleteJobFromStore("test-job-qa-01");
     state = readStore();
     expect(state.jobs.some((j) => j.id === "test-job-qa-01")).toBe(false);
+  });
+
+  it("hashes passwords, signs/verifies session tokens, and enforces backend role promotion", async () => {
+    const hash = hashPassword("StrongPass#2026");
+    expect(verifyPassword("StrongPass#2026", hash)).toBe(true);
+    expect(verifyPassword("WrongPassword1!", hash)).toBe(false);
+
+    const user = createAuthUser({
+      email: "facilitator-test@utare-zem.org",
+      name: "Test Facilitator",
+      role: "candidate",
+      passwordHash: hash,
+      emailConfirmed: false,
+      confirmationToken: "tok-confirm-123",
+    });
+    expect(user.emailConfirmed).toBe(false);
+
+    const confirmed = verifyUserEmailByToken("tok-confirm-123");
+    expect(confirmed?.emailConfirmed).toBe(true);
+
+    const promoted = updateUserRole("facilitator-test@utare-zem.org", "admin");
+    expect(promoted?.role).toBe("admin");
+
+    const token = await signSessionToken({
+      sub: user.id,
+      email: user.email,
+      name: user.name,
+      role: "admin",
+      emailConfirmed: true,
+    });
+    const payload = await verifySessionToken(token);
+    expect(payload?.email).toBe("facilitator-test@utare-zem.org");
+    expect(payload?.role).toBe("admin");
+  });
+
+  it("scopes employer applicants strictly to owned jobs and strips all private candidate fields", () => {
+    // 1. Enrol an employer (starts pending verification)
+    const emp = saveEmployerRegistration({
+      companyName: "Zambezi Cloud Labs",
+      contactPerson: "Tariro Ndlovu",
+      email: `hiring-${Date.now()}@zambezicloud.co.zw`,
+      industry: "Technology",
+      rolesInterested: ["Backend Engineering"],
+      hiringModel: "100% Remote Contract",
+      estimatedHires: 2,
+      timezoneOverlapNeeded: "CAT (GMT+2)",
+    });
+    expect(emp.verificationStatus).toBe("pending");
+
+    // 2. Employer posts a role while pending verification
+    const empJobId = `job-emp-test-${Date.now()}`;
+    addJobToStore({
+      id: empJobId,
+      title: "Backend Python Engineer",
+      company: emp.companyName,
+      employerId: emp.id,
+      employerEmail: emp.email,
+      category: "Software",
+      compensationUsdMonthly: "$1,300 / mo",
+      supportedPaymentRails: ["Deel"],
+      requiredSkills: ["Python", "PostgreSQL"],
+      minReadinessTier: "Market-Ready (Direct Placement)",
+      isAsyncFriendly: true,
+      description: "Build APIs for fintech partners.",
+      applicationUrl: "#apply",
+      status: "pending_review",
+      discoveredBy: "employer-posted",
+    });
+
+    // 3. Admin verifies employer once -> pending job auto-approves
+    const verifiedEmp = updateEmployerVerificationStatus(emp.id, "verified");
+    expect(verifiedEmp?.verificationStatus).toBe("verified");
+    const approvedJob = readStore().jobs.find((j) => j.id === empJobId);
+    expect(approvedJob?.status).toBe("approved");
+
+    // 4. Candidate applies to the employer's job
+    const cand = registerOrUpdateCandidate(testCandidateProfile);
+    const submittedApp = submitJobApplicationToStore({
+      jobId: empJobId,
+      tailoredResumePitch: "Experienced Python & FastAPI engineer in Mutare.",
+      candidateId: cand.id,
+      candidateName: cand.profile.fullName,
+      candidateEmail: cand.profile.email,
+    });
+    expect(submittedApp).not.toBeNull();
+
+    // 5. Employer retrieves applicants for their own jobs
+    const views = getEmployerApplicants({
+      id: emp.id,
+      email: emp.email,
+      companyName: emp.companyName,
+    });
+    expect(views.length).toBeGreaterThanOrEqual(1);
+    const view = views.find((v) => v.id === submittedApp?.id)!;
+    expect(view).toBeDefined();
+    expect(view.candidateName).toBe("Ruvimbo Chitepo");
+    expect(view.tailoredResumePitch).toContain("FastAPI");
+
+    // Verify private fields are NEVER leaked on the EmployerApplicantView object
+    const rawView = view as unknown as Record<string, unknown>;
+    expect(rawView.phone).toBeUndefined();
+    expect(rawView.monthlyIncomeBracket).toBeUndefined();
+    expect(rawView.employmentStatus).toBeUndefined();
+    expect(rawView.hasDedicatedLaptop).toBeUndefined();
+    expect(rawView.primaryDevice).toBeUndefined();
+    expect(rawView.internetAccessType).toBeUndefined();
+    expect(rawView.powerReliabilityHours).toBeUndefined();
+    expect(rawView.hasGlobalPaymentRail).toBeUndefined();
+    expect(rawView.assessment).toBeUndefined();
+    expect(rawView.pathway).toBeUndefined();
+
+    // 6. Employer updates applicant status to shortlisted
+    const updatedView = updateApplicationStatus({
+      applicationId: view.id,
+      status: "shortlisted",
+      employer: { id: emp.id, email: emp.email },
+    });
+    expect(updatedView?.status).toBe("shortlisted");
+
+    // 7. Unrelated employer cannot see or modify this applicant
+    const otherEmployerViews = getEmployerApplicants({
+      id: "emp-unrelated-999",
+      email: "nobody@othercompany.com",
+      companyName: "Other Co",
+    });
+    expect(otherEmployerViews.some((v) => v.id === view.id)).toBe(false);
+
+    deleteJobFromStore(empJobId);
   });
 });

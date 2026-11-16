@@ -1,0 +1,267 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireRoles, unauthorizedResponse } from "@/lib/auth-guard";
+import {
+  addJobToStore,
+  findEmployerByEmail,
+  findEmployerById,
+  getEmployerApplicants,
+  getEmployerJobs,
+  saveEmployerRegistration,
+  updateApplicationStatus,
+  updateJobStatus,
+} from "@/lib/store";
+import { ApplicationStatus, RemoteJob } from "@/types";
+
+export const runtime = "nodejs";
+
+export async function GET(req: NextRequest) {
+  const session = await requireRoles(req, ["employer", "admin", "superuser"]);
+  if (!session) {
+    return unauthorizedResponse("Employer authentication required.");
+  }
+
+  let employer =
+    findEmployerByEmail(session.email) || findEmployerById(session.sub);
+
+  if (!employer && session.role === "employer") {
+    employer = saveEmployerRegistration({
+      userId: session.sub,
+      companyName: session.companyName || `${session.name} Organization`,
+      contactPerson: session.name,
+      email: session.email,
+      industry: "Technology & Operations",
+      rolesInterested: ["Remote Operations"],
+      hiringModel: "100% Remote Contract",
+      estimatedHires: 1,
+      timezoneOverlapNeeded: "CAT (GMT+2)",
+      verificationStatus: "pending",
+    });
+  }
+
+  const lookup = {
+    id: employer?.id || session.sub,
+    email: employer?.email || session.email,
+    companyName: employer?.companyName || session.companyName,
+  };
+
+  const jobs = getEmployerJobs(lookup);
+  // Strictly scoped applicant DTOs (never includes private candidate fields)
+  const applicants = getEmployerApplicants(lookup);
+
+  return NextResponse.json({
+    employer,
+    jobs,
+    applicants,
+  });
+}
+
+export async function POST(req: NextRequest) {
+  const session = await requireRoles(req, ["employer", "admin", "superuser"]);
+  if (!session) {
+    return unauthorizedResponse("Employer authentication required.");
+  }
+
+  try {
+    const body = await req.json();
+    let employer =
+      findEmployerByEmail(session.email) || findEmployerById(session.sub);
+
+    if (!employer) {
+      employer = saveEmployerRegistration({
+        userId: session.sub,
+        companyName:
+          String(body.companyName || session.companyName || session.name).trim(),
+        contactPerson: session.name,
+        email: session.email,
+        industry: String(body.industry || "Technology & SaaS"),
+        rolesInterested: [],
+        hiringModel: "100% Remote Contract",
+        estimatedHires: 1,
+        timezoneOverlapNeeded: "CAT (GMT+2)",
+        verificationStatus:
+          session.role === "admin" || session.role === "superuser"
+            ? "verified"
+            : "pending",
+      });
+    }
+
+    if (employer.verificationStatus === "rejected") {
+      return NextResponse.json(
+        {
+          error:
+            "Your employer account was not approved for job posting. Please contact partnerships support.",
+        },
+        { status: 403 }
+      );
+    }
+
+    const title = String(body.title || "").trim();
+    const category = String(body.category || "Operations").trim();
+    const compensationUsdMonthly = String(
+      body.compensationUsdMonthly || "$800 – $1,400 / mo"
+    ).trim();
+    const description = String(body.description || "").trim();
+
+    if (!title || !description) {
+      return NextResponse.json(
+        { error: "Job title and description are required." },
+        { status: 400 }
+      );
+    }
+
+    const requiredSkills = Array.isArray(body.requiredSkills)
+      ? body.requiredSkills
+      : String(body.requiredSkills || "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+    const supportedPaymentRails = Array.isArray(body.supportedPaymentRails)
+      ? body.supportedPaymentRails
+      : String(body.supportedPaymentRails || "Deel, Payoneer, USD Wire (Nostro)")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+    // Verified employers publish straight away; unverified employers' jobs
+    // wait in pending_review and auto-approve once an admin verifies the employer.
+    const isVerified =
+      employer.verificationStatus === "verified" ||
+      session.role === "admin" ||
+      session.role === "superuser";
+
+    const newJob: RemoteJob = {
+      id: `job-emp-${Date.now()}`,
+      title,
+      company: employer.companyName,
+      employerId: employer.id,
+      employerEmail: employer.email,
+      category,
+      industry: String(body.industry || employer.industry || "Technology"),
+      level: body.level || "Entry",
+      arrangement: body.arrangement || "Remote",
+      compensationUsdMonthly,
+      supportedPaymentRails:
+        supportedPaymentRails.length > 0 ? supportedPaymentRails : ["Deel", "Payoneer"],
+      requiredSkills:
+        requiredSkills.length > 0
+          ? requiredSkills
+          : ["English Fluency", "Async Communication"],
+      minReadinessTier: String(
+        body.minReadinessTier || "Bridge-Ready (Hub + Rapid Upskilling)"
+      ),
+      isAsyncFriendly: body.isAsyncFriendly !== false,
+      description,
+      applicationUrl: String(body.applicationUrl || "#apply-platform"),
+      status: isVerified ? "approved" : "pending_review",
+      discoveredBy: "employer-posted",
+      discoveredAt: new Date().toISOString(),
+    };
+
+    const savedJob = addJobToStore(newJob);
+    return NextResponse.json({
+      success: true,
+      job: savedJob,
+      publishedImmediately: isVerified,
+      message: isVerified
+        ? "Job published live on the Utare ZEM Opportunities board."
+        : "Job saved! It will go live automatically as soon as a Facilitator verifies your employer account.",
+    });
+  } catch (error) {
+    console.error("[API /api/employer/portal POST Error]:", error);
+    return NextResponse.json(
+      { error: "Failed to post job." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  const session = await requireRoles(req, ["employer", "admin", "superuser"]);
+  if (!session) {
+    return unauthorizedResponse("Employer authentication required.");
+  }
+
+  try {
+    const body = await req.json();
+    const employer =
+      findEmployerByEmail(session.email) || findEmployerById(session.sub);
+    const lookup = {
+      id: employer?.id || session.sub,
+      email: employer?.email || session.email,
+      companyName: employer?.companyName || session.companyName,
+    };
+
+    if (body.action === "update_application_status") {
+      const validStatuses: ApplicationStatus[] = [
+        "submitted",
+        "under_review",
+        "shortlisted",
+        "rejected",
+        "hired",
+      ];
+      const nextStatus = body.status as ApplicationStatus;
+      if (!body.applicationId || !validStatuses.includes(nextStatus)) {
+        return NextResponse.json(
+          { error: "Valid applicationId and status are required." },
+          { status: 400 }
+        );
+      }
+
+      const updated = updateApplicationStatus({
+        applicationId: String(body.applicationId),
+        status: nextStatus,
+        employer: lookup,
+        isAdmin: session.role === "admin" || session.role === "superuser",
+      });
+
+      if (!updated) {
+        return NextResponse.json(
+          { error: "Application not found or not owned by your organization." },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        applicant: updated,
+      });
+    }
+
+    if (body.action === "update_job_status") {
+      const ownedJobs = getEmployerJobs(lookup);
+      const targetJob = ownedJobs.find((j) => j.id === body.jobId);
+      if (
+        !targetJob &&
+        session.role !== "admin" &&
+        session.role !== "superuser"
+      ) {
+        return NextResponse.json(
+          { error: "Job not found or not owned by your organization." },
+          { status: 404 }
+        );
+      }
+
+      const requestedStatus =
+        body.status === "archived"
+          ? "archived"
+          : employer?.verificationStatus === "verified"
+          ? "approved"
+          : "pending_review";
+
+      const updatedJob = updateJobStatus(String(body.jobId), requestedStatus);
+      return NextResponse.json({
+        success: true,
+        job: updatedJob,
+      });
+    }
+
+    return NextResponse.json({ error: "Invalid action." }, { status: 400 });
+  } catch (error) {
+    console.error("[API /api/employer/portal PATCH Error]:", error);
+    return NextResponse.json(
+      { error: "Failed to update employer resource." },
+      { status: 500 }
+    );
+  }
+}

@@ -11,18 +11,24 @@ import {
   updateCandidateProgress,
   findCandidateByEmail,
 } from "@/lib/store";
+import { getSessionFromRequest, unauthorizedResponse } from "@/lib/auth-guard";
 
 export async function GET(req: NextRequest) {
   const state = readStore();
+  const session = await getSessionFromRequest(req);
+  const isAdmin =
+    session?.role === "admin" || session?.role === "superuser";
   const emailParam = req.nextUrl.searchParams.get("email");
   const idParam = req.nextUrl.searchParams.get("id");
   let activeCandidate = null;
 
-  if (emailParam) {
-    activeCandidate = findCandidateByEmail(emailParam);
-  } else if (idParam) {
-    activeCandidate =
-      state.candidates.find((c) => c.id === idParam) || null;
+  if (session) {
+    const targetEmail = isAdmin && emailParam ? emailParam : session.email;
+    activeCandidate = findCandidateByEmail(targetEmail);
+    if (!activeCandidate && isAdmin && idParam) {
+      activeCandidate =
+        state.candidates.find((c) => c.id === idParam) || null;
+    }
   }
 
   return NextResponse.json({
@@ -35,6 +41,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSessionFromRequest(req);
     const body = await req.json();
     const profile: CandidateProfile = body.profile;
     const quizAnswers: Record<string, number> = body.quizAnswers || {
@@ -51,6 +58,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Bind profile email to authenticated candidate session when logged in as candidate
+    if (session && session.role === "candidate") {
+      profile.email = session.email;
+    }
+
     // 1. Compute multi-dimensional diagnostic assessment
     const assessment = computeAssessmentScores(profile, quizAnswers);
 
@@ -60,7 +72,7 @@ export async function POST(req: NextRequest) {
     // 3. Persist to Unified End-to-End Store
     const savedRecord = saveCandidateEndToEnd(profile, assessment, pathway);
 
-    // 4. Also sync to Supabase if cloud credentials are configured in .env.local
+    // 4. Also sync to Supabase if cloud credentials are configured
     let savedToSupabase = false;
     if (isSupabaseConfigured && supabase) {
       try {
@@ -115,9 +127,15 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const session = await getSessionFromRequest(req);
+    if (!session) {
+      return unauthorizedResponse();
+    }
+    const isAdmin =
+      session.role === "admin" || session.role === "superuser";
     const body = await req.json();
     const updated = updateCandidateProgress({
-      candidateId: body.candidateId,
+      candidateId: isAdmin && body.candidateId ? body.candidateId : session.email,
       toggleMilestonePhase: body.toggleMilestonePhase,
       confirmCoaching: body.confirmCoaching,
       coachingPreferredDate: body.coachingPreferredDate,

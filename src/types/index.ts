@@ -253,6 +253,8 @@ export interface RemoteJob {
   id: string;
   title: string;
   company: string;
+  employerId?: string;
+  employerEmail?: string;
   category: string;
   industry?: string; // 'Technology', 'Research', 'Media', 'Professional Services', 'Finance'
   level?: "Entry" | "Mid-level" | "Experienced";
@@ -265,9 +267,44 @@ export interface RemoteJob {
   description: string;
   applicationUrl: string;
   status?: "approved" | "pending_review" | "archived";
-  discoveredBy?: "ai-search" | "admin-manual" | "partner-feed";
+  discoveredBy?: "ai-search" | "admin-manual" | "partner-feed" | "employer-posted";
   sourceUrl?: string;
   discoveredAt?: string;
+}
+
+export type UserRole = "candidate" | "employer" | "admin" | "superuser";
+
+export type ApplicationStatus =
+  | "submitted"
+  | "under_review"
+  | "shortlisted"
+  | "rejected"
+  | "hired";
+
+export type EmployerVerificationStatus = "pending" | "verified" | "rejected";
+
+/**
+ * Strictly scoped applicant DTO returned to an employer for their own posted jobs.
+ * Never includes phone, income bracket, employment status, hardware/internet/power
+ * constraints, payment rail status, diagnostic sub-scores, coaching, or hub bookings.
+ */
+export interface EmployerApplicantView {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  company: string;
+  appliedAt: string;
+  status: ApplicationStatus;
+  candidateName: string;
+  candidateEmail: string;
+  candidateCity: string;
+  candidateQualification: string;
+  candidateFieldOfStudy: string;
+  skills: string[];
+  readinessTier: string;
+  tailoredResumePitch: string;
+  generatedCv?: GeneratedCv;
+  generatedCoverLetter?: GeneratedCoverLetter;
 }
 
 // =============================================================================
@@ -353,6 +390,7 @@ export interface StyleReport {
 
 export interface EmployerRegistration {
   id: string;
+  userId?: string;
   companyName: string;
   contactPerson: string;
   email: string;
@@ -363,6 +401,8 @@ export interface EmployerRegistration {
   estimatedHires: number;
   timezoneOverlapNeeded: string;
   additionalNotes?: string;
+  verificationStatus?: EmployerVerificationStatus;
+  verifiedAt?: string;
   createdAt: string;
 }
 

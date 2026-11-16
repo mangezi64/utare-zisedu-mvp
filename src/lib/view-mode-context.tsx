@@ -1,14 +1,16 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-
-export type ViewMode = "user" | "admin";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { EmployerVerificationStatus, UserRole } from "@/types";
 
 export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  role: "candidate" | "admin";
+  role: UserRole;
+  emailConfirmed?: boolean;
+  companyName?: string;
+  employerVerificationStatus?: EmployerVerificationStatus;
   qualification?: string;
   fieldOfStudy?: string;
   city?: string;
@@ -16,167 +18,104 @@ export interface AuthUser {
 }
 
 interface ViewModeContextType {
-  mode: ViewMode;
   user: AuthUser | null;
+  loading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  isUser: boolean;
+  isSuperuser: boolean;
+  isEmployer: boolean;
   isCandidate: boolean;
-  setMode: (mode: ViewMode) => void;
-  toggleMode: () => void;
-  loginAsCandidate: (custom?: Partial<AuthUser>) => void;
-  loginAsAdmin: () => void;
-  logout: () => void;
+  setSessionUser: (user: AuthUser | null) => void;
+  refreshSession: () => Promise<AuthUser | null>;
+  logout: () => Promise<void>;
 }
 
-const DEFAULT_DEMO_CANDIDATE: AuthUser = {
-  id: "cand-tatenda-01",
-  name: "Tatenda Moyo",
-  email: "demo@utarezem.ai",
-  role: "candidate",
-  qualification: "BSc Computer Science",
-  fieldOfStudy: "Software Engineering & Data",
-  city: "Harare",
-};
-
-const DEFAULT_ADMIN_USER: AuthUser = {
-  id: "admin-stewart-01",
-  name: "Stewart Mangezi (Facilitator Lead)",
-  email: "admin@utare.co.zw",
-  role: "admin",
-  city: "Harare",
-};
-
 const ViewModeContext = createContext<ViewModeContextType>({
-  mode: "user",
   user: null,
+  loading: true,
   isAuthenticated: false,
   isAdmin: false,
-  isUser: true,
+  isSuperuser: false,
+  isEmployer: false,
   isCandidate: false,
-  setMode: () => {},
-  toggleMode: () => {},
-  loginAsCandidate: () => {},
-  loginAsAdmin: () => {},
-  logout: () => {},
+  setSessionUser: () => {},
+  refreshSession: async () => null,
+  logout: async () => {},
 });
 
-const STORAGE_KEY = "utare_view_mode";
-const AUTH_KEY = "utare-demo-user";
-
 export function ViewModeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setModeState] = useState<ViewMode>("user");
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const loadFromStorage = () => {
+  const refreshSession = useCallback(async (): Promise<AuthUser | null> => {
     try {
-      const savedMode = localStorage.getItem(STORAGE_KEY) as ViewMode | null;
-      if (savedMode === "user" || savedMode === "admin") {
-        setModeState(savedMode);
+      // Remove legacy client-side demo storage keys if present
+      try {
+        localStorage.removeItem("utare-demo-user");
+        localStorage.removeItem("utare_view_mode");
+      } catch {}
+
+      const res = await fetch("/api/auth/session", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        setUser(null);
+        return null;
       }
-
-      const savedUser = localStorage.getItem(AUTH_KEY);
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser);
-        const role = parsed.role || (savedMode === "admin" ? "admin" : "candidate");
-        setUser({
-          id: parsed.id || (role === "admin" ? "admin-01" : "cand-user-01"),
-          name: parsed.name || (role === "admin" ? "Facilitator Admin" : "Utare Candidate"),
-          email: parsed.email || (role === "admin" ? "admin@utare.co.zw" : "demo@utarezem.ai"),
-          role,
-          qualification: parsed.qualification,
-          fieldOfStudy: parsed.fieldOfStudy,
-          city: parsed.city,
-        });
+      const data = await res.json();
+      if (data.authenticated && data.user) {
+        setUser(data.user);
+        return data.user as AuthUser;
       }
-    } catch {}
-  };
-
-  useEffect(() => {
-    loadFromStorage();
-    setMounted(true);
-
-    const handleStorageChange = () => {
-      loadFromStorage();
-    };
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+      setUser(null);
+      return null;
+    } catch {
+      setUser(null);
+      return null;
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const setMode = (newMode: ViewMode) => {
-    setModeState(newMode);
-    try {
-      localStorage.setItem(STORAGE_KEY, newMode);
-      if (newMode === "admin") {
-        if (!user || user.role !== "admin") {
-          setUser(DEFAULT_ADMIN_USER);
-          localStorage.setItem(AUTH_KEY, JSON.stringify(DEFAULT_ADMIN_USER));
-        }
-      } else {
-        if (user && user.role === "admin") {
-          setUser(DEFAULT_DEMO_CANDIDATE);
-          localStorage.setItem(AUTH_KEY, JSON.stringify(DEFAULT_DEMO_CANDIDATE));
-        }
-      }
-    } catch {}
-  };
+  useEffect(() => {
+    refreshSession();
+  }, [refreshSession]);
 
-  const toggleMode = () => {
-    setMode(mode === "user" ? "admin" : "user");
-  };
+  const setSessionUser = useCallback((nextUser: AuthUser | null) => {
+    setUser(nextUser);
+    setLoading(false);
+  }, []);
 
-  const loginAsCandidate = (custom?: Partial<AuthUser>) => {
-    const candidateUser: AuthUser = {
-      ...DEFAULT_DEMO_CANDIDATE,
-      ...custom,
-      role: "candidate",
-    };
-    setUser(candidateUser);
-    setModeState("user");
-    try {
-      localStorage.setItem(AUTH_KEY, JSON.stringify(candidateUser));
-      localStorage.setItem(STORAGE_KEY, "user");
-    } catch {}
-  };
-
-  const loginAsAdmin = () => {
-    setUser(DEFAULT_ADMIN_USER);
-    setModeState("admin");
-    try {
-      localStorage.setItem(AUTH_KEY, JSON.stringify(DEFAULT_ADMIN_USER));
-      localStorage.setItem(STORAGE_KEY, "admin");
-    } catch {}
-  };
-
-  const logout = () => {
+  const logout = useCallback(async () => {
     setUser(null);
-    setModeState("user");
     try {
-      localStorage.removeItem(AUTH_KEY);
-      localStorage.setItem(STORAGE_KEY, "user");
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
     } catch {}
-  };
+  }, []);
 
-  const currentMode = mounted ? mode : "user";
-  const currentUser = mounted ? user : null;
-  const isAdmin = currentMode === "admin" || currentUser?.role === "admin";
-  const isCandidate = currentUser?.role === "candidate";
-  const isAuthenticated = currentUser !== null;
+  const isAdmin = user?.role === "admin" || user?.role === "superuser";
+  const isSuperuser = user?.role === "superuser";
+  const isEmployer = user?.role === "employer";
+  const isCandidate = user?.role === "candidate";
+  const isAuthenticated = user !== null;
 
   return (
     <ViewModeContext.Provider
       value={{
-        mode: currentMode,
-        user: currentUser,
+        user,
+        loading,
         isAuthenticated,
         isAdmin,
-        isUser: !isAdmin,
+        isSuperuser,
+        isEmployer,
         isCandidate,
-        setMode,
-        toggleMode,
-        loginAsCandidate,
-        loginAsAdmin,
+        setSessionUser,
+        refreshSession,
         logout,
       }}
     >

@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 export default function PathwayStudioPage() {
-  const { user, isAuthenticated, loginAsCandidate } = useViewMode();
+  const { user, isAuthenticated } = useViewMode();
   const [record, setRecord] = useState<StoredCandidateRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);

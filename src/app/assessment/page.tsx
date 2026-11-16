@@ -35,10 +35,29 @@ const DIAGNOSTIC_QUESTIONS = [
   { key: "workExperience", label: "6. Previous Work, Gig, or Practical Hustle Experience" },
 ];
 
+const EMPTY_CANDIDATE_PROFILE: CandidateProfile = {
+  fullName: "",
+  email: "",
+  phone: "",
+  city: "Harare",
+  highestQualification: "Bachelors Degree",
+  fieldOfStudy: "",
+  yearsExperience: 0,
+  employmentStatus: "Unemployed",
+  monthlyIncomeBracket: "$0 (Zero Income)",
+  hasDedicatedLaptop: false,
+  primaryDevice: "Smartphone Only",
+  internetAccessType: "Mobile Data Bundles Only",
+  powerReliabilityHours: 6,
+  hasGlobalPaymentRail: false,
+  primaryGoal: "International Remote Work",
+  currentSkills: [],
+};
+
 export default function AssessmentAndPathwayPage() {
   const { user, isAdmin } = useViewMode();
   const [profile, setProfile] = useState<CandidateProfile>(
-    PRESET_PERSONAS[0].profile
+    EMPTY_CANDIDATE_PROFILE
   );
 
   useEffect(() => {
@@ -48,9 +67,18 @@ export default function AssessmentAndPathwayPage() {
         fullName: user.name || prev.fullName,
         email: user.email || prev.email,
         city: (user.city as any) || prev.city,
-        highestQualification: (user.qualification as any) || prev.highestQualification,
+        highestQualification:
+          (user.qualification as any) || prev.highestQualification,
         fieldOfStudy: user.fieldOfStudy || prev.fieldOfStudy,
       }));
+      fetch("/api/auth/profile", { credentials: "include" })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.candidate?.profile) {
+            setProfile(data.candidate.profile);
+          }
+        })
+        .catch(() => {});
     }
   }, [user]);
   const [skillInput, setSkillInput] = useState("");

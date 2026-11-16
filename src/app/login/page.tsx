@@ -6,21 +6,19 @@ import Link from "next/link";
 import {
   Sparkles,
   User,
-  Shield,
   ArrowRight,
   CheckCircle2,
   Mail,
-  MapPin,
   GraduationCap,
   Briefcase,
   AlertCircle,
+  Building2,
+  Globe,
 } from "lucide-react";
 import { useViewMode } from "@/lib/view-mode-context";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
 import PasswordInput from "@/components/PasswordInput";
 import { validateEmail, validatePassword } from "@/lib/validation";
-
-const IS_LOCAL_DEV = process.env.NODE_ENV === "development";
 
 const STRENGTH_STYLES: Record<string, { bar: string; text: string }> = {
   "Too Weak": { bar: "bg-slate-200", text: "text-slate-500" },
@@ -33,101 +31,119 @@ const STRENGTH_STYLES: Record<string, { bar: string; text: string }> = {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get("tab") === "register" ? "register" : "login";
+  const initialTab =
+    searchParams.get("tab") === "register" ? "register" : "login";
+  const initialRole =
+    searchParams.get("role") === "employer" ? "employer" : "candidate";
   const redirectUrl = searchParams.get("redirect");
-  
-  const { loginAsCandidate, loginAsAdmin } = useViewMode();
-  const [tab, setTab] = useState<"login" | "register">(initialTab === "register" ? "register" : "login");
-  
+
+  const { setSessionUser } = useViewMode();
+  const [tab, setTab] = useState<"login" | "register">(initialTab);
+  const [accountType, setAccountType] = useState<"candidate" | "employer">(
+    initialRole
+  );
+
   // Login State
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
-  
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   // Register State
   const [fullName, setFullName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirmPassword, setRegConfirmPassword] = useState("");
   const [regEmailTouched, setRegEmailTouched] = useState(false);
+
+  // Candidate-specific fields
   const [city, setCity] = useState("Harare");
   const [qualification, setQualification] = useState("Bachelors Degree");
   const [fieldOfStudy, setFieldOfStudy] = useState("Computer Science & IT");
+
+  // Employer-specific fields
+  const [companyName, setCompanyName] = useState("");
+  const [website, setWebsite] = useState("");
+  const [industry, setIndustry] = useState("Technology & SaaS");
+  const [hiringModel, setHiringModel] = useState("100% Remote Contract");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registerSuccess, setRegisterSuccess] = useState("");
+  const [confirmationPath, setConfirmationPath] = useState<string | null>(null);
 
-  const handleCandidateLogin = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError("");
+    setConfirmationPath(null);
+
     if (!loginEmail || !loginPassword) {
       setLoginError("Please enter your email and password.");
       return;
     }
 
     const normalizedEmail = loginEmail.trim().toLowerCase();
-
     const emailCheck = validateEmail(normalizedEmail);
     if (!emailCheck.isValid) {
       setLoginError(emailCheck.error || "Please enter a valid email address.");
       return;
     }
 
-    // 1. Local development only: admin shortcut. Production admin access will
-    //    come exclusively from the backend-assigned role (Supabase Auth, v2).
-    if (IS_LOCAL_DEV && normalizedEmail === "admin@utare.co.zw") {
-      loginAsAdmin();
-      router.push(redirectUrl || "/admin");
-      return;
-    }
-
-    // 2. Otherwise authenticate as candidate
+    setIsLoggingIn(true);
     try {
-      const res = await fetch(`/api/auth/profile?email=${encodeURIComponent(normalizedEmail)}`);
-      const data = await res.json();
-      if (data.candidate?.profile) {
-        const p = data.candidate.profile;
-        loginAsCandidate({
-          name: p.fullName || p.name || normalizedEmail.split("@")[0].replace(".", " "),
-          email: p.email || normalizedEmail,
-          city: p.city || "Harare",
-          qualification: p.highestQualification || "Bachelors Degree",
-          fieldOfStudy: p.fieldOfStudy || "Tertiary Graduate",
-          id: data.candidate.id,
-        });
-      } else {
-        loginAsCandidate({
-          name: normalizedEmail.split("@")[0].replace(".", " "),
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
           email: normalizedEmail,
-        });
+          password: loginPassword,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (data.confirmationPath) {
+          setConfirmationPath(data.confirmationPath);
+        }
+        setLoginError(data.error || "Invalid email or password.");
+        return;
+      }
+
+      if (data.user) {
+        setSessionUser(data.user);
+        const role = data.user.role;
+        if (redirectUrl) {
+          router.push(redirectUrl);
+        } else if (role === "admin" || role === "superuser") {
+          router.push("/admin");
+        } else if (role === "employer") {
+          router.push("/employer");
+        } else {
+          router.push("/account");
+        }
       }
     } catch {
-      loginAsCandidate({
-        name: normalizedEmail.split("@")[0].replace(".", " "),
-        email: normalizedEmail,
-      });
+      setLoginError(
+        "Unable to reach authentication server. Please check your connection."
+      );
+    } finally {
+      setIsLoggingIn(false);
     }
-    router.push(redirectUrl || "/account");
-  };
-
-  const handleDemoCandidateQuickLogin = () => {
-    loginAsCandidate({
-      name: "Tatenda Moyo",
-      email: "demo@utarezem.ai",
-      qualification: "Bachelors Degree",
-      city: "Harare",
-      fieldOfStudy: "BSc Computer Science",
-    });
-    router.push(redirectUrl || "/account");
-  };
-
-  const handleAdminQuickLogin = () => {
-    loginAsAdmin();
-    router.push(redirectUrl || "/admin");
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError("");
+    setRegisterSuccess("");
+    setConfirmationPath(null);
+
     if (!fullName.trim() || !regEmail || !regPassword) {
       setLoginError("Please complete all required fields.");
+      return;
+    }
+
+    if (accountType === "employer" && !companyName.trim()) {
+      setLoginError("Company name is required for employer registration.");
       return;
     }
 
@@ -150,67 +166,58 @@ function LoginForm() {
     }
 
     setIsSubmitting(true);
-    setLoginError("");
-
-    let res: Response;
     try {
-      // Save directly to backend / PostgreSQL database
-      res = await fetch("/api/auth/profile", {
+      const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mode: "register",
+          accountType,
           fullName: fullName.trim(),
           email: regEmail.trim().toLowerCase(),
-          city,
-          highestQualification: qualification,
-          fieldOfStudy,
-          yearsExperience: 1,
-          employmentStatus: "Seeking Remote Employment",
-          monthlyIncomeBracket: "$0 - No Income",
-          hasDedicatedLaptop: true,
-          primaryDevice: "Dedicated Laptop / PC",
-          internetAccessType: "Home Wi-Fi Broadband",
-          powerReliabilityHours: 8,
-          hasGlobalPaymentRail: false,
-          primaryGoal: "International Remote Work",
-          currentSkills: [fieldOfStudy, "Digital Literacy", "English Communication"],
+          password: regPassword,
+          ...(accountType === "employer"
+            ? {
+                companyName: companyName.trim(),
+                website: website.trim(),
+                industry,
+                hiringModel,
+              }
+            : {
+                city,
+                qualification,
+                fieldOfStudy,
+              }),
         }),
       });
-    } catch {
-      setIsSubmitting(false);
-      setLoginError("We couldn't reach the server. Check your connection and try again.");
-      return;
-    }
 
-    if (!res.ok) {
       const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setLoginError(data.error || "Registration failed. Please try again.");
+        return;
+      }
+
+      setRegisterSuccess(
+        data.message ||
+          "Account created! Please confirm your email address to sign in."
+      );
+      if (data.confirmationPath) {
+        setConfirmationPath(data.confirmationPath);
+      }
+    } catch {
+      setLoginError(
+        "We couldn't reach the server. Check your connection and try again."
+      );
+    } finally {
       setIsSubmitting(false);
-      setLoginError(data.error || "Registration failed. Please try again.");
-      return;
     }
-
-    const data = await res.json().catch(() => ({}));
-    setRegisterSuccess("Account created successfully! Connecting your workspace...");
-
-    loginAsCandidate({
-      name: fullName.trim(),
-      email: regEmail.trim().toLowerCase(),
-      qualification,
-      city,
-      fieldOfStudy,
-      ...(data.candidate?.id ? { id: data.candidate.id } : {}),
-    });
-
-    setTimeout(() => {
-      router.push(redirectUrl || "/assessment");
-    }, 1000);
   };
 
   const regEmailCheck = validateEmail(regEmail);
-  const showRegEmailError = regEmailTouched && regEmail.length > 0 && !regEmailCheck.isValid;
+  const showRegEmailError =
+    regEmailTouched && regEmail.length > 0 && !regEmailCheck.isValid;
   const pwStrength = validatePassword(regPassword);
-  const confirmMismatch = regConfirmPassword.length > 0 && regConfirmPassword !== regPassword;
+  const confirmMismatch =
+    regConfirmPassword.length > 0 && regConfirmPassword !== regPassword;
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -231,11 +238,17 @@ function LoginForm() {
             </div>
           </Link>
           <h1 className="mt-6 text-2xl font-bold tracking-tight text-slate-900">
-            {tab === "login" ? "Sign In to Your Account" : "Create Candidate Account"}
+            {tab === "login"
+              ? "Sign In to Your Account"
+              : accountType === "employer"
+              ? "Create Employer Account"
+              : "Create Candidate Account"}
           </h1>
           <p className="mt-2 text-sm text-slate-600">
             {tab === "login"
-              ? "Sign in to access your readiness assessment, AI roadmap, and workspace."
+              ? "Sign in with your verified credentials to access your workspace or console."
+              : accountType === "employer"
+              ? "Enrol your organization to post remote roles and review applicants."
               : "Create your account to bridge credentials into verified remote work."}
           </p>
         </div>
@@ -244,7 +257,11 @@ function LoginForm() {
         <div className="flex rounded-xl bg-slate-200/80 p-1 mb-6 text-xs sm:text-sm font-semibold">
           <button
             type="button"
-            onClick={() => { setTab("login"); setLoginError(""); }}
+            onClick={() => {
+              setTab("login");
+              setLoginError("");
+              setRegisterSuccess("");
+            }}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg transition ${
               tab === "login"
                 ? "bg-white text-slate-900 shadow-sm"
@@ -256,7 +273,11 @@ function LoginForm() {
           </button>
           <button
             type="button"
-            onClick={() => { setTab("register"); setLoginError(""); }}
+            onClick={() => {
+              setTab("register");
+              setLoginError("");
+              setRegisterSuccess("");
+            }}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg transition ${
               tab === "register"
                 ? "bg-white text-slate-900 shadow-sm"
@@ -271,101 +292,161 @@ function LoginForm() {
         {/* Card Body */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
           {loginError && (
-            <div className="mb-6 rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span>{loginError}</span>
-            </div>
-          )}
-
-          {registerSuccess && (
-            <div className="mb-6 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800 border border-emerald-200 flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-              <span>{registerSuccess}</span>
-            </div>
-          )}
-
-          {/* TAB 1: Candidate Login */}
-          {tab === "login" && (
-            <div>
-              <form onSubmit={handleCandidateLogin} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                    <input
-                      type="email"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Password
-                  </label>
-                  <PasswordInput
-                    value={loginPassword}
-                    onChange={setLoginPassword}
-                    autoComplete="current-password"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition flex items-center justify-center gap-2"
-                >
-                  Sign In to Workspace <ArrowRight className="h-4 w-4" />
-                </button>
-              </form>
-
-              {/* 1-Click Fast Test Box (local development only) */}
-              {IS_LOCAL_DEV && (
-              <div className="mt-6 border-t border-slate-100 pt-6">
-                <div className="rounded-xl bg-slate-50 border border-slate-200 p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                      Quick Demo Testing (local dev only)
-                    </span>
-                    <span className="rounded bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                      1-Click
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-600 mb-3">
-                    Fast-load verified test credentials with no typing required:
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={handleDemoCandidateQuickLogin}
-                      className="rounded-lg bg-white border border-emerald-600 text-emerald-800 py-2 px-3 text-xs font-bold hover:bg-emerald-50 transition shadow-xs flex items-center justify-center gap-1.5"
-                    >
-                      <User className="h-3.5 w-3.5 text-emerald-700" /> Demo Candidate (Tatenda)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleAdminQuickLogin}
-                      className="rounded-lg bg-white border border-amber-600 text-amber-900 py-2 px-3 text-xs font-bold hover:bg-amber-50 transition shadow-xs flex items-center justify-center gap-1.5"
-                    >
-                      <Shield className="h-3.5 w-3.5 text-amber-700" /> Facilitator Admin (Stewart)
-                    </button>
-                  </div>
-                </div>
+            <div className="mb-6 rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200 space-y-2">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{loginError}</span>
               </div>
+              {confirmationPath && (
+                <div className="pt-1">
+                  <Link
+                    href={confirmationPath}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-red-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-800 transition"
+                  >
+                    Confirm Email Address Now <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               )}
             </div>
           )}
 
-          {/* TAB 2: Create Candidate Account */}
-          {tab === "register" && (
-            <form onSubmit={handleRegister} className="space-y-4">
+          {registerSuccess && (
+            <div className="mb-6 rounded-lg bg-emerald-50 p-4 text-xs text-emerald-900 border border-emerald-200 space-y-3">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-700 mt-0.5" />
+                <div>
+                  <p className="font-bold">{registerSuccess}</p>
+                  <p className="mt-1 text-emerald-800">
+                    Once your email is confirmed, you will be signed in to your
+                    workspace automatically.
+                  </p>
+                </div>
+              </div>
+              {confirmationPath && (
+                <div>
+                  <Link
+                    href={confirmationPath}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition shadow-xs"
+                  >
+                    Verify Email &amp; Continue <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 1: Unified Sign In (Candidates, Employers, Admins) */}
+          {tab === "login" && (
+            <form onSubmit={handleSignIn} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Full Name *
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="you@domain.com"
+                    className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Password
+                </label>
+                <PasswordInput
+                  value={loginPassword}
+                  onChange={setLoginPassword}
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isLoggingIn ? "Signing In..." : "Sign In"}
+                <ArrowRight className="h-4 w-4" />
+              </button>
+
+              <p className="text-center text-xs text-slate-500 pt-2">
+                Don&apos;t have an account yet?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTab("register");
+                    setLoginError("");
+                  }}
+                  className="font-bold text-emerald-700 hover:underline"
+                >
+                  Create an account
+                </button>
+              </p>
+            </form>
+          )}
+
+          {/* TAB 2: Create Account (Candidate or Employer) */}
+          {tab === "register" && (
+            <form onSubmit={handleRegister} className="space-y-4">
+              {/* Role selector: Candidate vs Employer */}
+              <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1 text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setAccountType("candidate")}
+                  className={`flex items-center justify-center gap-1.5 rounded-lg py-2 transition ${
+                    accountType === "candidate"
+                      ? "bg-white text-emerald-800 shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <GraduationCap className="h-3.5 w-3.5" />
+                  I am a Candidate
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAccountType("employer")}
+                  className={`flex items-center justify-center gap-1.5 rounded-lg py-2 transition ${
+                    accountType === "employer"
+                      ? "bg-white text-blue-800 shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Building2 className="h-3.5 w-3.5" />
+                  I am an Employer
+                </button>
+              </div>
+
+              {accountType === "employer" && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Company / Organization Name *
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="e.g. Savannah Tech Labs UK"
+                      className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {accountType === "employer"
+                    ? "Contact Person Full Name *"
+                    : "Full Name *"}
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -374,7 +455,11 @@ function LoginForm() {
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="e.g. Farai Nyoni"
+                    placeholder={
+                      accountType === "employer"
+                        ? "e.g. Sarah Jenkins"
+                        : "e.g. Farai Nyoni"
+                    }
                     className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
                   />
                 </div>
@@ -382,7 +467,9 @@ function LoginForm() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Email Address *
+                  {accountType === "employer"
+                    ? "Work Email Address *"
+                    : "Email Address *"}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -393,7 +480,11 @@ function LoginForm() {
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
                     onBlur={() => setRegEmailTouched(true)}
-                    placeholder="farai.nyoni@gmail.com"
+                    placeholder={
+                      accountType === "employer"
+                        ? "sarah@company.com"
+                        : "farai.nyoni@gmail.com"
+                    }
                     aria-invalid={showRegEmailError || undefined}
                     className={`w-full rounded-lg border pl-10 pr-4 py-2 text-sm focus:outline-none ${
                       showRegEmailError
@@ -403,7 +494,9 @@ function LoginForm() {
                   />
                 </div>
                 {showRegEmailError && (
-                  <p className="mt-1 text-[11px] text-red-600">{regEmailCheck.error}</p>
+                  <p className="mt-1 text-[11px] text-red-600">
+                    {regEmailCheck.error}
+                  </p>
                 )}
               </div>
 
@@ -434,7 +527,9 @@ function LoginForm() {
                     invalid={confirmMismatch}
                   />
                   {confirmMismatch && (
-                    <p className="mt-1 text-[11px] text-red-600">Passwords do not match.</p>
+                    <p className="mt-1 text-[11px] text-red-600">
+                      Passwords do not match.
+                    </p>
                   )}
                 </div>
               </div>
@@ -443,14 +538,18 @@ function LoginForm() {
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-semibold">
                     <span className="text-slate-600">Password strength</span>
-                    <span className={STRENGTH_STYLES[pwStrength.label].text}>{pwStrength.label}</span>
+                    <span className={STRENGTH_STYLES[pwStrength.label].text}>
+                      {pwStrength.label}
+                    </span>
                   </div>
                   <div className="grid grid-cols-4 gap-1">
                     {[1, 2, 3, 4].map((i) => (
                       <div
                         key={i}
                         className={`h-1.5 rounded-full ${
-                          pwStrength.score >= i ? STRENGTH_STYLES[pwStrength.label].bar : "bg-slate-200"
+                          pwStrength.score >= i
+                            ? STRENGTH_STYLES[pwStrength.label].bar
+                            : "bg-slate-200"
                         }`}
                       />
                     ))}
@@ -463,7 +562,11 @@ function LoginForm() {
                           r.met ? "text-emerald-700" : "text-slate-500"
                         }`}
                       >
-                        <CheckCircle2 className={`h-3.5 w-3.5 ${r.met ? "text-emerald-600" : "text-slate-300"}`} />
+                        <CheckCircle2
+                          className={`h-3.5 w-3.5 ${
+                            r.met ? "text-emerald-600" : "text-slate-300"
+                          }`}
+                        />
                         {r.label}
                       </li>
                     ))}
@@ -471,58 +574,131 @@ function LoginForm() {
                 </div>
               )}
 
-              <div className="space-y-4">
-                <ZimbabweCitySelect
-                  value={city}
-                  onChange={setCity}
-                  label="City / Town in Zimbabwe *"
-                  required
-                />
+              {accountType === "candidate" ? (
+                <>
+                  <div className="space-y-4">
+                    <ZimbabweCitySelect
+                      value={city}
+                      onChange={setCity}
+                      label="City / Town in Zimbabwe *"
+                      required
+                    />
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Highest Qualification *
-                  </label>
-                  <div className="relative">
-                    <GraduationCap className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Highest Qualification *
+                      </label>
+                      <div className="relative">
+                        <GraduationCap className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                        <select
+                          value={qualification}
+                          onChange={(e) => setQualification(e.target.value)}
+                          className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none bg-white"
+                        >
+                          <option value="Bachelors Degree">
+                            Bachelors Degree
+                          </option>
+                          <option value="HND / Higher National Diploma">
+                            Higher National Diploma
+                          </option>
+                          <option value="Masters Degree">Masters Degree</option>
+                          <option value="National Diploma (ND) / TVET / Polytech">
+                            National Diploma
+                          </option>
+                          <option value="A-Level / High School Leaver">
+                            A-Level Certificate
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Field of Study / Discipline
+                    </label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={fieldOfStudy}
+                        onChange={(e) => setFieldOfStudy(e.target.value)}
+                        placeholder="e.g. Accounting, Computer Science, Marketing"
+                        className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Company Website
+                    </label>
+                    <div className="relative">
+                      <Globe className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                      <input
+                        type="url"
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value)}
+                        placeholder="https://company.com"
+                        className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Industry
+                    </label>
+                    <input
+                      type="text"
+                      value={industry}
+                      onChange={(e) => setIndustry(e.target.value)}
+                      placeholder="Technology & SaaS"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Preferred Hiring Model
+                    </label>
                     <select
-                      value={qualification}
-                      onChange={(e) => setQualification(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none bg-white"
+                      value={hiringModel}
+                      onChange={(e) => setHiringModel(e.target.value)}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:border-emerald-600 focus:outline-none"
                     >
-                      <option value="Bachelors Degree">Bachelors Degree</option>
-                      <option value="Higher National Diploma (HND)">Higher National Diploma</option>
-                      <option value="Masters Degree">Masters Degree</option>
-                      <option value="National Diploma">National Diploma</option>
-                      <option value="A-Level Certificate">A-Level Certificate</option>
+                      <option value="100% Remote Contract">
+                        100% Remote Contract
+                      </option>
+                      <option value="Full-Time EOR via Deel">
+                        Full-Time EOR via Deel
+                      </option>
+                      <option value="Freelance / Task-based">
+                        Freelance / Task-based
+                      </option>
                     </select>
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Field of Study / Discipline
-                </label>
-                <div className="relative">
-                  <Briefcase className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={fieldOfStudy}
-                    onChange={(e) => setFieldOfStudy(e.target.value)}
-                    placeholder="e.g. Accounting, Computer Science, Marketing"
-                    className="w-full rounded-lg border border-slate-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
-              </div>
+              )}
 
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={isSubmitting || !pwStrength.isValid || confirmMismatch || !regConfirmPassword}
+                  disabled={
+                    isSubmitting ||
+                    !pwStrength.isValid ||
+                    confirmMismatch ||
+                    !regConfirmPassword
+                  }
                   className="w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? "Verifying email & creating account..." : "Create Account & Start Diagnostic"}
+                  {isSubmitting
+                    ? "Verifying email & creating account..."
+                    : accountType === "employer"
+                    ? "Create Employer Account"
+                    : "Create Candidate Account"}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -544,8 +720,11 @@ function LoginForm() {
         {/* Public Website Navigation Notice */}
         <p className="mt-6 text-center text-xs text-slate-500">
           Want to browse without logging in?{" "}
-          <Link href="/" className="font-semibold text-emerald-700 hover:underline">
-            Explore public website & overview
+          <Link
+            href="/"
+            className="font-semibold text-emerald-700 hover:underline"
+          >
+            Explore public website &amp; overview
           </Link>
         </p>
       </div>

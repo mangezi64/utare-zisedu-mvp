@@ -71,16 +71,6 @@ export function validateEmail(email: string): EmailValidationResult {
 
   const trimmed = email.trim().toLowerCase();
 
-  // Special exemption for platform demo accounts
-  if (
-    trimmed === "demo@utarezem.ai" ||
-    trimmed === "demo@utaresizedu.ai" ||
-    trimmed === "tatenda.moyo@example.co.zw" ||
-    trimmed === "admin@utare.co.zw"
-  ) {
-    return { isValid: true };
-  }
-
   // Length limits
   if (trimmed.length < 6 || trimmed.length > 254) {
     return { isValid: false, error: "Email must be between 6 and 254 characters." };

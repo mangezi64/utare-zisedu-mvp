@@ -55,7 +55,7 @@ const FALLBACK_CANDIDATE_PROFILE: CandidateProfile = {
 };
 
 export default function RemoteJobsPage() {
-  const { user, isAuthenticated, isAdmin, loginAsCandidate } = useViewMode();
+  const { user, isAuthenticated, isAdmin } = useViewMode();
   const [jobs, setJobs] = useState<RemoteJob[]>(SEED_REMOTE_JOBS);
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
   const [activeCandidate, setActiveCandidate] =
@@ -245,12 +245,15 @@ export default function RemoteJobsPage() {
       const res = await fetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           jobId: activeJob.id,
           tailoredResumePitch: generatedDocs.cv.summary,
           candidateId: user?.id || activeCandidate?.id || user?.email,
           candidateName:
             currentProfile.fullName || user?.name || "Utare Candidate",
+          generatedCv: generatedDocs.cv,
+          generatedCoverLetter: generatedDocs.coverLetter,
         }),
       });
       const data = await res.json();

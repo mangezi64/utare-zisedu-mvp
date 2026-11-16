@@ -24,15 +24,31 @@ import {
   SlidersHorizontal,
   Globe,
 } from "lucide-react";
-import { EmployerRegistration, InnovationHub, RemoteJob, ZimbabweanCity } from "@/types";
-import { JobApplicationRecord, StoredCandidateRecord } from "@/lib/store";
+import {
+  EmployerRegistration,
+  EmployerVerificationStatus,
+  InnovationHub,
+  RemoteJob,
+  UserRole,
+  ZimbabweanCity,
+} from "@/types";
+import {
+  JobApplicationRecord,
+  StoredAuthUser,
+  StoredCandidateRecord,
+} from "@/lib/store";
 import { useViewMode } from "@/lib/view-mode-context";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
 
+type PublicAuthUser = Omit<
+  StoredAuthUser,
+  "passwordHash" | "confirmationToken" | "resetToken"
+>;
+
 export default function AdminConsolePage() {
-  const { isAdmin, loginAsAdmin, setMode } = useViewMode();
+  const { isAdmin, isSuperuser } = useViewMode();
   const [activeTab, setActiveTab] = useState<
-    "hubs" | "jobs" | "candidates" | "employers" | "ai"
+    "hubs" | "jobs" | "candidates" | "employers" | "users" | "ai"
   >("jobs");
 
   // Data states
@@ -41,6 +57,7 @@ export default function AdminConsolePage() {
   const [candidates, setCandidates] = useState<StoredCandidateRecord[]>([]);
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
   const [employers, setEmployers] = useState<EmployerRegistration[]>([]);
+  const [authUsers, setAuthUsers] = useState<PublicAuthUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Hub Form Modal / Drawer
@@ -103,23 +120,32 @@ export default function AdminConsolePage() {
   async function loadAllData() {
     setLoading(true);
     try {
-      const adminHeaders = {
-        "x-utare-role": "admin",
-        "x-utare-email": "admin@utare.co.zw",
-      };
-      const [hubsRes, jobsRes, candRes, aiRes, empRes] = await Promise.all([
-        fetch("/api/admin/hubs", { headers: adminHeaders }).then((r) => r.json()),
-        fetch("/api/jobs?all=1&role=admin", { headers: adminHeaders }).then((r) => r.json()),
-        fetch("/api/admin/candidates?role=admin", { headers: adminHeaders }).then((r) => r.json()),
-        fetch("/api/ai/status").then((r) => r.json()),
-        fetch("/api/employers?role=admin", { headers: adminHeaders }).then((r) => r.json()).catch(() => ({ employers: [] })),
-      ]);
+      const [hubsRes, jobsRes, candRes, aiRes, empRes, usersRes] =
+        await Promise.all([
+          fetch("/api/admin/hubs", { credentials: "include" }).then((r) =>
+            r.json()
+          ),
+          fetch("/api/jobs?all=1", { credentials: "include" }).then((r) =>
+            r.json()
+          ),
+          fetch("/api/admin/candidates", { credentials: "include" }).then((r) =>
+            r.json()
+          ),
+          fetch("/api/ai/status").then((r) => r.json()),
+          fetch("/api/employers", { credentials: "include" })
+            .then((r) => r.json())
+            .catch(() => ({ employers: [] })),
+          fetch("/api/admin/users", { credentials: "include" })
+            .then((r) => r.json())
+            .catch(() => ({ users: [] })),
+        ]);
 
       if (hubsRes.hubs) setHubs(hubsRes.hubs);
       if (jobsRes.jobs) setJobs(jobsRes.jobs);
       if (jobsRes.applications) setApplications(jobsRes.applications);
       if (candRes.candidates) setCandidates(candRes.candidates);
       if (empRes && empRes.employers) setEmployers(empRes.employers);
+      if (usersRes && usersRes.users) setAuthUsers(usersRes.users);
       if (aiRes) {
         setAiStatus(aiRes);
         if (aiRes.model) setModelInput(aiRes.model);
@@ -291,6 +317,52 @@ export default function AdminConsolePage() {
     } catch {}
   }
 
+  async function handleVerifyEmployer(
+    employerId: string,
+    verificationStatus: EmployerVerificationStatus
+  ) {
+    try {
+      const res = await fetch("/api/employers", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ employerId, verificationStatus }),
+      });
+      const data = await res.json();
+      if (res.ok && data.employer) {
+        setEmployers((prev) =>
+          prev.map((e) => (e.id === employerId ? data.employer : e))
+        );
+        await loadAllData();
+        notify(
+          verificationStatus === "verified"
+            ? `Verified ${data.employer.companyName}! Any pending roles from this employer are now live.`
+            : `Updated ${data.employer.companyName} status to ${verificationStatus}.`
+        );
+      }
+    } catch {}
+  }
+
+  async function handleChangeUserRole(email: string, role: UserRole) {
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, role }),
+      });
+      const data = await res.json();
+      if (res.ok && data.user) {
+        setAuthUsers((prev) =>
+          prev.map((u) => (u.email === email ? data.user : u))
+        );
+        notify(`Updated ${email} role to "${role}".`);
+      } else {
+        notify(data.error || "Could not update role.");
+      }
+    } catch {}
+  }
+
   // AI Actions
   async function handleTestAi(e: React.FormEvent) {
     e.preventDefault();
@@ -341,15 +413,6 @@ export default function AdminConsolePage() {
           >
             Sign In with Facilitator Account
           </Link>
-          {process.env.NODE_ENV === "development" && (
-          <button
-            type="button"
-            onClick={loginAsAdmin}
-            className="rounded-xl border border-amber-300 bg-white px-5 py-2.5 text-xs font-semibold text-amber-900 hover:bg-amber-50 transition"
-          >
-            Quick Demo: Stewart Mangezi (local dev)
-          </button>
-          )}
           <Link
             href="/"
             className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition inline-flex items-center justify-center"
@@ -394,15 +457,12 @@ export default function AdminConsolePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setMode("user");
-            }}
+          <Link
+            href="/employer"
             className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm"
           >
-            ← View as Candidate
-          </button>
+            Employer Portal
+          </Link>
           <Link
             href="/jobs"
             className="rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-800 transition shadow-sm"
@@ -531,8 +591,23 @@ export default function AdminConsolePage() {
           }`}
         >
           <Globe className="h-4 w-4" />
-          <span>Employer Leads ({employers.length})</span>
+          <span>Employers & Verification ({employers.length})</span>
         </button>
+
+        {isSuperuser && (
+          <button
+            type="button"
+            onClick={() => setActiveTab("users")}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
+              activeTab === "users"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+            }`}
+          >
+            <Shield className="h-4 w-4 text-amber-600" />
+            <span>User Roles ({authUsers.length})</span>
+          </button>
+        )}
 
         <button
           type="button"
@@ -1360,9 +1435,46 @@ export default function AdminConsolePage() {
                       </p>
                     </div>
 
-                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                      {emp.timezoneOverlapNeeded}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold border ${
+                          emp.verificationStatus === "verified"
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                            : emp.verificationStatus === "rejected"
+                            ? "bg-rose-50 text-rose-800 border-rose-200"
+                            : "bg-amber-50 text-amber-900 border-amber-300"
+                        }`}
+                      >
+                        {emp.verificationStatus === "verified"
+                          ? "✓ Verified Partner"
+                          : emp.verificationStatus === "rejected"
+                          ? "Rejected"
+                          : "Pending Verification"}
+                      </span>
+
+                      {emp.verificationStatus !== "verified" && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleVerifyEmployer(emp.id, "verified")
+                          }
+                          className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-800 transition"
+                        >
+                          Verify Employer
+                        </button>
+                      )}
+                      {emp.verificationStatus !== "rejected" && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleVerifyEmployer(emp.id, "rejected")
+                          }
+                          className="rounded-lg border border-rose-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 transition"
+                        >
+                          Reject
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {emp.rolesInterested && emp.rolesInterested.length > 0 && (
@@ -1384,6 +1496,85 @@ export default function AdminConsolePage() {
                 </div>
               ))
             )}
+          </div>
+        </section>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 4B: SUPERUSER ROLE MANAGEMENT */}
+      {/* ========================================================================= */}
+      {activeTab === "users" && isSuperuser && (
+        <section className="space-y-6">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">
+              Account Role &amp; Access Management (Superuser Only)
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Promote or demote registered accounts across Candidate, Employer,
+              Facilitator Admin, and Superuser roles.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+            <div className="divide-y divide-slate-200">
+              {authUsers.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-500">
+                  No registered user accounts yet.
+                </div>
+              ) : (
+                authUsers.map((u) => (
+                  <div
+                    key={u.id}
+                    className="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-slate-900">
+                          {u.name}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-700">
+                          {u.role}
+                        </span>
+                        {u.emailConfirmed ? (
+                          <span className="text-[11px] font-semibold text-emerald-700">
+                            ✓ Email verified
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-semibold text-amber-700">
+                            Unverified email
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        {u.email}
+                        {u.companyName ? ` • ${u.companyName}` : ""}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-semibold text-slate-600">
+                        Role:
+                      </label>
+                      <select
+                        value={u.role}
+                        onChange={(e) =>
+                          handleChangeUserRole(
+                            u.email,
+                            e.target.value as UserRole
+                          )
+                        }
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800"
+                      >
+                        <option value="candidate">candidate</option>
+                        <option value="employer">employer</option>
+                        <option value="admin">admin</option>
+                        <option value="superuser">superuser</option>
+                      </select>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </section>
       )}

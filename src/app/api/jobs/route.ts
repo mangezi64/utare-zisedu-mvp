@@ -1,19 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminRequest } from "@/lib/auth-guard";
-import { findCandidateByEmail, readStore, submitJobApplicationToStore } from "@/lib/store";
+import { getSessionFromRequest, isAdminRequest, unauthorizedResponse } from "@/lib/auth-guard";
+import {
+  findCandidateByEmail,
+  readStore,
+  submitJobApplicationToStore,
+} from "@/lib/store";
 
 export async function GET(req: NextRequest) {
   const state = readStore();
-  const emailParam = req.nextUrl.searchParams.get("email");
+  const session = await getSessionFromRequest(req);
   const showAll = req.nextUrl.searchParams.get("all") === "1";
   const isAdmin = showAll && (await isAdminRequest(req));
 
   let activeCandidate = null;
-  if (emailParam) {
-    activeCandidate = findCandidateByEmail(emailParam);
+  if (session) {
+    activeCandidate = findCandidateByEmail(session.email);
   }
 
-  // Regular candidate users see only approved jobs; admins see all jobs
+  // Regular candidate/public users see only approved jobs; admins see all jobs
   const jobs =
     showAll && isAdmin
       ? state.jobs
@@ -21,18 +25,20 @@ export async function GET(req: NextRequest) {
           (j) => j.status !== "pending_review" && j.status !== "archived"
         );
 
-  // Return applications strictly scoped to the requesting candidate or authorized admin
+  // Return applications strictly scoped to the authenticated session user or authorized admin
   let applications: typeof state.applications = [];
   if (showAll && isAdmin) {
     applications = state.applications;
-  } else if (activeCandidate) {
+  } else if (session) {
     applications = state.applications.filter(
       (a) =>
-        a.candidateId === activeCandidate.id ||
+        (activeCandidate && a.candidateId === activeCandidate.id) ||
+        a.candidateId === session.sub ||
+        (a.candidateEmail &&
+          a.candidateEmail.toLowerCase() === session.email.toLowerCase()) ||
         (a.candidateName &&
-          activeCandidate.profile.fullName &&
-          a.candidateName.toLowerCase() ===
-            activeCandidate.profile.fullName.toLowerCase())
+          session.name &&
+          a.candidateName.toLowerCase() === session.name.toLowerCase())
     );
   }
 
@@ -45,6 +51,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSessionFromRequest(req);
+    if (!session) {
+      return unauthorizedResponse("Please sign in to submit a job application.");
+    }
+
     const body = await req.json();
     if (!body.jobId || !body.tailoredResumePitch) {
       return NextResponse.json(
@@ -56,8 +67,11 @@ export async function POST(req: NextRequest) {
     const application = submitJobApplicationToStore({
       jobId: body.jobId,
       tailoredResumePitch: body.tailoredResumePitch,
-      candidateId: body.candidateId,
-      candidateName: body.candidateName,
+      candidateId: session.sub,
+      candidateName: body.candidateName || session.name,
+      candidateEmail: session.email,
+      generatedCv: body.generatedCv,
+      generatedCoverLetter: body.generatedCoverLetter,
     });
 
     if (!application) {

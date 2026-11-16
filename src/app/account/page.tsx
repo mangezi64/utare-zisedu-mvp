@@ -48,7 +48,7 @@ const DEFAULT_PROFILE: CandidateProfile = {
 
 export default function CandidateAccountPage() {
   const router = useRouter();
-  const { user, isAuthenticated, loginAsCandidate, logout } = useViewMode();
+  const { user, isAuthenticated, logout } = useViewMode();
   const [candidate, setCandidate] = useState<StoredCandidateRecord | null>(null);
   const [profile, setProfile] = useState<CandidateProfile>(DEFAULT_PROFILE);
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
@@ -668,8 +668,28 @@ export default function CandidateAccountPage() {
                         </span>
                         <div className="text-slate-600">{app.company}</div>
                       </div>
-                      <span className="rounded-full bg-blue-100 text-blue-800 px-2.5 py-0.5 text-[11px] font-bold">
-                        Submitted
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                          app.status === "hired"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : app.status === "shortlisted"
+                            ? "bg-amber-100 text-amber-900"
+                            : app.status === "under_review"
+                            ? "bg-blue-100 text-blue-800"
+                            : app.status === "rejected"
+                            ? "bg-rose-100 text-rose-800"
+                            : "bg-slate-200 text-slate-800"
+                        }`}
+                      >
+                        {app.status === "hired"
+                          ? "Hired"
+                          : app.status === "shortlisted"
+                          ? "Shortlisted"
+                          : app.status === "under_review"
+                          ? "Under Review"
+                          : app.status === "rejected"
+                          ? "Not Selected"
+                          : "Submitted"}
                       </span>
                     </div>
 
