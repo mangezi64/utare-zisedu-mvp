@@ -510,6 +510,170 @@ export function confirmUserEmailByAddress(email: string): StoredAuthUser | null 
   return user;
 }
 
+/**
+ * Hydrates from PostgreSQL/Supabase if needed, marks the user's email as
+ * confirmed, and awaits updating the persistent auth_users record.
+ */
+export async function confirmUserEmailByAddressAsync(
+  email: string
+): Promise<StoredAuthUser | null> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return null;
+
+  let user = findAuthUserByEmail(normalized);
+  if (!user) {
+    user = await findAuthUserByEmailFromDb(normalized);
+  }
+  if (user) {
+    user = confirmUserEmailByAddress(normalized) || user;
+  }
+
+  try {
+    await query(
+      `UPDATE public.auth_users
+       SET email_confirmed = true, confirmation_token = NULL
+       WHERE LOWER(email) = $1;`,
+      [normalized]
+    );
+  } catch {}
+
+  const sb = getSupabaseServer();
+  if (sb) {
+    try {
+      await sb
+        .from("auth_users")
+        .update({ email_confirmed: true, confirmation_token: null })
+        .ilike("email", normalized);
+    } catch {}
+  }
+
+  return user;
+}
+
+/**
+ * Verifies a custom confirmation token across both the local store and
+ * persistent PostgreSQL/Supabase auth_users records (for serverless cold starts).
+ */
+export async function verifyUserEmailByTokenAsync(
+  token: string
+): Promise<StoredAuthUser | null> {
+  if (!token) return null;
+
+  const localMatch = verifyUserEmailByToken(token);
+  if (localMatch) {
+    try {
+      await query(
+        `UPDATE public.auth_users
+         SET email_confirmed = true, confirmation_token = NULL
+         WHERE LOWER(email) = $1;`,
+        [localMatch.email.toLowerCase()]
+      );
+    } catch {}
+    const sb = getSupabaseServer();
+    if (sb) {
+      try {
+        await sb
+          .from("auth_users")
+          .update({ email_confirmed: true, confirmation_token: null })
+          .ilike("email", localMatch.email.toLowerCase());
+      } catch {}
+    }
+    return localMatch;
+  }
+
+  try {
+    const res = await query<any>(
+      `SELECT id, email, name, role, password_hash, email_confirmed,
+              confirmation_token, employer_id, org_role, company_name, created_at
+       FROM public.auth_users
+       WHERE confirmation_token = $1
+       LIMIT 1;`,
+      [token]
+    );
+    if (res && res.rows && res.rows.length > 0) {
+      const row = res.rows[0];
+      const user: StoredAuthUser = {
+        id: row.id,
+        email: row.email,
+        name: row.name,
+        role: row.role,
+        passwordHash: row.password_hash,
+        emailConfirmed: true,
+        confirmationToken: undefined,
+        employerId: row.employer_id || undefined,
+        orgRole: row.org_role || undefined,
+        companyName: row.company_name || undefined,
+        createdAt: row.created_at
+          ? new Date(row.created_at).toISOString()
+          : new Date().toISOString(),
+      };
+      const state = readStore();
+      const idx = state.users.findIndex(
+        (u) => u.email.trim().toLowerCase() === user.email.toLowerCase()
+      );
+      if (idx >= 0) {
+        state.users[idx] = { ...state.users[idx], ...user };
+      } else {
+        state.users.unshift(user);
+      }
+      writeStore(state);
+      await query(
+        `UPDATE public.auth_users
+         SET email_confirmed = true, confirmation_token = NULL
+         WHERE id = $1;`,
+        [user.id]
+      ).catch(() => {});
+      return user;
+    }
+  } catch {}
+
+  const sb = getSupabaseServer();
+  if (sb) {
+    try {
+      const { data: row, error } = await sb
+        .from("auth_users")
+        .select("*")
+        .eq("confirmation_token", token)
+        .maybeSingle();
+
+      if (!error && row) {
+        const user: StoredAuthUser = {
+          id: row.id,
+          email: row.email,
+          name: row.name,
+          role: row.role,
+          passwordHash: row.password_hash,
+          emailConfirmed: true,
+          confirmationToken: undefined,
+          employerId: row.employer_id || undefined,
+          orgRole: row.org_role || undefined,
+          companyName: row.company_name || undefined,
+          createdAt: row.created_at
+            ? new Date(row.created_at).toISOString()
+            : new Date().toISOString(),
+        };
+        const state = readStore();
+        const idx = state.users.findIndex(
+          (u) => u.email.trim().toLowerCase() === user.email.toLowerCase()
+        );
+        if (idx >= 0) {
+          state.users[idx] = { ...state.users[idx], ...user };
+        } else {
+          state.users.unshift(user);
+        }
+        writeStore(state);
+        await sb
+          .from("auth_users")
+          .update({ email_confirmed: true, confirmation_token: null })
+          .eq("id", row.id);
+        return user;
+      }
+    } catch {}
+  }
+
+  return null;
+}
+
 export function updateUserRole(emailOrId: string, role: UserRole): StoredAuthUser | null {
   const state = readStore();
   const key = emailOrId.trim().toLowerCase();

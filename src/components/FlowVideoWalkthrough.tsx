@@ -279,27 +279,6 @@ export default function FlowVideoWalkthrough() {
 
   return (
     <>
-      {/* Floating Pill Launch Trigger (Docked at top/bottom alongside accessibility tools) */}
-      <button
-        type="button"
-        onClick={() => {
-          setIsOpen(true);
-          setIsPlaying(true);
-        }}
-        aria-label="Open Interactive Flow Demo & Video Walkthrough"
-        title="Interactive Platform Flow & Video Demo"
-        className="fixed bottom-20 left-5 z-40 inline-flex items-center gap-2 rounded-full border border-amber-300 bg-white/95 px-3.5 py-2 text-xs font-bold text-amber-900 shadow-xl backdrop-blur-md transition-all hover:scale-105 hover:bg-amber-50 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-amber-500"
-      >
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm">
-          <Play className="h-3 w-3 fill-current ml-0.5" />
-        </span>
-        <span className="hidden sm:inline">Interactive Flow Demo</span>
-        <span className="sm:hidden">Demo</span>
-        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-amber-800">
-          Walkthrough
-        </span>
-      </button>
-
       {/* Main Full-Screen Dialog */}
       {isOpen && (
         <div

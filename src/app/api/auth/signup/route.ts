@@ -5,6 +5,7 @@ import { generateRandomToken, hashPassword } from "@/lib/password-hash";
 import {
   createAuthUser,
   findAuthUserByEmail,
+  findAuthUserByEmailFromDb,
   registerOrUpdateCandidate,
   saveEmployerRegistration,
 } from "@/lib/store";
@@ -59,8 +60,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. Reject duplicate accounts
-    if (findAuthUserByEmail(normalizedEmail)) {
+    // 4. Reject duplicate accounts (local store + live database)
+    if (
+      findAuthUserByEmail(normalizedEmail) ||
+      (await findAuthUserByEmailFromDb(normalizedEmail))
+    ) {
       return NextResponse.json(
         {
           error:
@@ -161,7 +165,24 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: error.message }, { status: 400 });
         }
       } else {
+        if (
+          data.user &&
+          Array.isArray(data.user.identities) &&
+          data.user.identities.length === 0
+        ) {
+          return NextResponse.json(
+            {
+              error:
+                "An account with this email already exists. Please sign in instead.",
+            },
+            { status: 409 }
+          );
+        }
+
         supabaseUserId = data.user?.id;
+        if (data.session || data.user?.email_confirmed_at) {
+          isAutoConfirmed = true;
+        }
 
         // Stamp authoritative role in app_metadata via Service Role client if available
         const adminClient = getSupabaseAdmin();
@@ -237,9 +258,8 @@ export async function POST(req: NextRequest) {
       // Sync candidate profile to live Supabase Postgres
       const sb = getSupabaseServer();
       if (sb) {
-        sb
-          .from("candidate_profiles")
-          .upsert(
+        try {
+          await sb.from("candidate_profiles").upsert(
             {
               user_id: supabaseUserId,
               full_name: fullName,
@@ -260,11 +280,8 @@ export async function POST(req: NextRequest) {
               updated_at: new Date().toISOString(),
             },
             { onConflict: "email" }
-          )
-          .then(
-            () => {},
-            () => {}
           );
+        } catch {}
       }
     }
 
@@ -289,9 +306,8 @@ export async function POST(req: NextRequest) {
     // Sync auth user to live Supabase Postgres auth_users table
     const sbAuth = getSupabaseServer();
     if (sbAuth) {
-      sbAuth
-        .from("auth_users")
-        .upsert(
+      try {
+        await sbAuth.from("auth_users").upsert(
           {
             id: supabaseUserId || authUser.id,
             email: normalizedEmail,
@@ -299,15 +315,14 @@ export async function POST(req: NextRequest) {
             role: assignedRole,
             password_hash: passwordHash,
             email_confirmed: isAutoConfirmed,
-            employer_id: employerId,
-            company_name: companyName,
+            confirmation_token: confirmationToken,
+            employer_id: employerId || null,
+            org_role: accountType === "employer" ? "org_admin" : null,
+            company_name: companyName || null,
           },
           { onConflict: "email" }
-        )
-        .then(
-          () => {},
-          () => {}
         );
+      } catch {}
     }
 
     const confirmationPath = `/auth/callback?token=${encodeURIComponent(

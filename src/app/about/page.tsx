@@ -34,9 +34,9 @@ const TEAM_MEMBERS = [
   },
   {
     num: "02",
-    role: "FRONTEND EXPERIENCE & UI DESIGN",
-    name: "Faith Wenzira",
-    bio: "Co-designed the UTARE visual identity, typography, interactive candidate journey walkthrough, opportunities explorer, and responsive interface architecture.",
+    role: "FRONTEND EXPERIENCE, UI & USER TESTING",
+    name: "Future Wenzira",
+    bio: "Co-designed the UTARE visual identity, typography, interactive candidate journey walkthrough, opportunities explorer, accessibility feedback, and responsive interface architecture.",
   },
   {
     num: "03",
@@ -58,9 +58,9 @@ const TEAM_MEMBERS = [
   },
   {
     num: "06",
-    role: "RESEARCH & ECOSYSTEM PARTNERSHIPS",
-    name: "UTARE Scholar Team",
-    bio: "Leads empirical user journey survey research, community outreach, and employer/mentor ecosystem partnerships across Zimbabwe.",
+    role: "STORYTELLING, STRATEGY & PARTNERSHIPS",
+    name: "Bheki",
+    bio: "Leads strategic ecosystem partnerships, sustainable business model design, empirical user journey storytelling, and employer and mentor outreach across Zimbabwe.",
   },
 ];
 

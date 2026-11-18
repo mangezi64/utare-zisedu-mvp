@@ -749,7 +749,7 @@ main {
 .footer {
   background: #0c1529;
   color: white;
-  padding: 40px max(16px, calc((100% - 1188px) / 2)) 72px;
+  padding: 40px max(16px, calc((100% - 1188px) / 2)) 36px;
   margin-top: auto;
 }
 .footer-top {

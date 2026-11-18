@@ -7,6 +7,7 @@ import { ViewModeProvider } from "@/lib/view-mode-context";
 import AudioExplainer from "@/components/AudioExplainer";
 import AccessibilityControls from "@/components/AccessibilityControls";
 import FlowVideoWalkthrough from "@/components/FlowVideoWalkthrough";
+import AssistiveToolbar from "@/components/AssistiveToolbar";
 
 export const metadata: Metadata = {
   title: "UTARE ZEM AI — Economic Mobility & Remote Bridge",
@@ -32,6 +33,7 @@ export default function RootLayout({
 
         <ViewModeProvider>
           <Navbar />
+          <AssistiveToolbar variant="top" />
           <main id="main-content" className="flex-1">
             {children}
           </main>
@@ -75,6 +77,7 @@ export default function RootLayout({
                 </div>
               </div>
             </div>
+            <AssistiveToolbar variant="footer" />
             <div className="footer-bottom">
               <span>© {new Date().getFullYear()} UTARE ZEM AI</span>
               <span>Zimbabwe Economic Mobility &amp; Remote Bridge</span>

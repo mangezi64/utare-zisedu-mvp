@@ -73,6 +73,35 @@ function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registerSuccess, setRegisterSuccess] = useState("");
   const [confirmationPath, setConfirmationPath] = useState<string | null>(null);
+  const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState<string | null>(null);
+  const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
+  const [resendNotice, setResendNotice] = useState("");
+
+  const handleResendConfirmation = async (emailToResend: string) => {
+    if (!emailToResend.trim()) return;
+    setIsResendingConfirmation(true);
+    setResendNotice("");
+    try {
+      const res = await fetch("/api/auth/resend-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailToResend.trim().toLowerCase() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.confirmationPath) {
+        setConfirmationPath(data.confirmationPath);
+      }
+      setResendNotice(
+        data.message ||
+          data.error ||
+          "Confirmation email dispatched. Please check your inbox and spam folder."
+      );
+    } catch {
+      setResendNotice("Unable to resend confirmation email right now.");
+    } finally {
+      setIsResendingConfirmation(false);
+    }
+  };
 
   // Forgot / Reset Password state
   const [showResetPassword, setShowResetPassword] = useState(false);
@@ -159,6 +188,9 @@ function LoginForm() {
       if (!res.ok) {
         if (data.confirmationPath) {
           setConfirmationPath(data.confirmationPath);
+        }
+        if (data.code === "EMAIL_NOT_CONFIRMED") {
+          setPendingConfirmationEmail(normalizedEmail);
         }
         setLoginError(data.error || "Invalid email or password.");
         return;
@@ -248,6 +280,11 @@ function LoginForm() {
       );
       if (data.confirmationPath) {
         setConfirmationPath(data.confirmationPath);
+      }
+      if (data.requiresEmailConfirmation && !data.confirmationPath) {
+        setPendingConfirmationEmail(regEmail.trim().toLowerCase());
+      } else {
+        setPendingConfirmationEmail(null);
       }
     } catch {
       setLoginError(
@@ -425,6 +462,23 @@ function LoginForm() {
                   </Link>
                 </div>
               )}
+              {pendingConfirmationEmail && !confirmationPath && (
+                <div className="pt-1 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={isResendingConfirmation}
+                    onClick={() => handleResendConfirmation(pendingConfirmationEmail)}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-red-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-800 disabled:opacity-60 transition"
+                  >
+                    {isResendingConfirmation ? "Sending..." : "Resend Confirmation Email"}
+                  </button>
+                  {resendNotice && (
+                    <span className="text-[11px] font-medium text-red-900">
+                      {resendNotice}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -435,8 +489,7 @@ function LoginForm() {
                 <div>
                   <p className="font-bold">{registerSuccess}</p>
                   <p className="mt-1 text-[#2e4a3d]">
-                    Once your email is confirmed, you will be signed in to your
-                    workspace automatically.
+                    Check your inbox (and spam folder) and click &ldquo;Confirm email address&rdquo; to activate your account and sign in automatically.
                   </p>
                 </div>
               </div>
@@ -454,6 +507,23 @@ function LoginForm() {
                     Verify Email &amp; Continue{" "}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
+                </div>
+              )}
+              {pendingConfirmationEmail && !confirmationPath && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={isResendingConfirmation}
+                    onClick={() => handleResendConfirmation(pendingConfirmationEmail)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#08785f]/30 bg-white px-3 py-1.5 text-[11.5px] font-bold text-[#08785f] hover:bg-[#f2fbf7] disabled:opacity-60 transition"
+                  >
+                    {isResendingConfirmation ? "Sending..." : "Resend Confirmation Email"}
+                  </button>
+                  {resendNotice && (
+                    <span className="text-[11px] font-medium text-[#1b4d3e]">
+                      {resendNotice}
+                    </span>
+                  )}
                 </div>
               )}
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import {
   Volume2,
   VolumeX,
@@ -9,13 +10,10 @@ import {
   Square,
   RotateCcw,
   FastForward,
-  Headphones,
   FileText,
   X,
   ChevronDown,
   ChevronUp,
-  Sparkles,
-  Check,
 } from "lucide-react";
 
 export interface AudioChapter {
@@ -65,6 +63,8 @@ export const AUDIO_CHAPTERS: AudioChapter[] = [
 const SPEECH_RATES = [0.85, 1.0, 1.25, 1.5];
 
 export default function AudioExplainer() {
+  const pathname = usePathname();
+  const prevPathnameRef = useRef<string>(pathname);
   const [isSupported, setIsSupported] = useState<boolean>(true);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -150,15 +150,39 @@ export default function AudioExplainer() {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
 
-    // Listen for custom trigger event from AccessibilityControls
+    // Listen for custom trigger events from page toolbars & AccessibilityControls
     const handleTrigger = () => {
       setIsOpen(true);
-      playChapterRef.current(0);
     };
+    const handleStopEvent = () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch {}
+      }
+      setIsPlaying(false);
+      setIsPaused(false);
+      setCurrentChapterIndex(0);
+      setIsOpen(false);
+    };
+    const handlePageExit = () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch {}
+      }
+    };
+
     window.addEventListener("utare-open-audio-explainer", handleTrigger);
+    window.addEventListener("utare-stop-audio", handleStopEvent);
+    window.addEventListener("pagehide", handlePageExit);
+    window.addEventListener("beforeunload", handlePageExit);
 
     return () => {
       window.removeEventListener("utare-open-audio-explainer", handleTrigger);
+      window.removeEventListener("utare-stop-audio", handleStopEvent);
+      window.removeEventListener("pagehide", handlePageExit);
+      window.removeEventListener("beforeunload", handlePageExit);
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         try {
           window.speechSynthesis.cancel();
@@ -166,6 +190,37 @@ export default function AudioExplainer() {
       }
     };
   }, []);
+
+  // Stop & tuck audio away whenever the user navigates to a different page
+  useEffect(() => {
+    if (prevPathnameRef.current !== pathname) {
+      prevPathnameRef.current = pathname;
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch {}
+      }
+      setIsPlaying(false);
+      setIsPaused(false);
+      setCurrentChapterIndex(0);
+      setIsOpen(false);
+    }
+  }, [pathname]);
+
+  // Broadcast live audio state to in-flow toolbars (top & footer)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const chapter = AUDIO_CHAPTERS[currentChapterIndex];
+    window.dispatchEvent(
+      new CustomEvent("utare-audio-state", {
+        detail: {
+          isPlaying,
+          isPaused,
+          shortTitle: chapter?.shortTitle,
+        },
+      })
+    );
+  }, [isPlaying, isPaused, currentChapterIndex]);
 
   const playChapter = useCallback((index: number) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -211,9 +266,15 @@ export default function AudioExplainer() {
           setCurrentChapterIndex(nextIndex);
           playChapter(nextIndex);
         } else {
+          if (typeof window !== "undefined" && "speechSynthesis" in window) {
+            try {
+              window.speechSynthesis.cancel();
+            } catch {}
+          }
           setIsPlaying(false);
           setIsPaused(false);
           setCurrentChapterIndex(0);
+          setIsOpen(false);
           setSrAnnouncement("UTARE audio walkthrough complete.");
         }
       };
@@ -236,7 +297,7 @@ export default function AudioExplainer() {
 
   playChapterRef.current = playChapter;
 
-  const handlePlayPause = () => {
+  const handlePlayPause = useCallback(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
     if (!isPlaying) {
@@ -250,14 +311,33 @@ export default function AudioExplainer() {
       setIsPaused(true);
       setSrAnnouncement("Paused audio explainer.");
     }
-  };
+  }, [isPlaying, isPaused, currentChapterIndex, playChapter]);
+
+  useEffect(() => {
+    const handleToggle = () => {
+      handlePlayPause();
+    };
+    window.addEventListener("utare-toggle-audio-play", handleToggle);
+    return () => {
+      window.removeEventListener("utare-toggle-audio-play", handleToggle);
+    };
+  }, [handlePlayPause]);
 
   const handleStop = () => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch {}
+    }
     setIsPlaying(false);
     setIsPaused(false);
+    setCurrentChapterIndex(0);
     setSrAnnouncement("Stopped audio explainer.");
+  };
+
+  const handleStopAndClose = () => {
+    handleStop();
+    setIsOpen(false);
   };
 
   const handleNextChapter = () => {
@@ -304,93 +384,59 @@ export default function AudioExplainer() {
         {srAnnouncement}
       </div>
 
-      {/* Floating Audio Pill (when closed) */}
-      {!isOpen && (
-        <aside
-          aria-label="Audio Overview Navigation"
-          className="fixed bottom-5 left-5 z-40 print:hidden"
-        >
-          <div className="flex items-center gap-1.5 p-1.5 pl-3 pr-2 rounded-full bg-slate-900/95 text-white shadow-xl backdrop-blur-md border border-slate-700/60 transition-all hover:scale-[1.02] hover:shadow-2xl">
-            <button
-              onClick={() => setIsOpen(true)}
-              className="flex items-center gap-2 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-full py-1 pr-2"
-              aria-label="Open UTARE ZEM AI Audio Explainer"
-            >
-              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400">
-                <Headphones className="w-4 h-4" />
-              </span>
-              <div className="flex flex-col">
-                <span className="text-xs font-bold leading-tight flex items-center gap-1.5">
-                  Audio Overview
-                  {isPlaying && !isPaused && (
-                    <span className="flex items-center gap-0.5 h-3 ml-1">
-                      <span className="audio-wave-bar h-2 animate-audio-bar-1 bg-emerald-400"></span>
-                      <span className="audio-wave-bar h-3 animate-audio-bar-3 bg-emerald-400"></span>
-                      <span className="audio-wave-bar h-2 animate-audio-bar-5 bg-emerald-400"></span>
-                    </span>
-                  )}
-                </span>
-                <span className="text-[10px] text-slate-400 font-medium leading-none">
-                  {isPlaying
-                    ? isPaused
-                      ? "Paused"
-                      : currentChapter.shortTitle
-                    : "Listen (3 min)"}
-                </span>
-              </div>
-            </button>
-
-            {/* Quick Play/Pause on the pill */}
-            <button
-              onClick={handlePlayPause}
-              className="w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              aria-label={isPlaying && !isPaused ? "Pause Audio" : "Play Audio"}
-              title={isPlaying && !isPaused ? "Pause" : "Play"}
-            >
-              {isPlaying && !isPaused ? (
-                <Pause className="w-3.5 h-3.5" />
-              ) : (
-                <Play className="w-3.5 h-3.5 ml-0.5 fill-current" />
-              )}
-            </button>
-          </div>
-        </aside>
-      )}
-
-      {/* Expanded Audio Explainer Modal / Bottom Sheet */}
+      {/* Audio Explainer Modal / Bottom Sheet (tucked away when closed, finished, or leaving page) */}
       {isOpen && (
-        <section
-          role="region"
+        <div
+          role="dialog"
+          aria-modal="true"
           aria-label="UTARE ZEM AI Audio Explainer & Walkthrough"
-          className="fixed bottom-5 left-5 z-40 w-[92vw] max-w-md bg-slate-900 text-white rounded-2xl shadow-2xl border border-slate-700/80 backdrop-blur-xl p-5 print:hidden animate-in fade-in slide-in-from-bottom-4 duration-200"
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-slate-950/60 backdrop-blur-sm print:hidden animate-in fade-in duration-150"
         >
-          {/* Header */}
-          <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-800">
-            <div className="flex items-center gap-2.5">
-              <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400">
-                <Volume2 className="w-5 h-5" />
-              </span>
-              <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-                  UTARE ZEM AI Audio Walkthrough
-                  <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                    Voice Guide
-                  </span>
-                </h3>
-                <p className="text-[11px] text-slate-400">
-                  Mission, Career Diagnostic, CV Studio &amp; Partner Hubs
-                </p>
+          <section
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-slate-900 text-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-700/80 p-5"
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400">
+                  <Volume2 className="w-5 h-5" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                    UTARE ZEM AI Audio Walkthrough
+                    <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                      Voice Guide
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Mission, Career Diagnostic, CV Studio &amp; Partner Hubs
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1">
+                {isPlaying && (
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                    aria-label="Minimize Audio Explainer while playing"
+                    title="Minimize"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  onClick={handleStopAndClose}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  aria-label="Stop and close Audio Explainer"
+                  title="Stop & Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
             </div>
-
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
-              aria-label="Close Audio Explainer window"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
 
           {/* Graceful Fallback Notice if Speech Synthesis Not Supported */}
           {!isSupported && (
@@ -656,7 +702,8 @@ export default function AudioExplainer() {
               Watch Video Flow Demo 🎥
             </button>
           </div>
-        </section>
+          </section>
+        </div>
       )}
     </>
   );

@@ -114,7 +114,37 @@ export default function AccessibilityControls() {
     } catch (e) {
       console.warn("Could not save a11y preferences:", e);
     }
+
+    const hasActivePrefs = Boolean(
+      prefs.highContrast ||
+        prefs.colorblindMode !== "none" ||
+        prefs.fontSize !== "normal" ||
+        prefs.reducedMotion ||
+        prefs.dyslexicFriendly
+    );
+    window.dispatchEvent(
+      new CustomEvent("utare-a11y-state", { detail: { hasActivePrefs } })
+    );
   }, [prefs, isMounted]);
+
+  // Listen for custom open event from top/footer page toolbars & handle Escape
+  useEffect(() => {
+    const handleOpen = () => {
+      setIsOpen(true);
+      setAnnouncement("Accessibility menu opened.");
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener("utare-open-accessibility", handleOpen);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("utare-open-accessibility", handleOpen);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const updatePref = <K extends keyof AccessibilityPreferences>(
     key: K,
@@ -208,38 +238,13 @@ export default function AccessibilityControls() {
         {announcement}
       </div>
 
-      {/* Floating Accessibility Trigger Button */}
-      {!isOpen && (
-        <aside
-          aria-label="Assistive Technology Controls"
-          className="fixed bottom-5 right-5 z-40 print:hidden"
-        >
-          <button
-            onClick={() => {
-              setIsOpen(true);
-              setAnnouncement("Accessibility menu opened.");
-            }}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-slate-900/95 text-white shadow-xl backdrop-blur-md border border-slate-700/70 hover:bg-slate-800 transition-all hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
-            aria-label="Open Accessibility & Assistive Tech Settings"
-            aria-haspopup="dialog"
-          >
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400">
-              <Accessibility className="w-4 h-4" />
-            </span>
-            <span className="text-xs font-bold tracking-tight">Accessibility</span>
-            {(prefs.highContrast || prefs.colorblindMode !== "none" || prefs.fontSize !== "normal") && (
-              <span className="w-2 h-2 rounded-full bg-emerald-400" title="Custom accessibility settings active" />
-            )}
-          </button>
-        </aside>
-      )}
-
       {/* Accessibility Controls Drawer / Dialog Modal */}
       {isOpen && (
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="a11y-dialog-title"
+          onClick={() => setIsOpen(false)}
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-slate-950/60 backdrop-blur-sm print:hidden animate-in fade-in duration-150"
         >
           <div
