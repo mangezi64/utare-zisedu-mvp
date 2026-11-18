@@ -39,8 +39,19 @@ export const isSupabaseAdminConfigured = Boolean(
     !supabaseServiceRoleKey.includes("your-service-role")
 );
 
+const serverNoopTransport =
+  typeof WebSocket === "undefined"
+    ? (class {} as unknown as NonNullable<
+        NonNullable<Parameters<typeof createClient>[2]>["realtime"]
+      >["transport"])
+    : undefined;
+
+const realtimeFallbackOptions = serverNoopTransport
+  ? { realtime: { transport: serverNoopTransport } }
+  : {};
+
 export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, realtimeFallbackOptions)
   : null;
 
 let adminClient: SupabaseClient | null = null;
@@ -54,6 +65,7 @@ export function getSupabaseAdmin(): SupabaseClient | null {
   if (!isSupabaseAdminConfigured) return null;
   if (!adminClient) {
     adminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      ...realtimeFallbackOptions,
       auth: {
         autoRefreshToken: false,
         persistSession: false,

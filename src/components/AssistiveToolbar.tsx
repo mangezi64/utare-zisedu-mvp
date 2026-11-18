@@ -196,10 +196,12 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent("utare-open-video-walkthrough"))}
-              className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50/80 px-2.5 py-1 text-[11.5px] font-semibold text-amber-900 shadow-sm hover:bg-amber-100 transition md:hidden"
+              className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50/90 px-2.5 py-1 text-[11.5px] font-semibold text-amber-900 shadow-sm hover:bg-amber-100 transition"
+              title="Watch 2-Min Flow Demo"
+              aria-label="Watch interactive platform flow demo"
             >
               <Video className="h-3.5 w-3.5 text-amber-700 shrink-0" />
-              <span>Demo</span>
+              <span>Flow Demo</span>
             </button>
           </div>
 

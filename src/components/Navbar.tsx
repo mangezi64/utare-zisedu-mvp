@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -20,13 +20,13 @@ import {
   Mail,
   Menu,
   X,
-  Video,
+  ArrowRight,
+  ChevronDown,
 } from "lucide-react";
 import { useViewMode } from "@/lib/view-mode-context";
 
 const PUBLIC_NAV_ITEMS = [
   { href: "/", label: "Overview", icon: Compass },
-  { href: "/about", label: "About Us", icon: Info },
   { href: "/how-it-works", label: "How It Works", icon: HelpCircle },
   { href: "/opportunities", label: "Opportunities", icon: Briefcase },
   { href: "/skills", label: "Skills", icon: BookOpen },
@@ -64,19 +64,51 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
   const {
     user,
     isAuthenticated,
     isAdmin,
     isSuperuser,
     isEmployer,
-    isCandidate,
     logout,
   } = useViewMode();
+
+  // Close menus on route change, outside click, or Escape
+  useEffect(() => {
+    setMobileOpen(false);
+    setUserMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(e.target as Node)
+      ) {
+        setUserMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [userMenuOpen]);
 
   const handleLogout = async () => {
     await logout();
     setMobileOpen(false);
+    setUserMenuOpen(false);
     router.push("/");
   };
 
@@ -87,6 +119,46 @@ export default function Navbar() {
     : isAuthenticated
     ? CANDIDATE_NAV_ITEMS
     : PUBLIC_NAV_ITEMS;
+
+  const firstInitial = (
+    user?.name?.trim()?.[0] ||
+    user?.email?.trim()?.[0] ||
+    "U"
+  ).toUpperCase();
+
+  const roleTitle = isSuperuser
+    ? "Superuser · Admin Console Active"
+    : isAdmin
+    ? "Facilitator & Admin · Console Active"
+    : isEmployer
+    ? "Employer Partner Portal"
+    : "Candidate Workspace";
+
+  const roleSubtitle = isAdmin
+    ? "Employer verification, hub enlistment, job moderation & oversight"
+    : isEmployer
+    ? user?.companyName || "Verified Hiring Partner"
+    : user?.city
+    ? `${user.city}${user.qualification ? ` · ${user.qualification}` : ""}`
+    : user?.qualification || "Economic Mobility Pathway";
+
+  const primaryHref = isAdmin
+    ? "/admin"
+    : isEmployer
+    ? "/employer"
+    : "/account";
+
+  const primaryLabel = isAdmin
+    ? "Open Admin Console"
+    : isEmployer
+    ? "Open Employer Portal"
+    : "Open My Workspace";
+
+  const avatarToneClass = isAdmin
+    ? "border-amber-400 bg-amber-100 text-amber-950"
+    : isEmployer
+    ? "border-blue-300 bg-blue-100 text-blue-950"
+    : "border-emerald-300 bg-emerald-100 text-emerald-950";
 
   return (
     <header className="site-header no-print" suppressHydrationWarning>
@@ -129,8 +201,16 @@ export default function Navbar() {
             );
           })}
 
-          {/* Mobile Navigation Drawer Auth Section (< 768px) */}
-          <div className="md:hidden border-t border-slate-200/90 pt-3 mt-2 flex flex-col gap-2.5 w-full">
+          {/* Mobile Navigation Drawer Footer Links (< 1040px) */}
+          <div className="lg:hidden border-t border-slate-200/90 pt-3 mt-2 flex flex-col gap-2 w-full">
+            <Link
+              href="/about"
+              onClick={() => setMobileOpen(false)}
+              className="inline-flex items-center gap-1.5"
+            >
+              <Info className="h-3.5 w-3.5 shrink-0" />
+              <span>About Us</span>
+            </Link>
             <Link
               href="/contact"
               onClick={() => setMobileOpen(false)}
@@ -139,26 +219,28 @@ export default function Navbar() {
               <Mail className="h-3.5 w-3.5 shrink-0" />
               <span>Contact</span>
             </Link>
-            {isAdmin ? (
-              <>
-                <div className="flex items-center gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 shadow-sm">
-                  <Shield className="h-4 w-4 text-amber-700 shrink-0" />
-                  <div className="flex flex-col text-left">
-                    <span className="font-bold text-amber-950">
-                      {user?.name || "Admin Facilitator"}
-                    </span>
-                    <span className="text-[10px] text-amber-700">
-                      {isSuperuser ? "Superuser Active" : "Facilitator & Admin Active"}
-                    </span>
-                  </div>
-                </div>
+
+            {isAuthenticated && user ? (
+              <div className="pt-2 border-t border-slate-200/80 flex flex-col gap-2">
                 <Link
-                  href="/admin"
+                  href={primaryHref}
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-amber-700 active:scale-98"
+                  className={`flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white shadow-sm transition ${
+                    isAdmin
+                      ? "bg-amber-600 hover:bg-amber-700"
+                      : isEmployer
+                      ? "bg-slate-900 hover:bg-slate-800"
+                      : "bg-emerald-700 hover:bg-emerald-800"
+                  }`}
                 >
-                  <Shield className="h-4 w-4" />
-                  <span>Return to Admin Console</span>
+                  {isAdmin ? (
+                    <Shield className="h-4 w-4" />
+                  ) : isEmployer ? (
+                    <Building2 className="h-4 w-4" />
+                  ) : (
+                    <User className="h-4 w-4" />
+                  )}
+                  <span>{primaryLabel}</span>
                 </Link>
                 <button
                   type="button"
@@ -168,67 +250,7 @@ export default function Navbar() {
                   <LogOut className="h-4 w-4" />
                   <span>Sign Out</span>
                 </button>
-              </>
-            ) : isEmployer && user ? (
-              <>
-                <div className="flex items-center gap-2.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-900 shadow-sm">
-                  <Building2 className="h-4 w-4 text-blue-700 shrink-0" />
-                  <div className="flex flex-col text-left">
-                    <span className="font-bold text-blue-950">
-                      {user.companyName || user.name}
-                    </span>
-                    <span className="text-[10px] text-blue-700">
-                      Employer Partner Account
-                    </span>
-                  </div>
-                </div>
-                <Link
-                  href="/employer"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-98"
-                >
-                  <Globe className="h-4 w-4" />
-                  <span>Return to Employer Portal</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 shadow-sm"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign Out</span>
-                </button>
-              </>
-            ) : isCandidate && user ? (
-              <>
-                <div className="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900 shadow-sm">
-                  <span className="avatar shrink-0" aria-hidden="true">
-                    {user.name.slice(0, 2).toUpperCase()}
-                  </span>
-                  <div className="flex flex-col text-left">
-                    <span className="font-bold text-emerald-950">{user.name}</span>
-                    <span className="text-[10px] text-emerald-700">
-                      {user.city ? `${user.city} • ` : ""}Candidate Workspace
-                    </span>
-                  </div>
-                </div>
-                <Link
-                  href="/account"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-800 active:scale-98"
-                >
-                  <User className="h-4 w-4" />
-                  <span>Return to My Workspace</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 shadow-sm"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign Out</span>
-                </button>
-              </>
+              </div>
             ) : (
               <div className="flex flex-col gap-2 pt-1">
                 <Link
@@ -251,147 +273,164 @@ export default function Navbar() {
           </div>
         </nav>
 
-        {/* Right Side Desktop Auth & Role Controls */}
+        {/* Right Side Auth / User Circle Controls */}
         <div className="header-end">
-          <button
-            type="button"
-            onClick={() =>
-              window.dispatchEvent(
-                new CustomEvent("utare-open-video-walkthrough")
-              )
-            }
-            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50/90 px-2.5 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100 transition shadow-sm whitespace-nowrap"
-            title="Watch 2-Min Flow Demo"
-            aria-label="Watch interactive platform flow demo"
-          >
-            <Video className="h-3.5 w-3.5 text-amber-700" />
-            <span className="hidden sm:inline">Flow Demo</span>
-          </button>
-          {isAdmin ? (
-            <>
-              {/* Desktop Controls */}
-              <div className="hidden md:flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-900 shadow-sm">
-                  <Shield className="h-3.5 w-3.5 text-amber-700" />
-                  <span>
-                    {isSuperuser ? "Superuser:" : "Admin:"}{" "}
-                    {user?.name?.split(" ")[0] || "Facilitator"}
-                  </span>
+          {isAuthenticated && user ? (
+            <div className="relative" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((prev) => !prev)}
+                aria-expanded={userMenuOpen}
+                aria-haspopup="menu"
+                aria-label={`Account menu for ${user.name} (${roleTitle})`}
+                title={`${user.name} — ${roleTitle}`}
+                className="group relative flex items-center gap-1 rounded-full p-0.5 pr-1.5 hover:bg-slate-100/90 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              >
+                <span
+                  className={`relative flex h-9 w-9 items-center justify-center rounded-full border-2 font-extrabold text-sm shadow-sm transition group-hover:scale-105 ${avatarToneClass}`}
+                >
+                  {user.avatar ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <span>{firstInitial}</span>
+                  )}
+
+                  {/* Clean corner status/role badge on the circle */}
+                  {isAdmin ? (
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-amber-600 text-white shadow"
+                      title={isSuperuser ? "Superuser" : "Admin"}
+                    >
+                      <Shield className="h-2.5 w-2.5" />
+                    </span>
+                  ) : isEmployer ? (
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow"
+                      title="Employer Partner"
+                    >
+                      <Building2 className="h-2.5 w-2.5" />
+                    </span>
+                  ) : (
+                    <span
+                      className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 shadow"
+                      title="Candidate Active"
+                    />
+                  )}
                 </span>
-                <Link
-                  href="/admin"
-                  className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-amber-700"
-                >
-                  Admin Console
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  title="Sign Out"
-                  aria-label="Sign out"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700 transition shadow-sm"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">Sign Out</span>
-                </button>
-              </div>
+                <ChevronDown
+                  className={`h-3.5 w-3.5 text-slate-500 transition-transform ${
+                    userMenuOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
-              {/* Mobile Quick Icon (< 768px) */}
-              <Link
-                href="/admin"
-                className="md:hidden flex items-center justify-center h-8 w-8 rounded-lg bg-amber-100 border border-amber-300 text-amber-900 shadow-sm"
-                title="Admin Console"
-                aria-label="Admin Console"
-              >
-                <Shield className="h-4 w-4" />
-              </Link>
-            </>
-          ) : isEmployer && user ? (
-            <>
-              {/* Desktop Controls */}
-              <div className="hidden md:flex items-center gap-2">
-                <Link
-                  href="/employer"
-                  className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50/80 px-2.5 py-1.5 text-xs font-semibold text-blue-900 hover:bg-blue-100 transition shadow-sm"
+              {userMenuOpen && (
+                <div
+                  role="menu"
+                  aria-label="User profile and console status"
+                  className="absolute right-0 top-12 z-50 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150"
                 >
-                  <Building2 className="h-3.5 w-3.5 text-blue-700 shrink-0" />
-                  <span className="font-bold max-w-[120px] truncate">
-                    {user.companyName || user.name}
-                  </span>
-                </Link>
-                <Link
-                  href="/employer"
-                  className="rounded-lg bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800"
-                >
-                  Employer Portal
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  title="Sign Out"
-                  aria-label="Sign out"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700 transition shadow-sm"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">Sign Out</span>
-                </button>
-              </div>
+                  <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                    <span
+                      className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 font-extrabold text-base ${avatarToneClass}`}
+                    >
+                      {user.avatar ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <span>{firstInitial}</span>
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-slate-900">
+                        {user.name}
+                      </p>
+                      <p className="truncate text-[11px] text-slate-500">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
 
-              {/* Mobile Quick Icon (< 768px) */}
-              <Link
-                href="/employer"
-                className="md:hidden flex items-center justify-center h-8 w-8 rounded-lg bg-blue-100 border border-blue-300 text-blue-900 shadow-sm"
-                title="Employer Portal"
-                aria-label="Employer Portal"
-              >
-                <Building2 className="h-4 w-4" />
-              </Link>
-            </>
-          ) : isCandidate && user ? (
-            <>
-              {/* Desktop Controls */}
-              <div className="hidden md:flex items-center gap-2">
-                <Link
-                  href="/account"
-                  className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/80 px-2.5 py-1 text-xs font-semibold text-emerald-900 hover:bg-emerald-100 transition shadow-sm"
-                >
-                  <span className="avatar" aria-hidden="true">
-                    {user.name.slice(0, 2).toUpperCase()}
-                  </span>
-                  <span className="font-bold max-w-[120px] truncate">{user.name}</span>
-                </Link>
-                <Link
-                  href="/account"
-                  className="button button-green"
-                  style={{ minHeight: "36px", padding: "0 14px", fontSize: "11.5px" }}
-                >
-                  My Workspace
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  title="Sign Out"
-                  aria-label="Sign out"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700 transition shadow-sm"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">Sign Out</span>
-                </button>
-              </div>
+                  <div className="my-3 rounded-xl border border-slate-100 bg-slate-50/90 p-2.5 space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      {isAdmin ? (
+                        <Shield className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                      ) : isEmployer ? (
+                        <Building2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                      ) : (
+                        <User className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      )}
+                      <span
+                        className={`text-[11px] font-bold ${
+                          isAdmin
+                            ? "text-amber-900"
+                            : isEmployer
+                            ? "text-blue-900"
+                            : "text-emerald-900"
+                        }`}
+                      >
+                        {roleTitle}
+                      </span>
+                    </div>
+                    <p className="text-[11px] leading-snug text-slate-600">
+                      {roleSubtitle}
+                    </p>
+                  </div>
 
-              {/* Mobile Quick Avatar (< 768px) */}
-              <Link
-                href="/account"
-                className="md:hidden flex items-center justify-center h-8 w-8 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-900 font-bold text-xs shadow-sm"
-                title="My Workspace"
-                aria-label="My Workspace"
-              >
-                {user.name.slice(0, 2).toUpperCase()}
-              </Link>
-            </>
+                  <div className="flex flex-col gap-1.5">
+                    <Link
+                      href={primaryHref}
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                      className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs font-bold text-white transition ${
+                        isAdmin
+                          ? "bg-amber-600 hover:bg-amber-700"
+                          : isEmployer
+                          ? "bg-slate-900 hover:bg-slate-800"
+                          : "bg-emerald-700 hover:bg-emerald-800"
+                      }`}
+                    >
+                      <span>{primaryLabel}</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+
+                    {!isAdmin && !isEmployer && (
+                      <Link
+                        href="/assessment"
+                        role="menuitem"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                      >
+                        <span>Career Diagnostic</span>
+                        <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
+                      </Link>
+                    )}
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      className="mt-1 flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50/80 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 transition"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <>
-              {/* Desktop Controls */}
+              {/* Desktop Auth Links */}
               <div className="hidden md:flex items-center gap-2">
                 <Link href="/login" className="signin-link whitespace-nowrap">
                   Sign In
@@ -405,7 +444,7 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              {/* Mobile Quick Sign In (< 768px) */}
+              {/* Mobile Quick Sign In */}
               <Link
                 href="/login"
                 className="md:hidden text-xs font-bold text-emerald-700 px-2 py-1 hover:underline"
@@ -431,14 +470,6 @@ export default function Navbar() {
           </button>
         </div>
       </div>
-
-      {isAdmin && (
-        <div className="border-t border-amber-200 bg-amber-50/95 px-4 py-1 text-center text-[11px] font-semibold text-amber-900">
-          🛠️ {isSuperuser ? "Superuser" : "Facilitator & Admin"} Console Active
-          — Employer verification, hub enlistment, job moderation &amp; cohort
-          oversight enabled.
-        </div>
-      )}
     </header>
   );
 }

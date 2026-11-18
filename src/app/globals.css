@@ -142,11 +142,25 @@ main {
 .main-nav {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex: 1 1 auto;
+  justify-content: flex-start;
+  flex: 1 1 0%;
   min-width: 0;
-  gap: 2px;
-  margin: auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: 4px;
+  margin: 0;
+  padding: 2px 6px;
+}
+.main-nav::-webkit-scrollbar {
+  display: none;
+}
+@media (min-width: 1041px) {
+  .main-nav > a:first-child {
+    margin-left: auto;
+  }
+  .main-nav > a:last-of-type {
+    margin-right: auto;
+  }
 }
 .main-nav a {
   padding: 7px 9px;
@@ -1736,6 +1750,7 @@ main {
     top: 64px;
     left: 0;
     right: 0;
+    overflow-x: visible;
     padding: 14px 16px 18px;
     background: white;
     border-bottom: 1px solid var(--line);

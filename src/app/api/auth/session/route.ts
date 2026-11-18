@@ -39,6 +39,7 @@ export async function GET(req: NextRequest) {
         candidate?.profile.highestQualification || session.qualification,
       fieldOfStudy:
         candidate?.profile.fieldOfStudy || session.fieldOfStudy,
+      avatar: candidate?.profile.avatarDataUrl || undefined,
     },
   });
 
