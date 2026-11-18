@@ -28,38 +28,38 @@ const CHALLENGES = [
 const TEAM_MEMBERS = [
   {
     num: "01",
+    role: "TEAM LEAD · CANDIDATE INTAKE & PARTNER HUBS",
+    name: "Munashe Mugonda",
+    bio: "Team Lead driving overall coordination, candidate diagnostic intake workflows, and partner innovation hub mapping across Harare, Bulawayo, Mutare, Gweru, and Masvingo.",
+  },
+  {
+    num: "02",
     role: "PLATFORM ARCHITECTURE & AI ENGINE",
     name: "Stewart Mangezi",
     bio: "Leads candidate account workflows, 6-factor readiness diagnostics, Gemini AI career pathway synthesis, human coach pairing, and containerized infrastructure.",
   },
   {
-    num: "02",
+    num: "03",
     role: "FRONTEND EXPERIENCE, UI & USER TESTING",
-    name: "Future Wenzira",
+    name: "Future",
     bio: "Co-designed the UTARE visual identity, typography, interactive candidate journey walkthrough, opportunities explorer, accessibility feedback, and responsive interface architecture.",
   },
   {
-    num: "03",
-    role: "FRONTEND ARCHITECTURE & DATABASE",
-    name: "Amanda",
-    bio: "Co-leads frontend UI design, user experience polish, partner hub directory layouts, and PostgreSQL / Supabase schema structure.",
-  },
-  {
     num: "04",
-    role: "CANDIDATE INTAKE & PARTNER HUBS",
-    name: "Munashe",
-    bio: "Leads candidate diagnostic intake workflows and partner innovation hub mapping across Harare, Bulawayo, Mutare, Gweru, and Masvingo.",
+    role: "FRONTEND ARCHITECTURE & DATABASE",
+    name: "Amanda Mukute",
+    bio: "Co-leads frontend UI design, user experience polish, partner hub directory layouts, and PostgreSQL / Supabase schema structure.",
   },
   {
     num: "05",
     role: "MARKET VALIDATION & REMOTE JOBS",
-    name: "Kudakwashe",
+    name: "Kudakwashe Maganzu",
     bio: "Leads competitor analysis, market validation, and curation criteria for verified remote work opportunities and payment rails.",
   },
   {
     num: "06",
     role: "STORYTELLING, STRATEGY & PARTNERSHIPS",
-    name: "Bheki",
+    name: "Bheki Ndlovu",
     bio: "Leads strategic ecosystem partnerships, sustainable business model design, empirical user journey storytelling, and employer and mentor outreach across Zimbabwe.",
   },
 ];
