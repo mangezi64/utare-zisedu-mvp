@@ -29,6 +29,8 @@ import {
   RefreshCw,
   User,
   Lock,
+  Flag,
+  AlertTriangle,
 } from "lucide-react";
 
 const FALLBACK_CANDIDATE_PROFILE: CandidateProfile = {
@@ -94,6 +96,15 @@ export default function RemoteJobsPage() {
   const [downloadingDocx, setDownloadingDocx] = useState<string | null>(null);
   const [copiedLabel, setCopiedLabel] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [shareWithEmployer, setShareWithEmployer] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [reportingJob, setReportingJob] = useState<RemoteJob | null>(null);
+  const [reportReason, setReportReason] = useState(
+    "Asks for upfront fee or payment"
+  );
+  const [reportDetails, setReportDetails] = useState("");
+  const [submittingReport, setSubmittingReport] = useState(false);
+  const [safetyBanner, setSafetyBanner] = useState<string | null>(null);
 
   useEffect(() => {
     const candidateQuery = user?.email
@@ -135,7 +146,20 @@ export default function RemoteJobsPage() {
   }, [user]);
 
   const currentProfile: CandidateProfile =
-    activeCandidate?.profile || FALLBACK_CANDIDATE_PROFILE;
+    activeCandidate?.profile ||
+    (user?.name
+      ? {
+          ...FALLBACK_CANDIDATE_PROFILE,
+          fullName: user.name,
+          email: user.email || FALLBACK_CANDIDATE_PROFILE.email,
+          city: (user.city as any) || FALLBACK_CANDIDATE_PROFILE.city,
+          highestQualification:
+            (user.qualification as any) ||
+            FALLBACK_CANDIDATE_PROFILE.highestQualification,
+          fieldOfStudy:
+            user.fieldOfStudy || FALLBACK_CANDIDATE_PROFILE.fieldOfStudy,
+        }
+      : FALLBACK_CANDIDATE_PROFILE);
   const currentHubName: string =
     activeCandidate?.pathway.recommendedHub.name ||
     "Impact Hub Harare — Utare Node";
@@ -143,6 +167,8 @@ export default function RemoteJobsPage() {
   async function handleOpenStudio(job: RemoteJob) {
     setActiveJob(job);
     setStudioTab("cv");
+    setShareWithEmployer(false);
+    setSubmitError(null);
     setTimeout(() => {
       studioRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 80);
@@ -245,6 +271,13 @@ export default function RemoteJobsPage() {
       return;
     }
     if (!activeJob || !generatedDocs) return;
+    if (!shareWithEmployer) {
+      setSubmitError(
+        "Please toggle on consent to share your profile and application with this employer before submitting."
+      );
+      return;
+    }
+    setSubmitError(null);
     setSubmitting(true);
     try {
       const res = await fetch("/api/jobs", {
@@ -259,16 +292,96 @@ export default function RemoteJobsPage() {
             currentProfile.fullName || user?.name || "Utare Candidate",
           generatedCv: generatedDocs.cv,
           generatedCoverLetter: generatedDocs.coverLetter,
+          sharedWithEmployer: true,
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setSubmitError(data.error || "Could not submit your application.");
+        return;
+      }
       if (data.application) {
         setApplications([data.application, ...applications]);
         setActiveJob(null);
+        setShareWithEmployer(false);
       }
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function handleSubmitSafetyReport(e: React.FormEvent) {
+    e.preventDefault();
+    if (!reportingJob) return;
+    setSubmittingReport(true);
+    try {
+      const res = await fetch("/api/jobs/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          jobId: reportingJob.id,
+          reason: reportReason,
+          details: reportDetails.trim(),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setJobs((prev) => prev.filter((j) => j.id !== reportingJob.id));
+        if (activeJob?.id === reportingJob.id) {
+          setActiveJob(null);
+        }
+        setSafetyBanner(
+          data.message ||
+            "Listing reported, taken off the platform immediately, and escalated to Superusers for safety review."
+        );
+        setReportingJob(null);
+        setReportDetails("");
+      } else {
+        setSafetyBanner(data.error || "Please sign in to report a listing.");
+      }
+    } finally {
+      setSubmittingReport(false);
+    }
+  }
+
+  function evaluateJobQualification(job: RemoteJob): {
+    qualified: boolean;
+    reasons: string[];
+  } | null {
+    if (!activeCandidate?.assessment?.readinessTier) return null;
+    const tierRank = (tier: string) => {
+      const lower = tier.toLowerCase();
+      if (lower.includes("market-ready")) return 3;
+      if (lower.includes("bridge-ready")) return 2;
+      return 1;
+    };
+    const candTier = activeCandidate.assessment.readinessTier;
+    const requiredTier = job.minReadinessTier || "Bridge-Ready";
+    const candSkills = (activeCandidate.profile.currentSkills || []).map((s) =>
+      s.toLowerCase()
+    );
+    const missingSkills = job.requiredSkills.filter(
+      (req) =>
+        !candSkills.some(
+          (cs) => cs.includes(req.toLowerCase()) || req.toLowerCase().includes(cs)
+        )
+    );
+    const reasons: string[] = [];
+    if (tierRank(candTier) < tierRank(requiredTier)) {
+      reasons.push(
+        `Requires "${requiredTier}" tier (your current AI tier is "${candTier}").`
+      );
+    }
+    if (missingSkills.length > 0) {
+      reasons.push(
+        `Missing listed skills on profile: ${missingSkills.slice(0, 3).join(", ")}.`
+      );
+    }
+    return {
+      qualified: reasons.length === 0,
+      reasons,
+    };
   }
 
   const rails = ["All", "Deel", "Payoneer", "Wise", "USD Wire (Nostro)"];
@@ -1025,29 +1138,157 @@ export default function RemoteJobsPage() {
                 )}
 
                 {/* Submit Application Footer */}
-                <div className="no-print flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-4">
-                  <div className="text-xs text-slate-600">
-                    <strong>Anti-Slop Audit:</strong>{" "}
-                    {generatedDocs.styleReport.coverLetter.notes.join(" ")} (Avg
-                    sentence: {generatedDocs.styleReport.coverLetter.avgSentenceLength}{" "}
-                    words)
+                <div className="no-print space-y-4 border-t border-slate-200 pt-4">
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 space-y-2">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={shareWithEmployer}
+                        onChange={(e) => {
+                          setShareWithEmployer(e.target.checked);
+                          if (e.target.checked) setSubmitError(null);
+                        }}
+                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-600"
+                      />
+                      <span className="text-xs text-slate-800 leading-relaxed">
+                        <strong>
+                          Share my information and application with {activeJob.company}
+                        </strong>{" "}
+                        — Toggle on to allow {activeJob.company} to view your
+                        name, email, city, qualification, skills, tailored CV,
+                        and cover letter. Your phone number and hardware/power
+                        details are <strong>never</strong> shared.
+                      </span>
+                    </label>
+                    {submitError && (
+                      <p className="text-xs font-semibold text-rose-700 pl-7">
+                        {submitError}
+                      </p>
+                    )}
                   </div>
-                  <button
-                    type="button"
-                    disabled={submitting}
-                    onClick={handleSubmitApplication}
-                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
-                  >
-                    <Send className="h-4 w-4" />
-                    {submitting
-                      ? "Submitting Application..."
-                      : `Mark Applied to ${activeJob.company}`}
-                  </button>
+
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="text-xs text-slate-600">
+                      <strong>Anti-Slop Audit:</strong>{" "}
+                      {generatedDocs.styleReport.coverLetter.notes.join(" ")} (Avg
+                      sentence: {generatedDocs.styleReport.coverLetter.avgSentenceLength}{" "}
+                      words)
+                    </div>
+                    <button
+                      type="button"
+                      disabled={submitting || !shareWithEmployer}
+                      onClick={handleSubmitApplication}
+                      className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-45 disabled:cursor-not-allowed transition"
+                    >
+                      <Send className="h-4 w-4" />
+                      {submitting
+                        ? "Submitting Application..."
+                        : `Submit & Share with ${activeJob.company}`}
+                    </button>
+                  </div>
                 </div>
               </>
             )
           )}
         </section>
+      )}
+
+      {/* Safety Report Confirmation Banner */}
+      {safetyBanner && (
+        <div className="no-print rounded-2xl border border-amber-300 bg-amber-50 p-4 flex items-center justify-between gap-3 text-xs text-amber-950">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-700 shrink-0" />
+            <span>{safetyBanner}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSafetyBanner(null)}
+            className="font-bold text-amber-900 hover:underline shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Report Suspicious / Unsafe Job Modal */}
+      {reportingJob && (
+        <div className="no-print rounded-2xl border-2 border-rose-300 bg-rose-50/70 p-6 shadow-md space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-rose-950 flex items-center gap-1.5">
+                <Flag className="h-4 w-4 text-rose-600" />
+                Report Listing for Safety Review: {reportingJob.title} ({reportingJob.company})
+              </h3>
+              <p className="text-xs text-rose-900 mt-0.5">
+                Submitting a report immediately takes this listing off the platform and escalates it to Superusers to evaluate before allowing it back or permanently removing it.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReportingJob(null)}
+              className="text-xs font-semibold text-slate-600 hover:text-slate-900"
+            >
+              Cancel ✕
+            </button>
+          </div>
+          <form onSubmit={handleSubmitSafetyReport} className="space-y-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-800 mb-1">
+                Reason for Report
+              </label>
+              <select
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs"
+              >
+                <option value="Asks for upfront fee or payment">
+                  Asks for upfront fee, deposit, or money
+                </option>
+                <option value="Suspicious external link or phishing">
+                  Suspicious external link or phishing attempt
+                </option>
+                <option value="Misleading pay or fake employer">
+                  Misleading pay or fake company details
+                </option>
+                <option value="Unsafe or inappropriate contact">
+                  Unsafe work or inappropriate contact request
+                </option>
+                <option value="Other safety concern">Other safety concern</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-800 mb-1">
+                Additional Details (Optional)
+              </label>
+              <textarea
+                rows={2}
+                value={reportDetails}
+                onChange={(e) => setReportDetails(e.target.value)}
+                placeholder="Describe what looks suspicious or unsafe..."
+                className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-xs"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setReportingJob(null)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submittingReport}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-rose-700 px-4 py-1.5 text-xs font-bold text-white hover:bg-rose-800 disabled:opacity-50"
+              >
+                <Flag className="h-3.5 w-3.5" />
+                {submittingReport
+                  ? "Taking Off Platform..."
+                  : "Take Off Platform & Escalate to Superuser"}
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
       {/* Payment Rail Filter */}
@@ -1075,6 +1316,7 @@ export default function RemoteJobsPage() {
       <div className="no-print grid gap-6 lg:grid-cols-2">
         {filteredJobs.map((job) => {
           const alreadyApplied = applications.some((a) => a.jobId === job.id);
+          const aiCheck = evaluateJobQualification(job);
 
           return (
             <div
@@ -1170,30 +1412,70 @@ export default function RemoteJobsPage() {
                   )}
                 </div>
 
-                {alreadyApplied ? (
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs font-bold text-emerald-800">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Application Submitted
+                {aiCheck && (
+                  <div
+                    className={`rounded-xl border p-3 text-[11px] space-y-1 ${
+                      aiCheck.qualified
+                        ? "border-emerald-200 bg-emerald-50/50 text-emerald-900"
+                        : "border-amber-200 bg-amber-50/60 text-amber-950"
+                    }`}
+                  >
+                    <div className="font-bold">
+                      {aiCheck.qualified
+                        ? "✓ AI Qualification Check: Meets Role Tier & Core Skills"
+                        : "AI Qualification Check — Why AI Flags a Gap:"}
                     </div>
+                    {!aiCheck.qualified && (
+                      <ul className="list-disc pl-4 space-y-0.5">
+                        {aiCheck.reasons.map((r) => (
+                          <li key={r}>{r}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <div className="text-[10px] opacity-80">
+                      Advisory only — you may still apply; employers reserve final decision and feedback discretion.
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  {alreadyApplied ? (
+                    <div className="flex-1 flex items-center justify-between gap-2">
+                      <div className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs font-bold text-emerald-800">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Application Submitted
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenStudio(job)}
+                        className="rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        View CV &amp; Letter
+                      </button>
+                    </div>
+                  ) : (
                     <button
                       type="button"
                       onClick={() => handleOpenStudio(job)}
-                      className="rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-800"
                     >
-                      View CV & Letter
+                      <Sparkles className="h-4 w-4 text-emerald-400" />
+                      Generate Structured CV &amp; Application Letter
                     </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleOpenStudio(job)}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-800"
-                  >
-                    <Sparkles className="h-4 w-4 text-emerald-400" />
-                    Generate Structured CV & Application Letter (.docx / PDF)
-                  </button>
-                )}
+                  )}
+
+                  {isAuthenticated && (
+                    <button
+                      type="button"
+                      onClick={() => setReportingJob(job)}
+                      title="Report suspicious, misleading, or unsafe listing"
+                      className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition"
+                    >
+                      <Flag className="h-3.5 w-3.5" />
+                      Report
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );

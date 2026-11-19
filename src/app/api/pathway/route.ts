@@ -58,8 +58,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Bind profile email to authenticated candidate session when logged in as candidate
-    if (session && session.role === "candidate") {
+    // Bind profile email to authenticated non-admin session; only persist for signed-in candidates/admins
+    const isAdmin =
+      session?.role === "admin" || session?.role === "superuser";
+    const canPersist =
+      Boolean(session) &&
+      (session?.role === "candidate" || isAdmin);
+
+    if (session && !isAdmin) {
       profile.email = session.email;
     }
 
@@ -68,6 +74,16 @@ export async function POST(req: NextRequest) {
 
     // 2. Generate AI Career Pathway + Human Coach Pairing + Hub Match
     const pathway = await generateAICareerPathway(profile, assessment);
+
+    if (!canPersist) {
+      return NextResponse.json({
+        record: null,
+        assessment,
+        pathway,
+        savedToDatabase: false,
+        savedToSupabase: false,
+      });
+    }
 
     // 3. Persist to Unified End-to-End Store
     const savedRecord = saveCandidateEndToEnd(profile, assessment, pathway);

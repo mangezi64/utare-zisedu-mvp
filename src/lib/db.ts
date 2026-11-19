@@ -17,27 +17,42 @@ const connectionString =
   "postgresql://utare_user:utare_password@localhost:5432/utare_db";
 
 let pool: Pool | null = null;
-let schemaMigrated = false;
+let schemaMigrationPromise: Promise<void> | null = null;
 
 const AUTO_MIGRATION_SQL = `
 ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS avatar_data_url TEXT;
 ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS updated_by TEXT;
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS inactivity_notices_sent INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS last_inactivity_notice_at TIMESTAMPTZ;
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS remain_confirmed_at TIMESTAMPTZ;
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS data_policy_accepted_at TIMESTAMPTZ;
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS data_policy_version TEXT;
 
 ALTER TABLE IF EXISTS public.candidate_profiles ADD COLUMN IF NOT EXISTS avatar_data_url TEXT;
 ALTER TABLE IF EXISTS public.candidate_profiles ADD COLUMN IF NOT EXISTS include_photo_on_cv BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE IF EXISTS public.candidate_profiles ADD COLUMN IF NOT EXISTS updated_by TEXT;
+ALTER TABLE IF EXISTS public.candidate_profiles ADD COLUMN IF NOT EXISTS can_work_remotely BOOLEAN;
+ALTER TABLE IF EXISTS public.candidate_profiles ADD COLUMN IF NOT EXISTS hub_support_need TEXT;
 
 ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS company_website TEXT;
 ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS external_role_url TEXT;
 ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS attachment_documents JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS updated_by TEXT;
+ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS reports JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS reported_at TIMESTAMPTZ;
+ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS reported_reason TEXT;
+ALTER TABLE IF EXISTS public.remote_jobs ADD COLUMN IF NOT EXISTS moderation_notes TEXT;
 
 ALTER TABLE IF EXISTS public.job_applications ADD COLUMN IF NOT EXISTS attached_document_ids TEXT[] DEFAULT '{}';
 ALTER TABLE IF EXISTS public.job_applications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE IF EXISTS public.job_applications ADD COLUMN IF NOT EXISTS updated_by TEXT;
 ALTER TABLE IF EXISTS public.job_applications ADD COLUMN IF NOT EXISTS status_history JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE IF EXISTS public.job_applications ADD COLUMN IF NOT EXISTS shared_with_employer BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE IF EXISTS public.job_applications ADD COLUMN IF NOT EXISTS consent_timestamp TIMESTAMPTZ;
+ALTER TABLE IF EXISTS public.job_applications ADD COLUMN IF NOT EXISTS employer_feedback_note TEXT;
 
 ALTER TABLE IF EXISTS public.employer_registrations ADD COLUMN IF NOT EXISTS career_page_url TEXT;
 ALTER TABLE IF EXISTS public.employer_registrations ADD COLUMN IF NOT EXISTS shared_documents JSONB DEFAULT '[]'::jsonb;
@@ -109,14 +124,17 @@ function getPool(): Pool {
 }
 
 export async function ensureDatabaseSchema(): Promise<void> {
-  if (schemaMigrated) return;
-  schemaMigrated = true;
-  try {
-    const p = getPool();
-    await p.query(AUTO_MIGRATION_SQL);
-  } catch {
-    // Non-fatal if running in fallback mode without direct PG socket
+  if (!schemaMigrationPromise) {
+    schemaMigrationPromise = (async () => {
+      try {
+        const p = getPool();
+        await p.query(AUTO_MIGRATION_SQL);
+      } catch {
+        // Non-fatal if running in fallback mode without direct PG socket
+      }
+    })();
   }
+  await schemaMigrationPromise;
 }
 
 export async function query<T extends QueryResultRow = any>(

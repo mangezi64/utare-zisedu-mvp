@@ -20,16 +20,9 @@ import {
 import { useViewMode } from "@/lib/view-mode-context";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
 import PasswordInput from "@/components/PasswordInput";
+import PasswordStrengthBox from "@/components/PasswordStrengthBox";
 import { validateEmail, validatePassword } from "@/lib/validation";
 import { resolvePostLoginDestination } from "@/lib/bootstrap-roles";
-
-const STRENGTH_STYLES: Record<string, { bar: string; text: string }> = {
-  "Too Weak": { bar: "bg-slate-200", text: "text-slate-500" },
-  Weak: { bar: "bg-red-500", text: "text-red-600" },
-  Fair: { bar: "bg-amber-500", text: "text-amber-600" },
-  Good: { bar: "bg-lime-500", text: "text-lime-700" },
-  Strong: { bar: "bg-emerald-600", text: "text-emerald-700" },
-};
 
 function LoginForm() {
   const router = useRouter();
@@ -71,6 +64,8 @@ function LoginForm() {
   const [hiringModel, setHiringModel] = useState("100% Remote Contract");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [regAttempted, setRegAttempted] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
   const [registerSuccess, setRegisterSuccess] = useState("");
   const [confirmationPath, setConfirmationPath] = useState<string | null>(null);
   const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState<string | null>(null);
@@ -107,6 +102,7 @@ function LoginForm() {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetFullName, setResetFullName] = useState("");
   const [resetNewPassword, setResetNewPassword] = useState("");
+  const [resetAttempted, setResetAttempted] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
   const [resetSuccessMsg, setResetSuccessMsg] = useState("");
 
@@ -114,6 +110,7 @@ function LoginForm() {
     e.preventDefault();
     setLoginError("");
     setResetSuccessMsg("");
+    setResetAttempted(true);
     if (!loginEmail.trim() || !resetFullName.trim() || !resetNewPassword) {
       setLoginError(
         "Please enter your registered email, full name, and new password."
@@ -122,7 +119,15 @@ function LoginForm() {
     }
     const pwCheck = validatePassword(resetNewPassword);
     if (!pwCheck.isValid) {
-      setLoginError(pwCheck.error || "Please choose a stronger password.");
+      const missing = pwCheck.requirements
+        .filter((r) => !r.met)
+        .map((r) => r.label)
+        .join(", ");
+      setLoginError(
+        missing
+          ? `Password is missing: ${missing}.`
+          : pwCheck.error || "Please choose a stronger password."
+      );
       return;
     }
     setResettingPassword(true);
@@ -148,6 +153,7 @@ function LoginForm() {
       setLoginPassword(resetNewPassword);
       setShowResetPassword(false);
       setResetNewPassword("");
+      setResetAttempted(false);
     } catch {
       setLoginError("Could not reach the server. Please try again.");
     } finally {
@@ -214,6 +220,7 @@ function LoginForm() {
     setLoginError("");
     setRegisterSuccess("");
     setConfirmationPath(null);
+    setRegAttempted(true);
 
     if (!fullName.trim() || !regEmail || !regPassword) {
       setLoginError("Please complete all required fields.");
@@ -234,12 +241,32 @@ function LoginForm() {
 
     const pwCheck = validatePassword(regPassword);
     if (!pwCheck.isValid) {
-      setLoginError(pwCheck.error || "Please choose a stronger password.");
+      const missing = pwCheck.requirements
+        .filter((r) => !r.met)
+        .map((r) => r.label)
+        .join(", ");
+      setLoginError(
+        missing
+          ? `Password is missing: ${missing}.`
+          : pwCheck.error || "Please choose a stronger password."
+      );
+      setTimeout(() => {
+        document
+          .getElementById("reg-password-box")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 40);
       return;
     }
 
     if (regPassword !== regConfirmPassword) {
       setLoginError("Passwords do not match.");
+      return;
+    }
+
+    if (!consentAccepted) {
+      setLoginError(
+        "Please read and confirm the data & retention notice before creating your account."
+      );
       return;
     }
 
@@ -253,6 +280,7 @@ function LoginForm() {
           fullName: fullName.trim(),
           email: regEmail.trim().toLowerCase(),
           password: regPassword,
+          dataPolicyAccepted: consentAccepted,
           ...(accountType === "employer"
             ? {
                 companyName: companyName.trim(),
@@ -638,10 +666,19 @@ function LoginForm() {
                     <PasswordInput
                       value={resetNewPassword}
                       onChange={setResetNewPassword}
-                      placeholder="Min 8 chars, upper, lower & number"
+                      placeholder="Min 8 chars, upper, lower, number & symbol"
                       autoComplete="new-password"
+                      invalid={
+                        resetAttempted && !validatePassword(resetNewPassword).isValid
+                      }
                     />
                   </div>
+
+                  <PasswordStrengthBox
+                    id="reset-password-box"
+                    password={resetNewPassword}
+                    showIssues={resetAttempted}
+                  />
 
                   <div className="flex items-center gap-2 pt-1">
                     <button
@@ -766,6 +803,7 @@ function LoginForm() {
                     onChange={setRegPassword}
                     placeholder="Create password"
                     autoComplete="new-password"
+                    invalid={regAttempted && !pwStrength.isValid}
                   />
                 </div>
 
@@ -777,7 +815,10 @@ function LoginForm() {
                     onChange={setRegConfirmPassword}
                     placeholder="Re-enter password"
                     autoComplete="new-password"
-                    invalid={confirmMismatch}
+                    invalid={
+                      confirmMismatch ||
+                      (regAttempted && !regConfirmPassword)
+                    }
                   />
                   {confirmMismatch && (
                     <p className="text-[11px] text-red-600 m-0">
@@ -787,45 +828,11 @@ function LoginForm() {
                 </div>
               </div>
 
-              {regPassword.length > 0 && (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
-                  <div className="flex items-center justify-between text-[11px] font-semibold">
-                    <span className="text-slate-600">Password strength</span>
-                    <span className={STRENGTH_STYLES[pwStrength.label].text}>
-                      {pwStrength.label}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-1">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div
-                        key={i}
-                        className={`h-1.5 rounded-full ${
-                          pwStrength.score >= i
-                            ? STRENGTH_STYLES[pwStrength.label].bar
-                            : "bg-slate-200"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-                    {pwStrength.requirements.map((r) => (
-                      <li
-                        key={r.id}
-                        className={`flex items-center gap-1.5 text-[11px] ${
-                          r.met ? "text-emerald-700" : "text-slate-500"
-                        }`}
-                      >
-                        <CheckCircle2
-                          className={`h-3.5 w-3.5 ${
-                            r.met ? "text-emerald-600" : "text-slate-300"
-                          }`}
-                        />
-                        {r.label}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <PasswordStrengthBox
+                id="reg-password-box"
+                password={regPassword}
+                showIssues={regAttempted}
+              />
 
               {accountType === "candidate" ? (
                 <>
@@ -912,14 +919,43 @@ function LoginForm() {
                 </div>
               )}
 
+              <div
+                className={`rounded-xl border p-3 text-[11px] space-y-1.5 transition-colors ${
+                  regAttempted && !consentAccepted
+                    ? "border-2 border-red-400 bg-red-50 text-red-900"
+                    : "border-slate-200 bg-slate-50 text-slate-700"
+                }`}
+              >
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={consentAccepted}
+                    onChange={(e) => setConsentAccepted(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-700"
+                  />
+                  <span className="leading-relaxed">
+                    I have read and accept the{" "}
+                    <Link
+                      href="/data-policy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-emerald-800 underline hover:text-emerald-950"
+                    >
+                      UTARE Data Policy &amp; Privacy Notice
+                    </Link>{" "}
+                    (aligned with Zimbabwe&apos;s Cyber and Data Protection Act
+                    [Chapter 12:07]): my data is used only for remote readiness
+                    and matching, never shared with an employer unless I toggle
+                    sharing on, retained only while active (3 email notices after
+                    1 year of inactivity before removal), and I can permanently
+                    delete my account at any time.
+                  </span>
+                </label>
+              </div>
+
               <button
                 type="submit"
-                disabled={
-                  isSubmitting ||
-                  !pwStrength.isValid ||
-                  confirmMismatch ||
-                  !regConfirmPassword
-                }
+                disabled={isSubmitting}
                 className="button button-wide button-green disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting

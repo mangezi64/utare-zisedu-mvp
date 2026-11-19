@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminRequest, adminUnauthorizedResponse } from "@/lib/auth-guard";
+import {
+  adminUnauthorizedResponse,
+  getSessionFromRequest,
+  isAdminRequest,
+  isSuperuserRequest,
+} from "@/lib/auth-guard";
 import {
   addJobToStore,
   deleteJobFromStore,
+  moderateReportedJob,
   readStore,
   updateJobStatus,
 } from "@/lib/store";
@@ -80,7 +86,10 @@ const SAMPLE_AI_DISCOVERIES: Omit<RemoteJob, "id">[] = [
 ];
 
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!(await isAdminRequest(req))) {
+    return adminUnauthorizedResponse();
+  }
   const state = readStore();
   return NextResponse.json({
     total: state.jobs.length,
@@ -261,7 +270,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!(await isAdminRequest(req))) {
+  const session = await getSessionFromRequest(req);
+  if (!session || (session.role !== "admin" && session.role !== "superuser")) {
     return NextResponse.json(
       { error: "Unauthorized. Admin/Facilitator privileges required." },
       { status: 401 }
@@ -269,6 +279,50 @@ export async function PATCH(req: NextRequest) {
   }
   try {
     const body = await req.json();
+
+    // Superuser-only evaluation of reported/flagged listings
+    if (body.action === "evaluate_report") {
+      if (session.role !== "superuser") {
+        return NextResponse.json(
+          {
+            error:
+              "Only a Superuser can evaluate, restore, or permanently remove a reported listing.",
+          },
+          { status: 403 }
+        );
+      }
+
+      const jobId = String(body.jobId || "").trim();
+      const decision = body.decision as "restore" | "remove";
+      const note = body.note ? String(body.note) : undefined;
+      if (!jobId || (decision !== "restore" && decision !== "remove")) {
+        return NextResponse.json(
+          { error: "jobId and decision ('restore' | 'remove') are required." },
+          { status: 400 }
+        );
+      }
+
+      const result = moderateReportedJob({
+        jobId,
+        decision,
+        superuserEmail: session.email,
+        note,
+      });
+
+      if (!result) {
+        return NextResponse.json({ error: "Job not found." }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        ...result,
+        message:
+          decision === "remove"
+            ? "Listing confirmed wrong/scam and permanently removed from the platform."
+            : "Listing evaluated and restored to the public job board.",
+      });
+    }
+
     const { jobId, status } = body;
 
     if (!jobId || !status) {
@@ -278,10 +332,26 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    if (!["approved", "pending_review", "archived"].includes(status)) {
+    if (!["approved", "pending_review", "reported", "archived"].includes(status)) {
       return NextResponse.json(
         { error: "Invalid status value." },
         { status: 400 }
+      );
+    }
+
+    const state = readStore();
+    const targetJob = state.jobs.find((j) => j.id === jobId);
+    if (!targetJob) {
+      return NextResponse.json({ error: "Job not found." }, { status: 404 });
+    }
+
+    if (targetJob.status === "reported" && session.role !== "superuser") {
+      return NextResponse.json(
+        {
+          error:
+            "This listing was reported for safety review. Only a Superuser may evaluate or allow it back onto the platform.",
+        },
+        { status: 403 }
       );
     }
 
@@ -320,6 +390,18 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json(
         { error: "id parameter is required." },
         { status: 400 }
+      );
+    }
+
+    const state = readStore();
+    const target = state.jobs.find((j) => j.id === jobId);
+    if (target?.status === "reported" && !(await isSuperuserRequest(req))) {
+      return NextResponse.json(
+        {
+          error:
+            "Reported listings must be evaluated and removed by a Superuser.",
+        },
+        { status: 403 }
       );
     }
 

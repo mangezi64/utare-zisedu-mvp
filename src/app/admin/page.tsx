@@ -38,6 +38,7 @@ import {
 } from "@/types";
 import {
   JobApplicationRecord,
+  InactivityRetentionStatus,
   StoredAuthUser,
   StoredCandidateRecord,
 } from "@/lib/store";
@@ -63,6 +64,9 @@ export default function AdminConsolePage() {
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
   const [employers, setEmployers] = useState<EmployerRegistration[]>([]);
   const [authUsers, setAuthUsers] = useState<PublicAuthUser[]>([]);
+  const [retentionStatuses, setRetentionStatuses] = useState<
+    InactivityRetentionStatus[]
+  >([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [allDocuments, setAllDocuments] = useState<CandidateDocument[]>([]);
   const [allCvArtifacts, setAllCvArtifacts] = useState<CandidateCvArtifact[]>([]);
@@ -110,7 +114,15 @@ export default function AdminConsolePage() {
   });
   const [savingJob, setSavingJob] = useState(false);
   const [discoveringJobs, setDiscoveringJobs] = useState(false);
-  const [jobFilter, setJobFilter] = useState<"all" | "pending_review" | "approved">("all");
+  const [jobFilter, setJobFilter] = useState<
+    "all" | "pending_review" | "reported" | "approved"
+  >("all");
+  const [deleteTargetEmail, setDeleteTargetEmail] = useState<string | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteReason, setDeleteReason] = useState(
+    "User / family erasure request (special circumstances or deceased user)"
+  );
+  const [deletingUser, setDeletingUser] = useState(false);
 
   // AI status
   const [aiStatus, setAiStatus] = useState<{
@@ -166,6 +178,9 @@ export default function AdminConsolePage() {
       if (candRes.candidates) setCandidates(candRes.candidates);
       if (empRes && empRes.employers) setEmployers(empRes.employers);
       if (usersRes && usersRes.users) setAuthUsers(usersRes.users);
+      if (usersRes && usersRes.retentionStatuses) {
+        setRetentionStatuses(usersRes.retentionStatuses);
+      }
       if (auditRes) {
         if (auditRes.auditLogs) setAuditLogs(auditRes.auditLogs);
         if (auditRes.documents) setAllDocuments(auditRes.documents);
@@ -230,9 +245,8 @@ export default function AdminConsolePage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-utare-role": "admin",
-          "x-utare-email": "admin@utare.co.zw",
         },
+        credentials: "include",
         body: JSON.stringify(hubForm),
       });
       const data = await res.json();
@@ -254,6 +268,8 @@ export default function AdminConsolePage() {
           operatingHours: "08:00 - 18:00 (Mon - Sat)",
         });
         notify(data.message || `Partner Hub "${data.hub.name}" enlisted successfully.`);
+      } else if (!res.ok) {
+        notify(data.error || "Failed to enlist Partner Hub.");
       }
     } finally {
       setSavingHub(false);
@@ -265,14 +281,14 @@ export default function AdminConsolePage() {
     try {
       const res = await fetch(`/api/admin/hubs?id=${id}`, {
         method: "DELETE",
-        headers: {
-          "x-utare-role": "admin",
-          "x-utare-email": "admin@utare.co.zw",
-        },
+        credentials: "include",
       });
       if (res.ok) {
         setHubs(hubs.filter((h) => h.id !== id));
         notify(`Hub "${name}" unlisted.`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        notify(data.error || "Failed to unlist hub.");
       }
     } catch {}
   }
@@ -286,9 +302,8 @@ export default function AdminConsolePage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-utare-role": "admin",
-          "x-utare-email": "admin@utare.co.zw",
         },
+        credentials: "include",
         body: JSON.stringify(jobForm),
       });
       const data = await res.json();
@@ -309,6 +324,8 @@ export default function AdminConsolePage() {
           sourceUrl: "",
         });
         notify(data.message || `Job "${data.job.title}" added and published.`);
+      } else if (!res.ok) {
+        notify(data.error || "Failed to add remote job.");
       }
     } finally {
       setSavingJob(false);
@@ -322,15 +339,16 @@ export default function AdminConsolePage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-utare-role": "admin",
-          "x-utare-email": "admin@utare.co.zw",
         },
+        credentials: "include",
         body: JSON.stringify({ action: "discover" }),
       });
       const data = await res.json();
       if (data.discovered) {
         await loadAllData();
         notify(data.message || `Discovered ${data.count} new remote roles awaiting approval.`);
+      } else if (!res.ok) {
+        notify(data.error || "Failed to run AI job discovery.");
       }
     } finally {
       setDiscoveringJobs(false);
@@ -343,15 +361,16 @@ export default function AdminConsolePage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-utare-role": "admin",
-          "x-utare-email": "admin@utare.co.zw",
         },
+        credentials: "include",
         body: JSON.stringify({ jobId, status }),
       });
-      const data = await res.json();
-      if (data.job) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.job) {
         setJobs(jobs.map((j) => (j.id === jobId ? data.job : j)));
         notify(`Job status updated to "${status}".`);
+      } else {
+        notify(data.error || "Failed to update job status.");
       }
     } catch {}
   }
@@ -361,14 +380,14 @@ export default function AdminConsolePage() {
     try {
       const res = await fetch(`/api/admin/jobs?id=${id}`, {
         method: "DELETE",
-        headers: {
-          "x-utare-role": "admin",
-          "x-utare-email": "admin@utare.co.zw",
-        },
+        credentials: "include",
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setJobs(jobs.filter((j) => j.id !== id));
         notify("Job listing removed.");
+      } else {
+        notify(data.error || "Failed to remove job listing.");
       }
     } catch {}
   }
@@ -460,13 +479,108 @@ export default function AdminConsolePage() {
     }
   }
 
+  async function handleEvaluateReportedJob(
+    jobId: string,
+    decision: "restore" | "remove"
+  ) {
+    try {
+      const res = await fetch("/api/admin/jobs", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          action: "evaluate_report",
+          jobId,
+          decision,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        notify(data.error || "Only a Superuser can evaluate reported listings.");
+        return;
+      }
+      if (decision === "remove") {
+        setJobs((prev) => prev.filter((j) => j.id !== jobId));
+      } else if (data.job) {
+        setJobs((prev) => prev.map((j) => (j.id === jobId ? data.job : j)));
+      }
+      notify(data.message || "Reported listing evaluated.");
+    } catch {
+      notify("Failed to evaluate reported listing.");
+    }
+  }
+
+  async function handleSuperuserDeleteUser(e: React.FormEvent) {
+    e.preventDefault();
+    if (!deleteTargetEmail) return;
+    if (deleteConfirmText.trim().toLowerCase() !== "delete") return;
+    setDeletingUser(true);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          email: deleteTargetEmail,
+          confirmationText: deleteConfirmText.trim(),
+          reason: deleteReason.trim(),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        notify(
+          data.message ||
+            `All platform and database records for ${deleteTargetEmail} deleted.`
+        );
+        setDeleteTargetEmail(null);
+        setDeleteConfirmText("");
+        loadAllData();
+      } else {
+        notify(data.error || "Failed to delete user records.");
+      }
+    } finally {
+      setDeletingUser(false);
+    }
+  }
+
+  async function handleSendInactivityNotice(email: string) {
+    const res = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "send_inactivity_notice", email }),
+    });
+    const data = await res.json().catch(() => ({}));
+    notify(data.message || data.error || "Notice processed.");
+    if (res.ok) loadAllData();
+  }
+
+  async function handlePurgeInactiveUser(email: string) {
+    const res = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "purge_inactive", email }),
+    });
+    const data = await res.json().catch(() => ({}));
+    notify(data.message || data.error || "Inactivity deletion processed.");
+    if (res.ok) loadAllData();
+  }
+
   const filteredJobs = jobs.filter((j) => {
     if (jobFilter === "pending_review") return j.status === "pending_review";
-    if (jobFilter === "approved") return j.status !== "pending_review" && j.status !== "archived";
+    if (jobFilter === "reported") return j.status === "reported";
+    if (jobFilter === "approved")
+      return (
+        j.status !== "pending_review" &&
+        j.status !== "reported" &&
+        j.status !== "archived"
+      );
     return true;
   });
 
   const pendingJobCount = jobs.filter((j) => j.status === "pending_review").length;
+  const reportedJobCount = jobs.filter((j) => j.status === "reported").length;
 
   if (!isAdmin) {
     return (
@@ -744,7 +858,7 @@ export default function AdminConsolePage() {
           </div>
 
           {/* Job Filter Pills */}
-          <div className="flex gap-2 text-xs">
+          <div className="flex flex-wrap gap-2 text-xs">
             <button
               type="button"
               onClick={() => setJobFilter("all")}
@@ -755,6 +869,19 @@ export default function AdminConsolePage() {
               }`}
             >
               All Jobs ({jobs.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setJobFilter("reported")}
+              className={`rounded-lg px-3 py-1.5 font-semibold transition ${
+                jobFilter === "reported"
+                  ? "bg-rose-700 text-white"
+                  : reportedJobCount > 0
+                  ? "bg-rose-50 text-rose-900 border border-rose-300 hover:bg-rose-100"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              Reported / Safety Review ({reportedJobCount})
             </button>
             <button
               type="button"
@@ -776,7 +903,7 @@ export default function AdminConsolePage() {
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
               }`}
             >
-              Published & Approved ({jobs.filter((j) => j.status !== "pending_review" && j.status !== "archived").length})
+              Published & Approved ({jobs.filter((j) => j.status !== "pending_review" && j.status !== "reported" && j.status !== "archived").length})
             </button>
           </div>
 
@@ -944,11 +1071,14 @@ export default function AdminConsolePage() {
             ) : (
               filteredJobs.map((job) => {
                 const isPending = job.status === "pending_review";
+                const isReported = job.status === "reported";
                 return (
                   <div
                     key={job.id}
                     className={`rounded-2xl border p-5 shadow-xs transition bg-white ${
-                      isPending
+                      isReported
+                        ? "border-rose-300 bg-rose-50/40"
+                        : isPending
                         ? "border-amber-300 bg-amber-50/30"
                         : "border-slate-200 hover:border-slate-300"
                     }`}
@@ -956,6 +1086,11 @@ export default function AdminConsolePage() {
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                       <div className="space-y-1.5">
                         <div className="flex flex-wrap items-center gap-2">
+                          {isReported && (
+                            <span className="rounded-full bg-rose-700 text-white px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider">
+                              ⚠ Reported — Taken Off Platform (Superuser Review)
+                            </span>
+                          )}
                           {isPending && (
                             <span className="rounded-full bg-amber-200 text-amber-900 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider">
                               AI Discovered — Needs Approval
@@ -980,6 +1115,22 @@ export default function AdminConsolePage() {
                           {job.description}
                         </p>
 
+                        {isReported && job.reports && job.reports.length > 0 && (
+                          <div className="rounded-xl border border-rose-200 bg-white p-3 space-y-1 text-xs text-rose-950">
+                            <div className="font-bold">
+                              Safety Report(s) ({job.reports.length}):
+                            </div>
+                            {job.reports.map((rep) => (
+                              <div key={rep.id} className="text-[11px] text-rose-900">
+                                • <strong>{rep.reason}</strong>
+                                {rep.details ? ` — "${rep.details}"` : ""} (reported by{" "}
+                                {rep.reportedByEmail} on{" "}
+                                {new Date(rep.reportedAt).toLocaleDateString()})
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
                         <div className="flex flex-wrap gap-1.5 pt-1">
                           {job.supportedPaymentRails.map((rail) => (
                             <span
@@ -993,7 +1144,34 @@ export default function AdminConsolePage() {
                       </div>
 
                       <div className="flex sm:flex-col items-center sm:items-end gap-2 pt-2 sm:pt-0">
-                        {isPending ? (
+                        {isReported ? (
+                          isSuperuser ? (
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleEvaluateReportedJob(job.id, "restore")
+                                }
+                                className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-800 shadow-xs"
+                              >
+                                ✓ Allow Back On Platform
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleEvaluateReportedJob(job.id, "remove")
+                                }
+                                className="rounded-lg bg-rose-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-800 shadow-xs"
+                              >
+                                ✕ Scam / Wrong — Delete Permanently
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-rose-800">
+                              Awaiting Superuser Evaluation
+                            </span>
+                          )
+                        ) : isPending ? (
                           <div className="flex gap-2">
                             <button
                               type="button"
@@ -1420,48 +1598,41 @@ export default function AdminConsolePage() {
                     </div>
                   </div>
 
-                  {applications.filter(
-                    (a) =>
-                      a.candidateId === cand.id ||
-                      a.candidateName.toLowerCase() ===
-                        cand.profile.fullName.toLowerCase()
-                  ).length > 0 && (
-                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs space-y-1.5">
-                      <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                        <Briefcase className="h-3.5 w-3.5 text-blue-600" />
-                        Submitted Applications (
-                        {
-                          applications.filter(
-                            (a) =>
-                              a.candidateId === cand.id ||
-                              a.candidateName.toLowerCase() ===
-                                cand.profile.fullName.toLowerCase()
-                          ).length
-                        }
-                        ):
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {applications
-                          .filter(
-                            (a) =>
-                              a.candidateId === cand.id ||
-                              a.candidateName.toLowerCase() ===
-                                cand.profile.fullName.toLowerCase()
-                          )
-                          .map((app) => (
-                            <span
-                              key={app.id}
-                              className="rounded-lg bg-white border border-slate-200 px-2.5 py-1 text-slate-700 shadow-xs"
-                            >
-                              <strong>{app.jobTitle}</strong> at {app.company}{" "}
-                              <span className="text-slate-400">
-                                ({new Date(app.appliedAt).toLocaleDateString()})
+                  {(() => {
+                    const candApps = applications.filter(
+                      (a) =>
+                        a.candidateId === cand.id ||
+                        (cand.userId && a.candidateId === cand.userId) ||
+                        (a.candidateEmail &&
+                          a.candidateEmail.toLowerCase() ===
+                            cand.profile.email.toLowerCase()) ||
+                        a.candidateName.toLowerCase() ===
+                          cand.profile.fullName.toLowerCase()
+                    );
+                    return (
+                      candApps.length > 0 && (
+                        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs space-y-1.5">
+                          <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                            <Briefcase className="h-3.5 w-3.5 text-blue-600" />
+                            Submitted Applications ({candApps.length}):
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {candApps.map((app) => (
+                              <span
+                                key={app.id}
+                                className="rounded-lg bg-white border border-slate-200 px-2.5 py-1 text-slate-700 shadow-xs"
+                              >
+                                <strong>{app.jobTitle}</strong> at {app.company}{" "}
+                                <span className="text-slate-400">
+                                  ({new Date(app.appliedAt).toLocaleDateString()})
+                                </span>
                               </span>
-                            </span>
-                          ))}
-                      </div>
-                    </div>
-                  )}
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    );
+                  })()}
                 </div>
               ))
             )}
@@ -1788,12 +1959,164 @@ export default function AdminConsolePage() {
                           <option value="superuser">superuser</option>
                         )}
                       </select>
+                      {isSuperuser && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeleteTargetEmail(u.email);
+                            setDeleteConfirmText("");
+                          }}
+                          title="Superuser: Delete all user data on request (e.g. deceased or special request)"
+                          className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
+                        >
+                          Erase Data
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))
               )}
             </div>
           </div>
+
+          {/* Superuser On-Request User Erasure Confirmation Drawer */}
+          {isSuperuser && deleteTargetEmail && (
+            <form
+              onSubmit={handleSuperuserDeleteUser}
+              className="rounded-2xl border-2 border-rose-300 bg-rose-50/70 p-5 space-y-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-bold text-rose-950">
+                    Superuser On-Request Data Erasure: {deleteTargetEmail}
+                  </h3>
+                  <p className="text-xs text-rose-900 mt-0.5">
+                    Permanently deletes this user&apos;s account and all associated
+                    profile, documents, CV artifacts, and applications from the
+                    platform and database (e.g., if deceased or special request).
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDeleteTargetEmail(null)}
+                  className="text-xs text-slate-600 hover:text-slate-900"
+                >
+                  Cancel ✕
+                </button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-rose-950 mb-1">
+                    Reason for Erasure
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={deleteReason}
+                    onChange={(e) => setDeleteReason(e.target.value)}
+                    className="w-full rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-rose-950 mb-1">
+                    Type &quot;delete&quot; to confirm permanent erasure
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder='Type "delete"'
+                    className="w-full rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-mono"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDeleteTargetEmail(null)}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={
+                    deletingUser ||
+                    deleteConfirmText.trim().toLowerCase() !== "delete"
+                  }
+                  className="rounded-lg bg-rose-700 px-4 py-1.5 text-xs font-bold text-white hover:bg-rose-800 disabled:opacity-45"
+                >
+                  {deletingUser
+                    ? "Deleting All User Data..."
+                    : "Permanently Delete All User Data"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* 1-Year Inactivity Data Retention Policy Monitor (Superuser) */}
+          {isSuperuser && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-xs">
+              <div className="border-b border-slate-100 pb-3">
+                <h3 className="text-sm font-bold text-slate-900">
+                  1-Year Inactivity Data Retention Policy Monitor
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Accounts with 365+ days of no site use receive a login-to-remain
+                  prompt and at least <strong>3 reminder emails</strong> before
+                  deplatforming and full data deletion is permitted.
+                </p>
+              </div>
+
+              {retentionStatuses.length === 0 ? (
+                <p className="text-xs text-slate-500 py-2">
+                  No user activity records yet.
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {retentionStatuses.map((rs) => (
+                    <div
+                      key={rs.userId}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-2.5 text-xs"
+                    >
+                      <div>
+                        <span className="font-bold text-slate-900">{rs.email}</span>
+                        <span className="ml-2 text-slate-500">
+                          Inactive: <strong>{rs.daysInactive}d</strong> • Emails
+                          sent: <strong>{rs.noticesSent}/{rs.requiredNotices}</strong>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {rs.isOverOneYearInactive ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleSendInactivityNotice(rs.email)}
+                              className="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-900 hover:bg-amber-100"
+                            >
+                              Send Login-to-Remain Email ({rs.noticesSent}/3)
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!rs.eligibleForDeletion}
+                              onClick={() => handlePurgeInactiveUser(rs.email)}
+                              className="rounded-lg bg-rose-700 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-rose-800 disabled:opacity-40"
+                            >
+                              Delete After 3 Notices
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-[11px] font-semibold text-emerald-700">
+                            Active (&lt; 365 days)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* System Audit & Activity Log (Who Changed What & When) */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-xs">

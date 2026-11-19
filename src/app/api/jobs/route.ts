@@ -4,6 +4,7 @@ import {
   findCandidateByEmailAsync,
   readStore,
   submitJobApplicationToStore,
+  toggleApplicationSharing,
 } from "@/lib/store";
 
 export async function GET(req: NextRequest) {
@@ -17,12 +18,15 @@ export async function GET(req: NextRequest) {
     activeCandidate = await findCandidateByEmailAsync(session.email);
   }
 
-  // Regular candidate/public users see only approved jobs; admins see all jobs
+  // Regular candidate/public users see only approved jobs (never pending_review, reported, or archived)
   const jobs =
     showAll && isAdmin
       ? state.jobs
       : state.jobs.filter(
-          (j) => j.status !== "pending_review" && j.status !== "archived"
+          (j) =>
+            j.status !== "pending_review" &&
+            j.status !== "reported" &&
+            j.status !== "archived"
         );
 
   // Return applications strictly scoped to the authenticated session user or authorized admin
@@ -35,10 +39,7 @@ export async function GET(req: NextRequest) {
         (activeCandidate && a.candidateId === activeCandidate.id) ||
         a.candidateId === session.sub ||
         (a.candidateEmail &&
-          a.candidateEmail.toLowerCase() === session.email.toLowerCase()) ||
-        (a.candidateName &&
-          session.name &&
-          a.candidateName.toLowerCase() === session.name.toLowerCase())
+          a.candidateEmail.toLowerCase() === session.email.toLowerCase())
     );
   }
 
@@ -64,6 +65,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (body.sharedWithEmployer !== true) {
+      return NextResponse.json(
+        {
+          error:
+            "Please toggle on consent to share your application and profile summary with the employer before submitting.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const state = readStore();
+    const targetJob = state.jobs.find((j) => j.id === body.jobId);
+    if (
+      !targetJob ||
+      targetJob.status === "reported" ||
+      targetJob.status === "pending_review" ||
+      targetJob.status === "archived"
+    ) {
+      return NextResponse.json(
+        { error: "Target remote job not found or no longer accepting applications." },
+        { status: 404 }
+      );
+    }
+
     const application = submitJobApplicationToStore({
       jobId: body.jobId,
       tailoredResumePitch: body.tailoredResumePitch,
@@ -72,6 +97,7 @@ export async function POST(req: NextRequest) {
       candidateEmail: session.email,
       generatedCv: body.generatedCv,
       generatedCoverLetter: body.generatedCoverLetter,
+      sharedWithEmployer: true,
     });
 
     if (!application) {
@@ -86,6 +112,47 @@ export async function POST(req: NextRequest) {
     console.error("[API /api/jobs POST Error]:", error);
     return NextResponse.json(
       { error: "Failed to submit remote job application." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const session = await getSessionFromRequest(req);
+    if (!session) {
+      return unauthorizedResponse("Please sign in to manage application sharing.");
+    }
+
+    const body = await req.json();
+    if (!body.applicationId || typeof body.sharedWithEmployer !== "boolean") {
+      return NextResponse.json(
+        { error: "applicationId and sharedWithEmployer boolean are required." },
+        { status: 400 }
+      );
+    }
+
+    const updated = toggleApplicationSharing({
+      applicationId: String(body.applicationId),
+      candidateEmail: session.email,
+      sharedWithEmployer: body.sharedWithEmployer,
+    });
+
+    if (!updated) {
+      return NextResponse.json(
+        { error: "Application not found for your account." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      application: updated,
+    });
+  } catch (error) {
+    console.error("[API /api/jobs PATCH Error]:", error);
+    return NextResponse.json(
+      { error: "Failed to update application sharing preference." },
       { status: 500 }
     );
   }

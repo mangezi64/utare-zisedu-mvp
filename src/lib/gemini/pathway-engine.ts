@@ -23,6 +23,7 @@ import {
   CandidateProfile,
   CoachProfile,
   InnovationHub,
+  QualificationBreakdown,
   SkillsAssessmentResult,
 } from "@/types";
 import { SEED_COACHES, SEED_INNOVATION_HUBS } from "@/lib/mock-data";
@@ -203,7 +204,134 @@ export function computeAssessmentScores(
     criticalGaps.push(
       "Portfolio Translation Gap: Academic credentials need repackaging into verified remote deliverables"
     );
+  } else if (profile.canWorkRemotely === false) {
+    criticalGaps.push(
+      "Remote Setup Gap: Currently unable to perform full remote work independently — Partner Hub workstation & power pairing recommended"
+    );
   }
+
+  // Clear AI Qualification Breakdown (Baraza: Explain why a candidate qualifies or does not yet qualify)
+  const reasonsNotQualified: string[] = [];
+  const howToQualify: string[] = [];
+  const qualifiedFor: string[] = [];
+  const notQualifiedYetFor: string[] = [];
+
+  if (readinessTier === "Market-Ready (Direct Placement)") {
+    qualifiedFor.push(
+      "Direct placement in Market-Ready remote roles",
+      "Independent remote work & ATS-grounded job applications",
+      "Optional Partner Hub backup during power/internet outages"
+    );
+    reasonsNotQualified.push(
+      "You meet all Market-Ready criteria (Overall Score ≥ 76/100 and dedicated workstation access)."
+    );
+    if (!profile.hasGlobalPaymentRail) {
+      howToQualify.push(
+        "Set up a compliant cross-border payment rail (Deel, Payoneer, or USD Nostro) so international employers can pay you smoothly."
+      );
+    }
+    if (profile.currentSkills.length < 3) {
+      howToQualify.push(
+        "Add 3+ verified practical skills to strengthen role-specific job matching."
+      );
+    }
+  } else if (readinessTier === "Bridge-Ready (Hub + Rapid Upskilling)") {
+    qualifiedFor.push(
+      "Bridge-Ready remote roles & supervised micro-tasks",
+      "Subsidized Partner Innovation Hub workstations & solar/Starlink access",
+      "1-on-1 Human Coach pairing & 8-week upskilling roadmap"
+    );
+    notQualifiedYetFor.push("Market-Ready (Direct Placement) tier");
+
+    if (!profile.hasDedicatedLaptop) {
+      reasonsNotQualified.push(
+        "You do not currently have a dedicated laptop/PC (Market-Ready direct placement requires reliable daily workstation access)."
+      );
+      howToQualify.push(
+        "Reserve a subsidized Partner Hub workstation or laptop loan to establish reliable remote delivery."
+      );
+    }
+    if (overallScore < 76) {
+      reasonsNotQualified.push(
+        `Your overall readiness score is ${overallScore}/100; Market-Ready direct placement requires at least 76/100.`
+      );
+    }
+    if (digitalReadinessScore < 70) {
+      reasonsNotQualified.push(
+        `Digital Readiness is ${digitalReadinessScore}/100 (target ≥ 70/100 for independent remote tool fluency).`
+      );
+      howToQualify.push(
+        "Complete Phase 1 Async Workflows & Cloud Tools modules and add practical digital skills to your profile."
+      );
+    }
+    if (remoteWorkLiteracyScore < 70) {
+      reasonsNotQualified.push(
+        `Remote Work Literacy is ${remoteWorkLiteracyScore}/100 (target ≥ 70/100 for async client comms and payment readiness).`
+      );
+      howToQualify.push(
+        "Complete async communication practice with your paired coach and configure a global payment rail."
+      );
+    }
+    if (howToQualify.length === 0) {
+      howToQualify.push(
+        "Complete Phases 1–2 of your upskilling roadmap and retake the diagnostic to unlock Market-Ready tier."
+      );
+    }
+  } else {
+    qualifiedFor.push(
+      "Foundation Track intensive human coaching",
+      "Full subsidized Partner Hub access (laptop workstation, solar power & Starlink)",
+      "Entry-level & micro-tasking skills modules"
+    );
+    notQualifiedYetFor.push(
+      "Bridge-Ready roles",
+      "Market-Ready (Direct Placement) roles"
+    );
+
+    if (overallScore < 52) {
+      reasonsNotQualified.push(
+        `Your overall readiness score is ${overallScore}/100 (Bridge-Ready requires ≥ 52/100; Market-Ready requires ≥ 76/100).`
+      );
+    }
+    if (!profile.hasDedicatedLaptop && profile.powerReliabilityHours < 6) {
+      reasonsNotQualified.push(
+        `You currently lack a dedicated laptop and have ${profile.powerReliabilityHours} hrs/day reliable power (< 6 hrs/day minimum for solo remote work).`
+      );
+      howToQualify.push(
+        "Use a subsidized Partner Innovation Hub for reliable solar power, Starlink internet, and workstation access."
+      );
+    } else if (!profile.hasDedicatedLaptop) {
+      reasonsNotQualified.push(
+        "You do not currently have a dedicated laptop/PC (Market-Ready direct placement requires reliable daily workstation access)."
+      );
+      howToQualify.push(
+        "Reserve a subsidized Partner Hub workstation or laptop loan to establish reliable remote delivery."
+      );
+    }
+    if (domainCompetencyScore < 65) {
+      reasonsNotQualified.push(
+        `Domain Competency is ${domainCompetencyScore}/100 (needs applied project proof to reach ≥ 65/100).`
+      );
+    }
+    if (digitalReadinessScore < 60) {
+      reasonsNotQualified.push(
+        `Digital Readiness is ${digitalReadinessScore}/100 (needs foundational cloud workspace & spreadsheet practice).`
+      );
+    }
+    howToQualify.push(
+      "Complete Phase 1 & Phase 2 deliverables at your Partner Hub, then retake the diagnostic or request a human coach review."
+    );
+  }
+
+  const qualificationBreakdown: QualificationBreakdown = {
+    qualifiedTier: readinessTier,
+    qualifiedFor,
+    notQualifiedYetFor,
+    reasonsNotQualified,
+    howToQualify,
+    aiRoleNotice:
+      "How this AI decision works: Your tier is computed automatically from your diagnostic ratings, skills, and remote-work setup (device, power, internet, payment rail). It guides your hub & coaching support and never permanently blocks you from applying. You can request a human review or appeal via Bheki Ndlovu on the Contact page, or report safety concerns to Stewart Mangezi. Employers make their own final hiring decisions and reserve the right to share or withhold specific application feedback.",
+  };
 
   return {
     domainCompetencyScore,
@@ -214,6 +342,7 @@ export function computeAssessmentScores(
     readinessTier,
     strengths,
     criticalGaps,
+    qualificationBreakdown,
   };
 }
 
@@ -239,7 +368,7 @@ Candidate Profile:
 - Name: ${profile.fullName}
 - City: ${profile.city}
 - Qualification: ${profile.highestQualification} in ${profile.fieldOfStudy}
-- Current Status: ${profile.employmentStatus} (Income: ${profile.monthlyIncomeBracket})
+- Remote Capability: ${profile.canWorkRemotely === false ? "Needs Hub Support" : profile.canWorkRemotely === true ? "Can work remotely" : "Assessing remote readiness"} (${profile.hubSupportNeed || (profile.hasDedicatedLaptop ? "Has workstation" : "Needs hub workstation")})
 - Primary Goal: ${profile.primaryGoal}
 - Existing Skills: ${profile.currentSkills.join(", ") || "General Academic Research"}
 - Dedicated Laptop: ${profile.hasDedicatedLaptop ? "Yes" : "No (Smartphone/Shared only)"}
@@ -370,7 +499,18 @@ Return ONLY valid JSON matching this exact structure (no markdown code fences):
       "Global Technical Operations, AI QA & Automation Engineering Track";
   }
 
-  const executiveDiagnosis = `${profile.fullName} holds a ${profile.highestQualification} in ${profile.fieldOfStudy} (Domain Score: ${assessment.domainCompetencyScore}/100), yet is currently ${profile.employmentStatus.toLowerCase()} earning ${profile.monthlyIncomeBracket}. The primary barrier to upward mobility is not academic capability, but last-mile infrastructure (${profile.hasDedicatedLaptop ? "has laptop" : "no dedicated laptop"}, ${profile.internetAccessType}) and translating academic credentials into verified global remote deliverables.`;
+  const hubNeedSummary =
+    profile.hubSupportNeed ||
+    (profile.hasDedicatedLaptop &&
+    (profile.internetAccessType === "Starlink" ||
+      profile.internetAccessType === "Home Fiber / Wi-Fi") &&
+    profile.powerReliabilityHours >= 10
+      ? "able to work remotely independently"
+      : !profile.hasDedicatedLaptop
+      ? "needs full Partner Innovation Hub access (workstation, solar power & internet)"
+      : "benefits from hybrid Partner Hub backup during power or connectivity drops");
+
+  const executiveDiagnosis = `${profile.fullName} holds a ${profile.highestQualification} in ${profile.fieldOfStudy} (Domain Score: ${assessment.domainCompetencyScore}/100) and ${hubNeedSummary}. Based on their current setup (${profile.hasDedicatedLaptop ? "has dedicated laptop" : "no dedicated laptop"}, ${profile.internetAccessType}, ${profile.powerReliabilityHours}h/day power), this pathway focuses on matching their remote readiness to verified international opportunities and right-sized hub support.`;
 
   const isDiaspora =
     profile.city.toLowerCase().includes("abroad") ||

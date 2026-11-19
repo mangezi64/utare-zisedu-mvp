@@ -24,11 +24,12 @@ import { resolveBootstrapRole } from "@/lib/bootstrap-roles";
 export { resolveBootstrapRole, DEFAULT_BOOTSTRAP_SUPERUSERS } from "@/lib/bootstrap-roles";
 
 export async function getSessionFromRequest(
-  req: NextRequest
+  req?: NextRequest
 ): Promise<SessionPayload | null> {
+  if (!req) return null;
   // 1. Check signed HTTP-only session cookie or Bearer header
-  const cookieToken = req.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const authHeader = req.headers.get("authorization");
+  const cookieToken = req.cookies?.get(SESSION_COOKIE_NAME)?.value;
+  const authHeader = req.headers?.get("authorization");
   const bearerToken = authHeader?.startsWith("Bearer ")
     ? authHeader.slice(7).trim()
     : null;

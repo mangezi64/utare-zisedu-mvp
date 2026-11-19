@@ -3,11 +3,16 @@ import {
   createAuthUser,
   findAuthUserByEmail,
   findAuthUserByEmailFromDb,
+  findEmployerByEmail,
   getEmployerRegistrations,
   saveEmployerRegistration,
   updateEmployerVerificationStatus,
 } from "@/lib/store";
-import { isAdminRequest, adminUnauthorizedResponse } from "@/lib/auth-guard";
+import {
+  adminUnauthorizedResponse,
+  getSessionFromRequest,
+  isAdminRequest,
+} from "@/lib/auth-guard";
 import { validateEmail, validatePassword } from "@/lib/validation";
 import { checkEmailDomain } from "@/lib/email-domain-check";
 import { generateRandomToken, hashPassword } from "@/lib/password-hash";
@@ -127,6 +132,25 @@ export async function POST(req: NextRequest) {
           {
             error:
               "An account with this email already exists. Please sign in to your Employer Portal.",
+          },
+          { status: 409 }
+        );
+      }
+    }
+
+    const existingEmployer = findEmployerByEmail(normalizedEmail);
+    if (existingEmployer) {
+      const session = await getSessionFromRequest(req);
+      const isOwnerOrAdmin =
+        session &&
+        (session.role === "admin" ||
+          session.role === "superuser" ||
+          session.email.toLowerCase() === normalizedEmail);
+      if (!isOwnerOrAdmin) {
+        return NextResponse.json(
+          {
+            error:
+              "An employer registration with this email already exists. Please sign in to update your organization.",
           },
           { status: 409 }
         );

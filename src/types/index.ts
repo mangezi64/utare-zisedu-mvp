@@ -161,6 +161,11 @@ export type ReadinessTier =
   | "Bridge-Ready (Hub + Rapid Upskilling)"
   | "Foundation Track (Hardware Bridge + Intensive Coaching)";
 
+export type HubSupportNeed =
+  | "Fully Independent (Have Reliable Device, Power & Internet)"
+  | "Hybrid Hub Backup (Need Power/Wi-Fi Backup During Outages)"
+  | "Full Hub Access Needed (Need Workstation, Solar Power & Internet)";
+
 export interface CandidateProfile {
   id?: string;
   fullName: string;
@@ -170,8 +175,11 @@ export interface CandidateProfile {
   highestQualification: QualificationLevel;
   fieldOfStudy: string;
   yearsExperience: number;
-  employmentStatus: EmploymentStatus;
-  monthlyIncomeBracket: IncomeBracket;
+  employmentStatus?: EmploymentStatus;
+  monthlyIncomeBracket?: IncomeBracket;
+  // Remote Work & Hub Independence Assessment
+  canWorkRemotely?: boolean;
+  hubSupportNeed?: HubSupportNeed;
   // Infrastructure Constraints
   hasDedicatedLaptop: boolean;
   primaryDevice: PrimaryDevice;
@@ -185,6 +193,15 @@ export interface CandidateProfile {
   includePhotoOnCv?: boolean;
 }
 
+export interface QualificationBreakdown {
+  qualifiedTier: string;
+  qualifiedFor: string[];
+  notQualifiedYetFor: string[];
+  reasonsNotQualified: string[];
+  howToQualify: string[];
+  aiRoleNotice: string;
+}
+
 export interface SkillsAssessmentResult {
   domainCompetencyScore: number;
   digitalReadinessScore: number;
@@ -194,6 +211,7 @@ export interface SkillsAssessmentResult {
   readinessTier: ReadinessTier;
   strengths: string[];
   criticalGaps: string[];
+  qualificationBreakdown?: QualificationBreakdown;
 }
 
 export interface UpskillingMilestone {
@@ -263,6 +281,15 @@ export interface EmployerSharedDocument {
   createdAt: string;
 }
 
+export interface JobReportEntry {
+  id: string;
+  reason: string;
+  details?: string;
+  reportedByEmail: string;
+  reportedByName?: string;
+  reportedAt: string;
+}
+
 export interface RemoteJob {
   id: string;
   title: string;
@@ -283,7 +310,11 @@ export interface RemoteJob {
   isAsyncFriendly: boolean;
   description: string;
   applicationUrl: string;
-  status?: "approved" | "pending_review" | "archived";
+  status?: "approved" | "pending_review" | "reported" | "archived";
+  reports?: JobReportEntry[];
+  reportedAt?: string;
+  reportedReason?: string;
+  moderationNotes?: string;
   discoveredBy?: "ai-search" | "admin-manual" | "partner-feed" | "employer-posted";
   sourceUrl?: string;
   discoveredAt?: string;
@@ -333,6 +364,9 @@ export interface EmployerApplicantView {
   company: string;
   appliedAt: string;
   status: ApplicationStatus;
+  sharedWithEmployer?: boolean;
+  consentTimestamp?: string;
+  employerFeedbackNote?: string;
   updatedAt?: string;
   updatedBy?: string;
   statusHistory?: StatusHistoryEntry[];

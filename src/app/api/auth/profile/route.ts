@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   readStore,
   registerOrUpdateCandidate,
-  findCandidateByEmail,
   findCandidateByEmailAsync,
 } from "@/lib/store";
 import { CandidateProfile } from "@/types";
 import { validateEmail } from "@/lib/validation";
-import { checkEmailDomain } from "@/lib/email-domain-check";
 import { getSessionFromRequest, unauthorizedResponse } from "@/lib/auth-guard";
 
 export const runtime = "nodejs";
@@ -39,12 +37,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getSessionFromRequest(req);
+    if (!session) {
+      return unauthorizedResponse("Please sign in to update your profile.");
+    }
+
     const body = await req.json();
     const rawProfile = (body.profile || body) as Record<string, unknown>;
     const fullName = (rawProfile.fullName || rawProfile.name) as
       | string
       | undefined;
-    const email = (rawProfile.email || session?.email) as string | undefined;
+    const isAdmin = session.role === "admin" || session.role === "superuser";
+    const email = (rawProfile.email || session.email) as string | undefined;
 
     if (!rawProfile || !fullName || !email) {
       return NextResponse.json(
@@ -57,43 +60,16 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // If not registering via legacy mode, require authenticated session matching email (or admin)
-    if (body.mode !== "register") {
-      if (!session) {
-        return unauthorizedResponse();
-      }
-      const isAdmin = session.role === "admin" || session.role === "superuser";
-      if (!isAdmin && session.email.toLowerCase() !== normalizedEmail) {
-        return NextResponse.json(
-          { error: "Forbidden. You may only update your own profile." },
-          { status: 403 }
-        );
-      }
-    } else {
-      const formatCheck = validateEmail(normalizedEmail);
-      if (!formatCheck.isValid) {
-        return NextResponse.json({ error: formatCheck.error }, { status: 400 });
-      }
+    if (!isAdmin && session.email.toLowerCase() !== normalizedEmail) {
+      return NextResponse.json(
+        { error: "Forbidden. You may only update your own profile." },
+        { status: 403 }
+      );
+    }
 
-      if ((await checkEmailDomain(normalizedEmail)) === "undeliverable") {
-        return NextResponse.json(
-          {
-            error:
-              "This email domain doesn't exist or can't receive mail. Please use a real email address.",
-          },
-          { status: 400 }
-        );
-      }
-
-      if (findCandidateByEmail(normalizedEmail)) {
-        return NextResponse.json(
-          {
-            error:
-              "An account with this email already exists. Please sign in instead.",
-          },
-          { status: 409 }
-        );
-      }
+    const formatCheck = validateEmail(normalizedEmail);
+    if (!formatCheck.isValid) {
+      return NextResponse.json({ error: formatCheck.error }, { status: 400 });
     }
 
     const profile = {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGeminiConfig, pingGemini } from "@/lib/gemini/client";
+import { adminUnauthorizedResponse, isAdminRequest } from "@/lib/auth-guard";
 import fs from "fs";
 import path from "path";
 
@@ -18,12 +19,18 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await isAdminRequest(req))) {
+    return adminUnauthorizedResponse();
+  }
   try {
     const body = await req.json();
-    const apiKey = typeof body.apiKey === "string" ? body.apiKey.trim() : "";
+    const apiKey =
+      typeof body.apiKey === "string"
+        ? body.apiKey.replace(/[\r\n]/g, "").trim()
+        : "";
     const model =
-      typeof body.model === "string" && body.model.trim()
-        ? body.model.trim()
+      typeof body.model === "string" && body.model.replace(/[\r\n]/g, "").trim()
+        ? body.model.replace(/[\r\n]/g, "").trim()
         : "gemini-2.5-flash";
 
     // Update current server process environment immediately so live calls work without restarting

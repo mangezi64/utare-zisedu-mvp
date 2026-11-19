@@ -210,8 +210,13 @@ To guarantee `main` never breaks on merge:
 
 ## 7. Detailed Documentation Links
 
+- **[Team Presentation & Architecture Review Hub](docs/TEAM_REVIEW_GUIDE.md)** — Central index for the team to review all presentation slides, Q&A scripts, and architecture docs.
+- **[Full Application Architecture & Vercel Deployment Guide](docs/ARCHITECTURE_AND_TEAM_GUIDE.md)** — End-to-end system diagrams, Vercel serverless lifecycle, Supabase/Postgres persistence, Gemini AI, RBAC security, and full route/API map.
+- **[Week 6 Pitch Deck & 4-Minute Speaker Script](docs/PITCH_DECK_WEEK6.md)** — Complete 10-slide presentation deck, stopwatch timing cues, and word-for-word storyteller script.
+- **[Uniform Team FAQ & Judge Defense Guide](docs/TEAM_FAQ_UNIFORM.md)** — Standardized 30s/60s answers, judge trap rebuttals, and rapid Q&A cheat sheet.
+- **[Coach Catherine Action Items & Sprint Matrix](docs/COACH_CATHERINE_ACTION_ITEMS.md)** — Week 6 to Week 7 deliverables matrix, 7-day countdown, and risk register.
+- **[Release Notes (`v2.2.0`)](RELEASE_NOTES.md)** — Latest platform features, Zimbabwe map radar, Flow Video Walkthrough, and live DB synchronization details.
 - **[Container & Setup Guide](docs/CONTAINER_AND_SETUP_GUIDE.md)** — How to run, debug, and manage the Docker environment on macOS, Windows (WSL2), and Linux.
-- **[Architecture & Team Development Guide](docs/ARCHITECTURE_AND_TEAM_GUIDE.md)** — How each file works, how Faith & Amanda's design system, PostgreSQL, and Gemini AI connect, and our Git workflow.
 - **[Internal Role Provisioning & Test Accounts](docs/TEST_ACCOUNTS.md)** — How to provision `superuser`, `admin`, and `employer` roles via the UI or `scripts/manage-user.mjs`.
 - **[CI/CD & Branch Protection Guide](docs/CI_TESTING_AND_BRANCH_PROTECTION.md)** — Automated lint, typecheck, Vitest suites, and PR governance.
 - **[Personal GitHub Setup (`mangezi64`)](docs/GITHUB_PERSONAL_ACCOUNT_GUIDE.md)** — Repository-local Git configuration for `https://github.com/mangezi64/utare-zisedu-mvp`.

@@ -4,7 +4,10 @@ import { addHubToStore, deleteHubFromStore, readStore } from "@/lib/store";
 import { InnovationHub } from "@/types";
 
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!(await isAdminRequest(req))) {
+    return adminUnauthorizedResponse();
+  }
   const state = readStore();
   return NextResponse.json({
     total: state.hubs.length,

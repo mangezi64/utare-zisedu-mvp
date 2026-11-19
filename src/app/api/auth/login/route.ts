@@ -7,10 +7,12 @@ import {
 } from "@/lib/auth-session";
 import {
   confirmUserEmailByAddress,
+  confirmUserRemainOnPlatform,
   findAuthUserByEmail,
   findAuthUserByEmailFromDb,
   findCandidateByEmailAsync,
   findEmployerByEmailAsync,
+  touchUserActivity,
   updateUserRole,
 } from "@/lib/store";
 import { getSupabaseAdmin, isSupabaseConfigured, supabase } from "@/lib/supabase/client";
@@ -180,6 +182,14 @@ export async function POST(req: NextRequest) {
 
     if (userRecord && userRecord.role !== finalRole) {
       updateUserRole(normalizedEmail, finalRole);
+    }
+
+    // Track activity & clear any 1-year inactivity notices upon successful sign-in
+    const hadInactivityNotices = (userRecord?.inactivityNoticesSent ?? 0) > 0;
+    if (hadInactivityNotices) {
+      confirmUserRemainOnPlatform(normalizedEmail);
+    } else {
+      touchUserActivity(normalizedEmail);
     }
 
     const sessionUser = {

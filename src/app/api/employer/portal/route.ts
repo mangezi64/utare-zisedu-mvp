@@ -265,6 +265,8 @@ export async function PATCH(req: NextRequest) {
         employer: lookup,
         isAdmin: session.role === "admin" || session.role === "superuser",
         actorEmail: session.email,
+        feedbackNote:
+          typeof body.feedbackNote === "string" ? body.feedbackNote : undefined,
       });
 
       if (!updated) {
@@ -291,6 +293,16 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json(
           { error: "Job not found or not owned by your organization." },
           { status: 404 }
+        );
+      }
+
+      if (targetJob?.status === "reported" && session.role !== "superuser") {
+        return NextResponse.json(
+          {
+            error:
+              "This listing was reported for safety review. Only a Superuser may evaluate or restore it.",
+          },
+          { status: 403 }
         );
       }
 

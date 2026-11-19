@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/client";
 import { addHubToStore, findCandidateByEmailAsync, readStore } from "@/lib/store";
+import {
+  adminUnauthorizedResponse,
+  getSessionFromRequest,
+  isAdminRequest,
+} from "@/lib/auth-guard";
 
 export async function GET(req: NextRequest) {
   const state = readStore();
+  const session = await getSessionFromRequest(req);
   const emailParam = req.nextUrl.searchParams.get("email");
-  const activeCandidate = emailParam ? await findCandidateByEmailAsync(emailParam) : null;
+  const isAdmin =
+    session?.role === "admin" || session?.role === "superuser";
+  const activeCandidate = session
+    ? await findCandidateByEmailAsync(
+        isAdmin && emailParam ? emailParam : session.email
+      )
+    : null;
 
   const sb = getSupabaseServer();
   if (sb) {
@@ -31,6 +43,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await isAdminRequest(req))) {
+    return adminUnauthorizedResponse();
+  }
   try {
     const body = await req.json();
     if (!body.name || !body.city || !body.address) {

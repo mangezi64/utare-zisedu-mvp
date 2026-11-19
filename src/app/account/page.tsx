@@ -40,6 +40,10 @@ import {
 import { JobApplicationRecord, StoredCandidateRecord } from "@/lib/store";
 import { useViewMode } from "@/lib/view-mode-context";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
+import DeleteAccountPanel from "@/components/DeleteAccountPanel";
+import PasswordInput from "@/components/PasswordInput";
+import PasswordStrengthBox from "@/components/PasswordStrengthBox";
+import { validatePassword } from "@/lib/validation";
 
 const DEFAULT_PROFILE: CandidateProfile = {
   fullName: "Chipo Nyamande",
@@ -49,8 +53,8 @@ const DEFAULT_PROFILE: CandidateProfile = {
   highestQualification: "Bachelors Degree",
   fieldOfStudy: "BSc Honours in Economics & Statistics",
   yearsExperience: 1,
-  employmentStatus: "Unemployed",
-  monthlyIncomeBracket: "$0 (Zero Income)",
+  canWorkRemotely: false,
+  hubSupportNeed: "Full Hub Access Needed (Need Workstation, Solar Power & Internet)",
   hasDedicatedLaptop: false,
   primaryDevice: "Smartphone Only",
   internetAccessType: "Mobile Data Bundles Only",
@@ -89,6 +93,7 @@ export default function CandidateAccountPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  const [pwChangeAttempted, setPwChangeAttempted] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Document Upload state
@@ -287,8 +292,22 @@ export default function CandidateAccountPage() {
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
     setPasswordError(null);
+    setPwChangeAttempted(true);
     if (!currentPassword || !newPassword) {
       setPasswordError("Please enter both your current and new password.");
+      return;
+    }
+    const pwCheck = validatePassword(newPassword);
+    if (!pwCheck.isValid) {
+      const missing = pwCheck.requirements
+        .filter((r) => !r.met)
+        .map((r) => r.label)
+        .join(", ");
+      setPasswordError(
+        missing
+          ? `New password is missing: ${missing}.`
+          : pwCheck.error || "Please choose a stronger password."
+      );
       return;
     }
     if (newPassword !== confirmNewPassword) {
@@ -314,6 +333,7 @@ export default function CandidateAccountPage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
+      setPwChangeAttempted(false);
       setStatusMessage(data.message || "Password updated successfully!");
     } catch {
       setPasswordError("Unable to reach server. Please try again.");
@@ -767,9 +787,13 @@ export default function CandidateAccountPage() {
                     <span className="font-semibold text-slate-800">{profile.phone}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Employment:</span>
+                    <span className="text-slate-400 block text-[11px]">Remote / Hub Mode:</span>
                     <span className="font-semibold text-slate-800">
-                      {profile.employmentStatus}
+                      {profile.hubSupportNeed
+                        ? profile.hubSupportNeed.split("(")[0].trim()
+                        : profile.hasDedicatedLaptop
+                        ? "Hybrid / Independent"
+                        : "Needs Hub Access"}
                     </span>
                   </div>
                   <div>
@@ -864,34 +888,45 @@ export default function CandidateAccountPage() {
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     New Password *
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     required
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 8 chars"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
+                    onChange={setNewPassword}
+                    placeholder="Min 8 chars, upper, lower, number, symbol"
+                    autoComplete="new-password"
+                    invalid={
+                      pwChangeAttempted && !validatePassword(newPassword).isValid
+                    }
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Confirm New *
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     required
                     value={confirmNewPassword}
-                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    onChange={setConfirmNewPassword}
                     placeholder="Repeat new password"
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs"
+                    autoComplete="new-password"
+                    invalid={
+                      (confirmNewPassword.length > 0 &&
+                        confirmNewPassword !== newPassword) ||
+                      (pwChangeAttempted && !confirmNewPassword)
+                    }
                   />
                 </div>
               </div>
+              <PasswordStrengthBox
+                id="account-password-box"
+                password={newPassword}
+                showIssues={pwChangeAttempted}
+              />
               <button
                 type="submit"
                 disabled={changingPassword}
@@ -939,6 +974,8 @@ export default function CandidateAccountPage() {
               </Link>
             </div>
           </div>
+
+          <DeleteAccountPanel />
         </div>
 
         {/* Right Column (7 cols): Hub Assignment, Milestone Progress & Job Applications */}
@@ -1391,6 +1428,64 @@ export default function CandidateAccountPage() {
                     <p className="text-slate-600 line-clamp-2 italic bg-white p-2 rounded border border-slate-100">
                       &quot;{app.tailoredResumePitch}&quot;
                     </p>
+
+                    {app.employerFeedbackNote ? (
+                      <div className="rounded-lg border border-slate-200 bg-white p-2.5 text-[11px] text-slate-700">
+                        <strong className="text-slate-900">Employer Feedback: </strong>
+                        {app.employerFeedbackNote}
+                      </div>
+                    ) : app.status === "rejected" ? (
+                      <div className="rounded-lg border border-slate-200 bg-white p-2.5 text-[11px] text-slate-500">
+                        The employer exercised their right not to share specific feedback for this hiring decision.
+                      </div>
+                    ) : null}
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                          app.sharedWithEmployer === false
+                            ? "bg-amber-100 text-amber-900"
+                            : "bg-emerald-100 text-emerald-800"
+                        }`}
+                      >
+                        {app.sharedWithEmployer === false
+                          ? "Sharing Paused (Hidden from Employer)"
+                          : "Shared with Employer (Consent Active)"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const nextVal = app.sharedWithEmployer === false;
+                          const res = await fetch("/api/jobs", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            credentials: "include",
+                            body: JSON.stringify({
+                              applicationId: app.id,
+                              sharedWithEmployer: nextVal,
+                            }),
+                          });
+                          const data = await res.json().catch(() => ({}));
+                          if (res.ok && data.application) {
+                            setApplications((prev) =>
+                              prev.map((item) =>
+                                item.id === app.id ? data.application : item
+                              )
+                            );
+                            setStatusMessage(
+                              nextVal
+                                ? `Resumed sharing application with ${app.company}.`
+                                : `Paused sharing — ${app.company} can no longer view this application.`
+                            );
+                          }
+                        }}
+                        className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-700 hover:bg-slate-100"
+                      >
+                        {app.sharedWithEmployer === false
+                          ? "Share with Employer"
+                          : "Pause Employer Access"}
+                      </button>
+                    </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 pt-1">
                       <div>

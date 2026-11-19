@@ -64,6 +64,7 @@ export default function RootLayout({
                   <Link href="/hubs">Hubs</Link>
                   <Link href="/employers">For Employers</Link>
                   <Link href="/contact">Contact</Link>
+                  <Link href="/data-policy">Data Policy &amp; Privacy</Link>
                 </div>
                 <div className="footer-contact">
                   <a href="mailto:utarezemai@gmail.com">
@@ -80,7 +81,15 @@ export default function RootLayout({
             <AssistiveToolbar variant="footer" />
             <div className="footer-bottom">
               <span>© {new Date().getFullYear()} UTARE ZEM AI</span>
-              <span>Zimbabwe Economic Mobility &amp; Remote Bridge</span>
+              <span className="flex flex-wrap items-center gap-4">
+                <Link
+                  href="/data-policy"
+                  className="underline underline-offset-4 hover:text-white"
+                >
+                  Data Policy &amp; Privacy (Zimbabwe Cyber &amp; Data Protection Act)
+                </Link>
+                <span>Zimbabwe Economic Mobility &amp; Remote Bridge</span>
+              </span>
             </div>
           </footer>
 

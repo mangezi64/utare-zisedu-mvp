@@ -20,6 +20,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useViewMode } from "@/lib/view-mode-context";
+import DeleteAccountPanel from "@/components/DeleteAccountPanel";
 import {
   ApplicationStatus,
   EmployerApplicantView,
@@ -191,7 +192,8 @@ export default function EmployerPortalPage() {
 
   async function handleUpdateApplicationStatus(
     applicationId: string,
-    status: ApplicationStatus
+    status: ApplicationStatus,
+    feedbackNote?: string
   ) {
     setErrorNotice(null);
     try {
@@ -203,6 +205,7 @@ export default function EmployerPortalPage() {
           action: "update_application_status",
           applicationId,
           status,
+          ...(feedbackNote !== undefined ? { feedbackNote } : {}),
         }),
       });
       const data = await res.json();
@@ -730,9 +733,12 @@ export default function EmployerPortalPage() {
             <p className="text-[11px] text-slate-600 leading-relaxed">
               To protect candidate privacy, this portal displays only
               application-related credentials, verified readiness tier, skills,
-              and submitted CV/cover letter documents for your roles.
+              and submitted CV/cover letter documents for candidates who
+              explicitly consented to share their application.
             </p>
           </div>
+
+          <DeleteAccountPanel />
         </div>
 
         {/* Right Column: Applicants for Employer's Roles */}
@@ -899,6 +905,36 @@ export default function EmployerPortalPage() {
                         <p className="text-xs text-slate-700 leading-relaxed">
                           {app.tailoredResumePitch}
                         </p>
+                      </div>
+
+                      {/* Optional Employer Feedback Note (Employer Discretion) */}
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5">
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                          <span className="font-semibold text-slate-700">
+                            Optional Candidate Feedback
+                          </span>
+                          <span className="text-slate-400">
+                            Employers reserve the right to share or withhold feedback
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            defaultValue={app.employerFeedbackNote || ""}
+                            placeholder="Optional note for candidate (leave blank to withhold)..."
+                            onBlur={(e) => {
+                              const nextNote = e.target.value.trim();
+                              if (nextNote !== (app.employerFeedbackNote || "")) {
+                                handleUpdateApplicationStatus(
+                                  app.id,
+                                  app.status,
+                                  nextNote
+                                );
+                              }
+                            }}
+                            className="flex-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs text-slate-700"
+                          />
+                        </div>
                       </div>
 
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">

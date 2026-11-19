@@ -210,6 +210,15 @@ export default function ContactPage() {
                     <option value="Candidate Support">
                       Career support &amp; intake
                     </option>
+                    <option value="Safety / Scam Report">
+                      Safety concern / scam report (Stewart Mangezi)
+                    </option>
+                    <option value="AI Decision / Appeal Review">
+                      AI decision appeal / human review (Bheki Ndlovu)
+                    </option>
+                    <option value="Data Erasure / Privacy Request">
+                      Data privacy / special-circumstance erasure (Stewart Mangezi)
+                    </option>
                     <option value="Employer Hiring">
                       Employer partnership
                     </option>

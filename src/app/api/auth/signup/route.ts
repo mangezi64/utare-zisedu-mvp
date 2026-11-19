@@ -34,6 +34,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (body.dataPolicyAccepted === false || body.dataPolicyAccepted === "false") {
+      return NextResponse.json(
+        {
+          error:
+            "You must read and accept the UTARE Data Policy before creating an account.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const dataPolicyAcceptedAt =
+      body.dataPolicyAccepted === true ? new Date().toISOString() : undefined;
+    const dataPolicyVersion =
+      body.dataPolicyAccepted === true ? "2026-11-v1" : undefined;
+
     // 1. Validate email format + disposable domain list
     const emailCheck = validateEmail(normalizedEmail);
     if (!emailCheck.isValid) {
@@ -244,8 +259,6 @@ export async function POST(req: NextRequest) {
         highestQualification,
         fieldOfStudy,
         yearsExperience: Number(body.yearsExperience) || 0,
-        employmentStatus: "Unemployed",
-        monthlyIncomeBracket: "$0 (Zero Income)",
         hasDedicatedLaptop: false,
         primaryDevice: "Smartphone Only",
         internetAccessType: "Mobile Data Bundles Only",
@@ -269,8 +282,8 @@ export async function POST(req: NextRequest) {
               highest_qualification: highestQualification,
               field_of_study: fieldOfStudy,
               years_experience: Number(body.yearsExperience) || 0,
-              employment_status: "Unemployed",
-              monthly_income_bracket: "$0 (Zero Income)",
+              employment_status: "Not specified",
+              monthly_income_bracket: "Not collected",
               has_dedicated_laptop: false,
               primary_device: "Smartphone Only",
               internet_access_type: "Mobile Data Bundles Only",
@@ -301,6 +314,8 @@ export async function POST(req: NextRequest) {
       city: body.city,
       qualification: body.qualification,
       fieldOfStudy: body.fieldOfStudy,
+      dataPolicyAcceptedAt,
+      dataPolicyVersion,
     });
 
     // Sync auth user to live Supabase Postgres auth_users table
@@ -319,6 +334,9 @@ export async function POST(req: NextRequest) {
             employer_id: employerId || null,
             org_role: accountType === "employer" ? "org_admin" : null,
             company_name: companyName || null,
+            data_policy_accepted_at: dataPolicyAcceptedAt || null,
+            data_policy_version: dataPolicyVersion || null,
+            last_active_at: authUser.lastActiveAt || new Date().toISOString(),
           },
           { onConflict: "email" }
         );

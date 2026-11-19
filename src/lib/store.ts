@@ -37,7 +37,7 @@ import {
   SEED_SKILLS_COURSES,
 } from "@/lib/mock-data";
 import { query } from "@/lib/db";
-import { getSupabaseServer } from "@/lib/supabase/client";
+import { getSupabaseAdmin, getSupabaseServer } from "@/lib/supabase/client";
 
 export interface StoredAuthUser {
   id: string;
@@ -56,6 +56,17 @@ export interface StoredAuthUser {
   qualification?: string;
   fieldOfStudy?: string;
   createdAt: string;
+  lastActiveAt?: string;
+  inactivityNoticesSent?: number;
+  lastInactivityNoticeAt?: string;
+  inactivityNoticeHistory?: {
+    noticeNumber: number;
+    sentAt: string;
+    channel: string;
+  }[];
+  remainConfirmedAt?: string;
+  dataPolicyAcceptedAt?: string;
+  dataPolicyVersion?: string;
 }
 
 export interface StoredCandidateRecord {
@@ -94,6 +105,9 @@ export interface JobApplicationRecord {
   generatedCoverLetter?: GeneratedCoverLetter;
   attachedDocumentIds?: string[];
   status?: ApplicationStatus;
+  sharedWithEmployer?: boolean;
+  consentTimestamp?: string;
+  employerFeedbackNote?: string;
   appliedAt: string;
   updatedAt?: string;
   updatedBy?: string;
@@ -220,8 +234,12 @@ export async function findCandidateByEmailAsync(
           highestQualification: p.highest_qualification || "Bachelors Degree",
           fieldOfStudy: p.field_of_study || "Information Technology",
           yearsExperience: Number(p.years_experience) || 0,
-          employmentStatus: p.employment_status || "Unemployed",
-          monthlyIncomeBracket: p.monthly_income_bracket || "$0 (Zero Income)",
+          ...(p.employment_status && p.employment_status !== "Not specified"
+            ? { employmentStatus: p.employment_status }
+            : {}),
+          ...(p.monthly_income_bracket && p.monthly_income_bracket !== "Not collected"
+            ? { monthlyIncomeBracket: p.monthly_income_bracket }
+            : {}),
           hasDedicatedLaptop: Boolean(p.has_dedicated_laptop),
           primaryDevice: p.primary_device || "Smartphone Only",
           internetAccessType: p.internet_access_type || "Mobile Data Bundles Only",
@@ -275,8 +293,10 @@ function syncAuthUserToPostgres(user: StoredAuthUser) {
   query(
     `INSERT INTO public.auth_users (
        id, email, name, role, password_hash, email_confirmed,
-       confirmation_token, employer_id, org_role, company_name, created_at
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       confirmation_token, employer_id, org_role, company_name, created_at,
+       last_active_at, inactivity_notices_sent, last_inactivity_notice_at,
+       remain_confirmed_at, data_policy_accepted_at, data_policy_version
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
      ON CONFLICT (email) DO UPDATE SET
        name = EXCLUDED.name,
        role = EXCLUDED.role,
@@ -285,7 +305,10 @@ function syncAuthUserToPostgres(user: StoredAuthUser) {
        confirmation_token = EXCLUDED.confirmation_token,
        employer_id = EXCLUDED.employer_id,
        org_role = EXCLUDED.org_role,
-       company_name = EXCLUDED.company_name;`,
+       company_name = EXCLUDED.company_name,
+       last_active_at = COALESCE(EXCLUDED.last_active_at, public.auth_users.last_active_at),
+       data_policy_accepted_at = COALESCE(EXCLUDED.data_policy_accepted_at, public.auth_users.data_policy_accepted_at),
+       data_policy_version = COALESCE(EXCLUDED.data_policy_version, public.auth_users.data_policy_version);`,
     [
       user.id,
       user.email.toLowerCase(),
@@ -298,6 +321,12 @@ function syncAuthUserToPostgres(user: StoredAuthUser) {
       user.orgRole || null,
       user.companyName || null,
       user.createdAt,
+      user.lastActiveAt || user.createdAt,
+      user.inactivityNoticesSent ?? 0,
+      user.lastInactivityNoticeAt || null,
+      user.remainConfirmedAt || null,
+      user.dataPolicyAcceptedAt || null,
+      user.dataPolicyVersion || null,
     ]
   ).catch(() => {});
 
@@ -317,6 +346,12 @@ function syncAuthUserToPostgres(user: StoredAuthUser) {
           org_role: user.orgRole || null,
           company_name: user.companyName || null,
           created_at: user.createdAt,
+          last_active_at: user.lastActiveAt || user.createdAt,
+          inactivity_notices_sent: user.inactivityNoticesSent ?? 0,
+          last_inactivity_notice_at: user.lastInactivityNoticeAt || null,
+          remain_confirmed_at: user.remainConfirmedAt || null,
+          data_policy_accepted_at: user.dataPolicyAcceptedAt || null,
+          data_policy_version: user.dataPolicyVersion || null,
         },
         { onConflict: "email" }
       )
@@ -342,7 +377,9 @@ export async function findAuthUserByEmailFromDb(
   try {
     const res = await query<any>(
       `SELECT id, email, name, role, password_hash, email_confirmed,
-              confirmation_token, employer_id, org_role, company_name, created_at
+              confirmation_token, employer_id, org_role, company_name, created_at,
+              last_active_at, inactivity_notices_sent, last_inactivity_notice_at,
+              remain_confirmed_at, data_policy_accepted_at, data_policy_version
        FROM public.auth_users
        WHERE LOWER(email) = $1
        LIMIT 1;`,
@@ -364,6 +401,23 @@ export async function findAuthUserByEmailFromDb(
         createdAt: row.created_at
           ? new Date(row.created_at).toISOString()
           : new Date().toISOString(),
+        lastActiveAt: row.last_active_at
+          ? new Date(row.last_active_at).toISOString()
+          : undefined,
+        inactivityNoticesSent:
+          typeof row.inactivity_notices_sent === "number"
+            ? row.inactivity_notices_sent
+            : undefined,
+        lastInactivityNoticeAt: row.last_inactivity_notice_at
+          ? new Date(row.last_inactivity_notice_at).toISOString()
+          : undefined,
+        remainConfirmedAt: row.remain_confirmed_at
+          ? new Date(row.remain_confirmed_at).toISOString()
+          : undefined,
+        dataPolicyAcceptedAt: row.data_policy_accepted_at
+          ? new Date(row.data_policy_accepted_at).toISOString()
+          : undefined,
+        dataPolicyVersion: row.data_policy_version || undefined,
       };
       const state = readStore();
       const idx = state.users.findIndex(
@@ -406,6 +460,23 @@ export async function findAuthUserByEmailFromDb(
           createdAt: row.created_at
             ? new Date(row.created_at).toISOString()
             : new Date().toISOString(),
+          lastActiveAt: row.last_active_at
+            ? new Date(row.last_active_at).toISOString()
+            : undefined,
+          inactivityNoticesSent:
+            typeof row.inactivity_notices_sent === "number"
+              ? row.inactivity_notices_sent
+              : undefined,
+          lastInactivityNoticeAt: row.last_inactivity_notice_at
+            ? new Date(row.last_inactivity_notice_at).toISOString()
+            : undefined,
+          remainConfirmedAt: row.remain_confirmed_at
+            ? new Date(row.remain_confirmed_at).toISOString()
+            : undefined,
+          dataPolicyAcceptedAt: row.data_policy_accepted_at
+            ? new Date(row.data_policy_accepted_at).toISOString()
+            : undefined,
+          dataPolicyVersion: row.data_policy_version || undefined,
         };
         const state = readStore();
         const idx = state.users.findIndex(
@@ -446,6 +517,8 @@ export function createAuthUser(params: {
   city?: string;
   qualification?: string;
   fieldOfStudy?: string;
+  dataPolicyAcceptedAt?: string;
+  dataPolicyVersion?: string;
 }): StoredAuthUser {
   const state = readStore();
   const normalizedEmail = params.email.trim().toLowerCase();
@@ -456,7 +529,9 @@ export function createAuthUser(params: {
   const userRecord: StoredAuthUser = {
     id:
       params.id ||
-      (existingIdx >= 0 ? state.users[existingIdx].id : `usr-${Date.now()}`),
+      (existingIdx >= 0
+        ? state.users[existingIdx].id
+        : `usr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`),
     email: normalizedEmail,
     name: params.name.trim(),
     role: params.role,
@@ -473,6 +548,15 @@ export function createAuthUser(params: {
       existingIdx >= 0
         ? state.users[existingIdx].createdAt
         : new Date().toISOString(),
+    lastActiveAt: new Date().toISOString(),
+    inactivityNoticesSent:
+      existingIdx >= 0 ? state.users[existingIdx].inactivityNoticesSent ?? 0 : 0,
+    dataPolicyAcceptedAt:
+      params.dataPolicyAcceptedAt ||
+      (existingIdx >= 0 ? state.users[existingIdx].dataPolicyAcceptedAt : undefined),
+    dataPolicyVersion:
+      params.dataPolicyVersion ||
+      (existingIdx >= 0 ? state.users[existingIdx].dataPolicyVersion : undefined),
   };
 
   if (existingIdx >= 0) {
@@ -651,6 +735,23 @@ export async function verifyUserEmailByTokenAsync(
           createdAt: row.created_at
             ? new Date(row.created_at).toISOString()
             : new Date().toISOString(),
+          lastActiveAt: row.last_active_at
+            ? new Date(row.last_active_at).toISOString()
+            : undefined,
+          inactivityNoticesSent:
+            typeof row.inactivity_notices_sent === "number"
+              ? row.inactivity_notices_sent
+              : undefined,
+          lastInactivityNoticeAt: row.last_inactivity_notice_at
+            ? new Date(row.last_inactivity_notice_at).toISOString()
+            : undefined,
+          remainConfirmedAt: row.remain_confirmed_at
+            ? new Date(row.remain_confirmed_at).toISOString()
+            : undefined,
+          dataPolicyAcceptedAt: row.data_policy_accepted_at
+            ? new Date(row.data_policy_accepted_at).toISOString()
+            : undefined,
+          dataPolicyVersion: row.data_policy_version || undefined,
         };
         const state = readStore();
         const idx = state.users.findIndex(
@@ -720,8 +821,8 @@ function syncCandidateToPostgres(profile: CandidateProfile) {
   const qual = profile.highestQualification || "Bachelors Degree";
   const field = profile.fieldOfStudy || "Tertiary Graduate";
   const exp = profile.yearsExperience || 0;
-  const empStatus = profile.employmentStatus || "Unemployed";
-  const income = profile.monthlyIncomeBracket || "$0 (Zero Income)";
+  const empStatus = profile.employmentStatus || "Not specified";
+  const income = profile.monthlyIncomeBracket || "Not collected";
   const hasLaptop = Boolean(profile.hasDedicatedLaptop);
   const device =
     profile.primaryDevice || (hasLaptop ? "Dedicated Laptop / PC" : "Smartphone Only");
@@ -737,8 +838,9 @@ function syncCandidateToPostgres(profile: CandidateProfile) {
        employment_status, monthly_income_bracket,
        has_dedicated_laptop, primary_device, internet_access_type,
        power_reliability_hours, has_global_payment_rail, primary_goal,
+       can_work_remotely, hub_support_need,
        updated_at
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW())
      ON CONFLICT (email) DO UPDATE SET
        full_name = EXCLUDED.full_name,
        phone = EXCLUDED.phone,
@@ -754,6 +856,8 @@ function syncCandidateToPostgres(profile: CandidateProfile) {
        power_reliability_hours = EXCLUDED.power_reliability_hours,
        has_global_payment_rail = EXCLUDED.has_global_payment_rail,
        primary_goal = EXCLUDED.primary_goal,
+       can_work_remotely = EXCLUDED.can_work_remotely,
+       hub_support_need = EXCLUDED.hub_support_need,
        updated_at = NOW();`,
     [
       fullName,
@@ -771,6 +875,8 @@ function syncCandidateToPostgres(profile: CandidateProfile) {
       power,
       paymentRail,
       goal,
+      profile.canWorkRemotely ?? null,
+      profile.hubSupportNeed || null,
     ]
   ).catch((err: any) => {
     console.warn("[PostgreSQL Candidate Sync Warning]:", err?.message);
@@ -823,12 +929,16 @@ function syncJobApplicationToPostgres(app: JobApplicationRecord) {
        id, candidate_id, candidate_name, candidate_email, candidate_city,
        candidate_qualification, candidate_field_of_study, candidate_skills,
        candidate_readiness_tier, job_id, job_title, company, employer_id,
-       tailored_resume_pitch, generated_cv, generated_cover_letter, status, applied_at
+       tailored_resume_pitch, generated_cv, generated_cover_letter, status,
+       shared_with_employer, consent_timestamp, employer_feedback_note, applied_at
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
      ON CONFLICT (id) DO UPDATE SET
        status = EXCLUDED.status,
-       tailored_resume_pitch = EXCLUDED.tailored_resume_pitch`,
+       tailored_resume_pitch = EXCLUDED.tailored_resume_pitch,
+       shared_with_employer = EXCLUDED.shared_with_employer,
+       consent_timestamp = EXCLUDED.consent_timestamp,
+       employer_feedback_note = EXCLUDED.employer_feedback_note`,
     [
       app.id,
       app.candidateId,
@@ -847,6 +957,9 @@ function syncJobApplicationToPostgres(app: JobApplicationRecord) {
       app.generatedCv ? JSON.stringify(app.generatedCv) : null,
       app.generatedCoverLetter ? JSON.stringify(app.generatedCoverLetter) : null,
       app.status || "submitted",
+      app.sharedWithEmployer !== false,
+      app.consentTimestamp || null,
+      app.employerFeedbackNote || null,
       app.appliedAt,
     ]
   ).catch(() => {
@@ -924,26 +1037,24 @@ export function saveCandidateEndToEnd(
     (c) => c.profile.email.toLowerCase() === profile.email.toLowerCase()
   );
 
+  const existing = existingIdx >= 0 ? state.candidates[existingIdx] : null;
+  const mergedProfile: CandidateProfile = {
+    ...profile,
+    avatarDataUrl: profile.avatarDataUrl ?? existing?.profile.avatarDataUrl,
+    includePhotoOnCv:
+      profile.includePhotoOnCv ?? existing?.profile.includePhotoOnCv,
+  };
+
   const record: StoredCandidateRecord = {
-    id:
-      existingIdx >= 0
-        ? state.candidates[existingIdx].id
-        : `cand-${Date.now()}`,
-    profile,
+    id: existing ? existing.id : `cand-${Date.now()}`,
+    ...(existing?.userId ? { userId: existing.userId } : {}),
+    profile: mergedProfile,
     assessment,
     pathway,
-    completedMilestones:
-      existingIdx >= 0 ? state.candidates[existingIdx].completedMilestones : [],
-    coachingStatus:
-      existingIdx >= 0
-        ? state.candidates[existingIdx].coachingStatus
-        : "Pending Booking",
-    bookedHubDesk:
-      existingIdx >= 0 ? state.candidates[existingIdx].bookedHubDesk : undefined,
-    createdAt:
-      existingIdx >= 0
-        ? state.candidates[existingIdx].createdAt
-        : new Date().toISOString(),
+    completedMilestones: existing ? existing.completedMilestones : [],
+    coachingStatus: existing ? existing.coachingStatus : "Pending Booking",
+    bookedHubDesk: existing ? existing.bookedHubDesk : undefined,
+    createdAt: existing ? existing.createdAt : new Date().toISOString(),
   };
 
   if (existingIdx >= 0) {
@@ -1048,22 +1159,156 @@ export function addJobToStore(job: RemoteJob): RemoteJob {
 
 export function updateJobStatus(
   jobId: string,
-  status: "approved" | "pending_review" | "archived"
+  status: "approved" | "pending_review" | "reported" | "archived"
 ): RemoteJob | null {
   const state = readStore();
   const job = state.jobs.find((j) => j.id === jobId);
   if (!job) return null;
   job.status = status;
+  job.updatedAt = new Date().toISOString();
   writeStore(state);
+  const pgStatus = status === "reported" ? "pending_review" : status;
+  query(
+    `UPDATE public.remote_jobs SET status = $2, updated_at = NOW() WHERE title = $1`,
+    [job.title, pgStatus]
+  ).catch(() => {});
   return job;
+}
+
+export function reportJobListing(params: {
+  jobId: string;
+  reason: string;
+  details?: string;
+  reportedByEmail: string;
+  reportedByName?: string;
+}): RemoteJob | null {
+  const state = readStore();
+  const job = state.jobs.find((j) => j.id === params.jobId);
+  if (!job) return null;
+
+  const nowIso = new Date().toISOString();
+  const entry = {
+    id: `rep-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    reason: params.reason.trim(),
+    details: params.details?.trim() || undefined,
+    reportedByEmail: params.reportedByEmail.trim().toLowerCase(),
+    reportedByName: params.reportedByName?.trim() || undefined,
+    reportedAt: nowIso,
+  };
+
+  if (!job.reports) job.reports = [];
+  job.reports.unshift(entry);
+  job.status = "reported";
+  job.reportedAt = nowIso;
+  job.reportedReason = entry.reason;
+  job.updatedAt = nowIso;
+  job.updatedBy = entry.reportedByEmail;
+
+  writeStore(state);
+
+  // Sync to PostgreSQL safely (status column falls back to pending_review if legacy CHECK constraint exists)
+  query(
+    `UPDATE public.remote_jobs
+     SET status = 'pending_review',
+         reports = $2::jsonb,
+         reported_at = $3,
+         reported_reason = $4,
+         updated_at = NOW(),
+         updated_by = $5
+     WHERE title = $1`,
+    [
+      job.title,
+      JSON.stringify(job.reports),
+      nowIso,
+      entry.reason,
+      entry.reportedByEmail,
+    ]
+  ).catch(() => {});
+
+  recordAuditLog({
+    entityType: "job",
+    entityId: job.id,
+    action: "job_reported",
+    actorEmail: entry.reportedByEmail,
+    actorRole: "candidate",
+    newValue: "reported",
+    summary: `Listing "${job.title}" (${job.company}) reported for "${entry.reason}" and taken off the platform pending Superuser safety review.`,
+  });
+
+  return job;
+}
+
+export function moderateReportedJob(params: {
+  jobId: string;
+  decision: "restore" | "remove";
+  superuserEmail: string;
+  note?: string;
+}): { decision: "restore" | "remove"; job?: RemoteJob; removed: boolean } | null {
+  const state = readStore();
+  const job = state.jobs.find((j) => j.id === params.jobId);
+  if (!job) return null;
+
+  const nowIso = new Date().toISOString();
+  if (params.decision === "remove") {
+    const title = job.title;
+    const company = job.company;
+    deleteJobFromStore(job.id);
+    recordAuditLog({
+      entityType: "job",
+      entityId: params.jobId,
+      action: "reported_job_removed",
+      actorEmail: params.superuserEmail,
+      actorRole: "superuser",
+      previousValue: job.status || "reported",
+      newValue: "deleted",
+      summary: `Superuser ${params.superuserEmail} confirmed "${title}" (${company}) was wrong/scam and permanently removed it.${params.note ? ` Note: ${params.note}` : ""}`,
+    });
+    return { decision: "remove", removed: true };
+  }
+
+  job.status = "approved";
+  job.moderationNotes = params.note?.trim() || "Evaluated and cleared by Superuser.";
+  job.updatedAt = nowIso;
+  job.updatedBy = params.superuserEmail;
+  writeStore(state);
+
+  query(
+    `UPDATE public.remote_jobs
+     SET status = 'approved',
+         moderation_notes = $2,
+         updated_at = NOW(),
+         updated_by = $3
+     WHERE title = $1`,
+    [job.title, job.moderationNotes, params.superuserEmail]
+  ).catch(() => {});
+
+  recordAuditLog({
+    entityType: "job",
+    entityId: job.id,
+    action: "reported_job_restored",
+    actorEmail: params.superuserEmail,
+    actorRole: "superuser",
+    previousValue: "reported",
+    newValue: "approved",
+    summary: `Superuser ${params.superuserEmail} evaluated "${job.title}" (${job.company}) and allowed it back onto the platform.${params.note ? ` Note: ${params.note}` : ""}`,
+  });
+
+  return { decision: "restore", job, removed: false };
 }
 
 export function deleteJobFromStore(jobId: string): boolean {
   const state = readStore();
+  const target = state.jobs.find((j) => j.id === jobId);
   const beforeLen = state.jobs.length;
   state.jobs = state.jobs.filter((j) => j.id !== jobId);
   if (state.jobs.length !== beforeLen) {
     writeStore(state);
+    if (target) {
+      query(`DELETE FROM public.remote_jobs WHERE title = $1 AND company = $2`, [
+        target.title,
+        target.company,
+      ]).catch(() => {});
+    }
     return true;
   }
   return false;
@@ -1289,27 +1534,39 @@ export function submitJobApplicationToStore(params: {
   generatedCv?: GeneratedCv;
   generatedCoverLetter?: GeneratedCoverLetter;
   attachedDocumentIds?: string[];
+  sharedWithEmployer?: boolean;
 }): JobApplicationRecord | null {
   const state = readStore();
   const job = state.jobs.find((j) => j.id === params.jobId);
   if (!job) return null;
 
+  const emailLower = params.candidateEmail?.trim().toLowerCase();
   const targetId = params.candidateId || params.candidateEmail || state.activeCandidateId;
-  const activeCandidate = targetId
-    ? state.candidates.find(
-        (c) =>
-          c.id === targetId ||
-          c.userId === targetId ||
-          c.profile.email.trim().toLowerCase() === targetId.trim().toLowerCase()
-      )
-    : state.candidates[0] || null;
+  const activeCandidate =
+    (targetId
+      ? state.candidates.find(
+          (c) =>
+            c.id === targetId ||
+            c.userId === targetId ||
+            c.profile.email.trim().toLowerCase() === targetId.trim().toLowerCase()
+        )
+      : null) ||
+    (emailLower
+      ? state.candidates.find(
+          (c) => c.profile.email.trim().toLowerCase() === emailLower
+        )
+      : null) ||
+    (!params.candidateId && !params.candidateEmail
+      ? state.candidates[0] || null
+      : null);
 
   const nowIso = new Date().toISOString();
   const candidateEmail =
     params.candidateEmail || activeCandidate?.profile.email || undefined;
+  const isShared = params.sharedWithEmployer !== false;
 
   const appRecord: JobApplicationRecord = {
-    id: `app-${Date.now()}`,
+    id: `app-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     candidateId: activeCandidate?.id || targetId || "candidate",
     candidateName:
       params.candidateName || activeCandidate?.profile.fullName || "Utare Candidate",
@@ -1331,6 +1588,8 @@ export function submitJobApplicationToStore(params: {
     generatedCoverLetter: params.generatedCoverLetter,
     attachedDocumentIds: params.attachedDocumentIds || [],
     status: "submitted",
+    sharedWithEmployer: isShared,
+    consentTimestamp: isShared ? nowIso : undefined,
     appliedAt: nowIso,
     updatedAt: nowIso,
     updatedBy: candidateEmail || "candidate",
@@ -1402,6 +1661,11 @@ export function toEmployerApplicantView(
     company: app.company,
     appliedAt: app.appliedAt,
     status: app.status || "submitted",
+    sharedWithEmployer: app.sharedWithEmployer !== false,
+    ...(app.consentTimestamp ? { consentTimestamp: app.consentTimestamp } : {}),
+    ...(app.employerFeedbackNote
+      ? { employerFeedbackNote: app.employerFeedbackNote }
+      : {}),
     ...(app.updatedAt ? { updatedAt: app.updatedAt } : {}),
     ...(app.updatedBy ? { updatedBy: app.updatedBy } : {}),
     ...(app.statusHistory ? { statusHistory: app.statusHistory } : {}),
@@ -1638,6 +1902,8 @@ export function getEmployerJobs(employer: {
     if (employer.id && j.employerId === employer.id) return true;
     if (emailLower && j.employerEmail?.toLowerCase() === emailLower) return true;
     if (
+      !j.employerId &&
+      !j.employerEmail &&
       companyLower &&
       j.discoveredBy === "employer-posted" &&
       j.company.trim().toLowerCase() === companyLower
@@ -1659,8 +1925,9 @@ export function getEmployerApplicants(employer: {
 
   const matchingApps = state.applications.filter(
     (app) =>
-      ownedJobIds.has(app.jobId) ||
-      (employer.id && app.employerId === employer.id)
+      app.sharedWithEmployer !== false &&
+      (ownedJobIds.has(app.jobId) ||
+        (employer.id && app.employerId === employer.id))
   );
 
   return matchingApps
@@ -1679,16 +1946,54 @@ export function getEmployerApplicants(employer: {
     );
 }
 
+export function toggleApplicationSharing(params: {
+  applicationId: string;
+  candidateEmail: string;
+  sharedWithEmployer: boolean;
+}): JobApplicationRecord | null {
+  const state = readStore();
+  const emailLower = params.candidateEmail.trim().toLowerCase();
+  const app = state.applications.find(
+    (a) =>
+      a.id === params.applicationId &&
+      a.candidateEmail &&
+      a.candidateEmail.trim().toLowerCase() === emailLower
+  );
+  if (!app) return null;
+
+  const nowIso = new Date().toISOString();
+  app.sharedWithEmployer = params.sharedWithEmployer;
+  app.consentTimestamp = params.sharedWithEmployer ? nowIso : undefined;
+  app.updatedAt = nowIso;
+  app.updatedBy = emailLower;
+  writeStore(state);
+  syncJobApplicationToPostgres(app);
+
+  recordAuditLog({
+    entityType: "application",
+    entityId: app.id,
+    action: params.sharedWithEmployer ? "sharing_enabled" : "sharing_revoked",
+    actorEmail: emailLower,
+    actorRole: "candidate",
+    newValue: String(params.sharedWithEmployer),
+    summary: `Candidate ${params.sharedWithEmployer ? "granted" : "paused"} employer visibility consent for application "${app.jobTitle}".`,
+  });
+
+  return app;
+}
+
 export function updateApplicationStatus(params: {
   applicationId: string;
   status: ApplicationStatus;
   employer?: { id?: string; email?: string; companyName?: string };
   isAdmin?: boolean;
   actorEmail?: string;
+  feedbackNote?: string;
 }): EmployerApplicantView | null {
   const state = readStore();
   const app = state.applications.find((a) => a.id === params.applicationId);
   if (!app) return null;
+  if (!params.isAdmin && app.sharedWithEmployer === false) return null;
 
   if (!params.isAdmin && params.employer) {
     const ownedJobs = getEmployerJobs(params.employer);
@@ -1704,6 +2009,9 @@ export function updateApplicationStatus(params: {
   const nowIso = new Date().toISOString();
 
   app.status = params.status;
+  if (params.feedbackNote !== undefined) {
+    app.employerFeedbackNote = params.feedbackNote.trim() || undefined;
+  }
   app.updatedAt = nowIso;
   app.updatedBy = actor;
   if (!app.statusHistory) app.statusHistory = [];
@@ -1711,6 +2019,9 @@ export function updateApplicationStatus(params: {
     status: params.status,
     changedBy: actor,
     changedAt: nowIso,
+    ...(params.feedbackNote?.trim()
+      ? { note: params.feedbackNote.trim() }
+      : {}),
   });
 
   writeStore(state);
@@ -2360,4 +2671,410 @@ export async function listAuditLogs(limit = 100): Promise<AuditLogEntry[]> {
   return logs
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, limit);
+}
+
+// =============================================================================
+// Data Retention (1-Year Inactivity Policy) & Full Account Erasure
+// =============================================================================
+
+export const INACTIVITY_THRESHOLD_DAYS = 365;
+export const REQUIRED_INACTIVITY_EMAILS = 3;
+
+export function touchUserActivity(email: string): StoredAuthUser | null {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return null;
+  const state = readStore();
+  const user = state.users.find((u) => u.email.toLowerCase() === normalized);
+  if (!user) return null;
+
+  const nowIso = new Date().toISOString();
+  user.lastActiveAt = nowIso;
+  writeStore(state);
+
+  query(
+    `UPDATE public.auth_users SET last_active_at = NOW(), updated_at = NOW() WHERE LOWER(email) = $1`,
+    [normalized]
+  ).catch(() => {});
+
+  return user;
+}
+
+export function confirmUserRemainOnPlatform(email: string): StoredAuthUser | null {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return null;
+  const state = readStore();
+  const user = state.users.find((u) => u.email.toLowerCase() === normalized);
+  if (!user) return null;
+
+  const nowIso = new Date().toISOString();
+  user.lastActiveAt = nowIso;
+  user.remainConfirmedAt = nowIso;
+  user.inactivityNoticesSent = 0;
+  user.lastInactivityNoticeAt = undefined;
+  writeStore(state);
+
+  query(
+    `UPDATE public.auth_users
+     SET last_active_at = NOW(),
+         remain_confirmed_at = NOW(),
+         inactivity_notices_sent = 0,
+         last_inactivity_notice_at = NULL,
+         updated_at = NOW()
+     WHERE LOWER(email) = $1`,
+    [normalized]
+  ).catch(() => {});
+
+  recordAuditLog({
+    entityType: "user",
+    entityId: user.id,
+    action: "retention_remain_confirmed",
+    actorEmail: normalized,
+    actorRole: user.role,
+    summary: `User confirmed they wish to remain on UTARE ZEM AI; inactivity notices reset to 0/${REQUIRED_INACTIVITY_EMAILS}.`,
+  });
+
+  return user;
+}
+
+export interface InactivityRetentionStatus {
+  userId: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  lastActiveAt: string;
+  daysInactive: number;
+  isOverOneYearInactive: boolean;
+  noticesSent: number;
+  requiredNotices: number;
+  lastNoticeAt?: string;
+  eligibleForDeletion: boolean;
+}
+
+export function listInactivityRetentionStatus(
+  referenceDate: Date = new Date()
+): InactivityRetentionStatus[] {
+  const state = readStore();
+  const refMs = referenceDate.getTime();
+  return state.users.map((u) => {
+    const lastIso = u.lastActiveAt || u.createdAt;
+    const lastMs = new Date(lastIso).getTime();
+    const daysInactive = Math.max(
+      0,
+      Math.floor((refMs - (Number.isNaN(lastMs) ? refMs : lastMs)) / (1000 * 60 * 60 * 24))
+    );
+    const noticesSent = u.inactivityNoticesSent ?? 0;
+    const isOverOneYearInactive = daysInactive >= INACTIVITY_THRESHOLD_DAYS;
+    return {
+      userId: u.id,
+      email: u.email,
+      name: u.name,
+      role: u.role,
+      lastActiveAt: lastIso,
+      daysInactive,
+      isOverOneYearInactive,
+      noticesSent,
+      requiredNotices: REQUIRED_INACTIVITY_EMAILS,
+      lastNoticeAt: u.lastInactivityNoticeAt,
+      eligibleForDeletion:
+        isOverOneYearInactive && noticesSent >= REQUIRED_INACTIVITY_EMAILS,
+    };
+  });
+}
+
+export function recordInactivityNoticeEmail(params: {
+  emailOrId: string;
+  actorEmail: string;
+  channel?: string;
+}): StoredAuthUser | null {
+  const target = params.emailOrId.trim().toLowerCase();
+  const state = readStore();
+  const user = state.users.find(
+    (u) => u.id === params.emailOrId || u.email.toLowerCase() === target
+  );
+  if (!user) return null;
+
+  const nowIso = new Date().toISOString();
+  const nextCount = (user.inactivityNoticesSent ?? 0) + 1;
+  user.inactivityNoticesSent = nextCount;
+  user.lastInactivityNoticeAt = nowIso;
+  if (!user.inactivityNoticeHistory) user.inactivityNoticeHistory = [];
+  user.inactivityNoticeHistory.push({
+    noticeNumber: nextCount,
+    sentAt: nowIso,
+    channel: params.channel || "email",
+  });
+  writeStore(state);
+
+  query(
+    `UPDATE public.auth_users
+     SET inactivity_notices_sent = $2,
+         last_inactivity_notice_at = NOW(),
+         updated_at = NOW(),
+         updated_by = $3
+     WHERE LOWER(email) = $1`,
+    [user.email.toLowerCase(), nextCount, params.actorEmail]
+  ).catch(() => {});
+
+  recordAuditLog({
+    entityType: "user",
+    entityId: user.id,
+    action: "inactivity_notice_sent",
+    actorEmail: params.actorEmail,
+    actorRole: "superuser",
+    newValue: `${nextCount}/${REQUIRED_INACTIVITY_EMAILS}`,
+    summary: `Inactivity login-to-remain notice #${nextCount} (of ${REQUIRED_INACTIVITY_EMAILS} required before deplatforming) sent to ${user.email}.`,
+  });
+
+  return user;
+}
+
+export async function deleteAllUserData(params: {
+  targetEmail?: string;
+  targetUserId?: string;
+  actorEmail: string;
+  actorRole: string;
+  reason?: string;
+}): Promise<{
+  deleted: boolean;
+  removedCounts: {
+    users: number;
+    candidates: number;
+    applications: number;
+    documents: number;
+    cvArtifacts: number;
+    employers: number;
+    jobs: number;
+    contactMessages: number;
+  };
+}> {
+  const state = readStore();
+  const emailLower = (params.targetEmail || "").trim().toLowerCase();
+  const targetUser = state.users.find(
+    (u) =>
+      (params.targetUserId && u.id === params.targetUserId) ||
+      (emailLower && u.email.toLowerCase() === emailLower)
+  );
+  const resolvedEmail = (targetUser?.email || emailLower).toLowerCase();
+  const resolvedUserId = targetUser?.id || params.targetUserId || "";
+
+  if (!resolvedEmail && !resolvedUserId) {
+    return {
+      deleted: false,
+      removedCounts: {
+        users: 0,
+        candidates: 0,
+        applications: 0,
+        documents: 0,
+        cvArtifacts: 0,
+        employers: 0,
+        jobs: 0,
+        contactMessages: 0,
+      },
+    };
+  }
+
+  const matchingCandidateIds = new Set<string>(
+    state.candidates
+      .filter(
+        (c) =>
+          (resolvedUserId && c.userId === resolvedUserId) ||
+          (resolvedEmail && c.profile.email.toLowerCase() === resolvedEmail)
+      )
+      .map((c) => c.id)
+  );
+
+  const matchingEmployerIds = new Set<string>(
+    state.employerRegistrations
+      .filter(
+        (e) =>
+          (resolvedUserId && e.userId === resolvedUserId) ||
+          (resolvedEmail && e.email.toLowerCase() === resolvedEmail)
+      )
+      .map((e) => e.id)
+  );
+
+  const beforeUsers = state.users.length;
+  state.users = state.users.filter(
+    (u) =>
+      !(
+        (resolvedUserId && u.id === resolvedUserId) ||
+        (resolvedEmail && u.email.toLowerCase() === resolvedEmail)
+      )
+  );
+
+  const beforeCandidates = state.candidates.length;
+  state.candidates = state.candidates.filter(
+    (c) =>
+      !(
+        matchingCandidateIds.has(c.id) ||
+        (resolvedUserId && c.userId === resolvedUserId) ||
+        (resolvedEmail && c.profile.email.toLowerCase() === resolvedEmail)
+      )
+  );
+  if (
+    state.activeCandidateId &&
+    matchingCandidateIds.has(state.activeCandidateId)
+  ) {
+    state.activeCandidateId = state.candidates[0]?.id || null;
+  }
+
+  const beforeApplications = state.applications.length;
+  state.applications = state.applications.filter(
+    (a) =>
+      !(
+        matchingCandidateIds.has(a.candidateId) ||
+        (resolvedUserId && a.candidateId === resolvedUserId) ||
+        (resolvedEmail &&
+          a.candidateEmail &&
+          a.candidateEmail.toLowerCase() === resolvedEmail)
+      )
+  );
+
+  const beforeDocs = (state.candidateDocuments || []).length;
+  state.candidateDocuments = (state.candidateDocuments || []).filter(
+    (d) =>
+      !(
+        (resolvedUserId && d.userId === resolvedUserId) ||
+        (d.candidateId && matchingCandidateIds.has(d.candidateId)) ||
+        (resolvedEmail && d.candidateEmail.toLowerCase() === resolvedEmail)
+      )
+  );
+
+  const beforeArtifacts = (state.candidateCvArtifacts || []).length;
+  state.candidateCvArtifacts = (state.candidateCvArtifacts || []).filter(
+    (a) =>
+      !(
+        (resolvedUserId && a.userId === resolvedUserId) ||
+        (a.candidateId && matchingCandidateIds.has(a.candidateId)) ||
+        (resolvedEmail && a.candidateEmail.toLowerCase() === resolvedEmail)
+      )
+  );
+
+  const beforeEmployers = state.employerRegistrations.length;
+  state.employerRegistrations = state.employerRegistrations.filter(
+    (e) =>
+      !(
+        matchingEmployerIds.has(e.id) ||
+        (resolvedUserId && e.userId === resolvedUserId) ||
+        (resolvedEmail && e.email.toLowerCase() === resolvedEmail)
+      )
+  );
+
+  const beforeJobs = state.jobs.length;
+  state.jobs = state.jobs.filter(
+    (j) =>
+      !(
+        (j.employerId && matchingEmployerIds.has(j.employerId)) ||
+        (resolvedEmail &&
+          j.employerEmail &&
+          j.employerEmail.toLowerCase() === resolvedEmail)
+      )
+  );
+
+  const beforeContact = state.contactMessages.length;
+  state.contactMessages = state.contactMessages.filter(
+    (m) => !(resolvedEmail && m.email.toLowerCase() === resolvedEmail)
+  );
+
+  writeStore(state);
+
+  // Cascade delete in PostgreSQL (when connected)
+  if (resolvedEmail) {
+    await Promise.allSettled([
+      query(`DELETE FROM public.auth_users WHERE LOWER(email) = $1`, [resolvedEmail]),
+      query(`DELETE FROM public.candidate_profiles WHERE LOWER(email) = $1`, [resolvedEmail]),
+      query(`DELETE FROM public.job_applications WHERE LOWER(candidate_email) = $1`, [resolvedEmail]),
+      query(`DELETE FROM public.candidate_documents WHERE LOWER(candidate_email) = $1`, [resolvedEmail]),
+      query(`DELETE FROM public.candidate_cv_artifacts WHERE LOWER(candidate_email) = $1`, [resolvedEmail]),
+      query(`DELETE FROM public.employer_registrations WHERE LOWER(email) = $1`, [resolvedEmail]),
+      query(`DELETE FROM public.remote_jobs WHERE LOWER(employer_email) = $1`, [resolvedEmail]),
+      query(`DELETE FROM public.contact_messages WHERE LOWER(email) = $1`, [resolvedEmail]),
+    ]);
+  }
+  if (resolvedUserId) {
+    await query(`DELETE FROM public.auth_users WHERE id = $1`, [resolvedUserId]).catch(() => {});
+  }
+
+  // Cascade delete in Supabase Auth + DB if configured
+  const adminClient = getSupabaseAdmin();
+  if (adminClient && resolvedUserId) {
+    try {
+      await adminClient.auth.admin.deleteUser(resolvedUserId);
+    } catch {}
+  }
+  const sb = getSupabaseServer();
+  if (sb && resolvedEmail) {
+    await Promise.allSettled([
+      sb.from("auth_users").delete().eq("email", resolvedEmail),
+      sb.from("candidate_profiles").delete().eq("email", resolvedEmail),
+      sb.from("job_applications").delete().eq("candidate_email", resolvedEmail),
+      sb.from("candidate_documents").delete().eq("candidate_email", resolvedEmail),
+      sb.from("candidate_cv_artifacts").delete().eq("candidate_email", resolvedEmail),
+      sb.from("employer_registrations").delete().eq("email", resolvedEmail),
+      sb.from("remote_jobs").delete().eq("employer_email", resolvedEmail),
+      sb.from("contact_messages").delete().eq("email", resolvedEmail),
+    ]);
+  }
+
+  const removedCounts = {
+    users: beforeUsers - state.users.length,
+    candidates: beforeCandidates - state.candidates.length,
+    applications: beforeApplications - state.applications.length,
+    documents: beforeDocs - state.candidateDocuments.length,
+    cvArtifacts: beforeArtifacts - state.candidateCvArtifacts.length,
+    employers: beforeEmployers - state.employerRegistrations.length,
+    jobs: beforeJobs - state.jobs.length,
+    contactMessages: beforeContact - state.contactMessages.length,
+  };
+
+  const isSelf = params.actorRole !== "superuser";
+  recordAuditLog({
+    entityType: "user",
+    entityId: resolvedUserId || "erased-user",
+    action: "account_and_data_deleted",
+    actorEmail: isSelf ? "self-deleted-user" : params.actorEmail,
+    actorRole: params.actorRole,
+    summary: `Account and all personal data permanently deleted (${params.reason || (isSelf ? "User self-deletion" : "Superuser on-request deletion")}).`,
+  });
+
+  return {
+    deleted:
+      Object.values(removedCounts).some((n) => n > 0) || Boolean(targetUser),
+    removedCounts,
+  };
+}
+
+export async function purgeInactiveAccountAfterNotices(params: {
+  targetEmail: string;
+  actorEmail: string;
+  referenceDate?: Date;
+}): Promise<{ ok: boolean; error?: string; deleted?: boolean }> {
+  const statuses = listInactivityRetentionStatus(params.referenceDate);
+  const target = statuses.find(
+    (s) => s.email.toLowerCase() === params.targetEmail.trim().toLowerCase()
+  );
+  if (!target) {
+    return { ok: false, error: "User account not found." };
+  }
+  if (!target.isOverOneYearInactive) {
+    return {
+      ok: false,
+      error: `Account has only been inactive for ${target.daysInactive} days. Policy requires at least ${INACTIVITY_THRESHOLD_DAYS} days (1 full year) of inactivity.`,
+    };
+  }
+  if (target.noticesSent < REQUIRED_INACTIVITY_EMAILS) {
+    return {
+      ok: false,
+      error: `Only ${target.noticesSent} of ${REQUIRED_INACTIVITY_EMAILS} required email warnings have been sent. At least ${REQUIRED_INACTIVITY_EMAILS} emails must be sent before deplatforming and deleting user data.`,
+    };
+  }
+
+  const res = await deleteAllUserData({
+    targetEmail: target.email,
+    targetUserId: target.userId,
+    actorEmail: params.actorEmail,
+    actorRole: "superuser",
+    reason: `1-year inactivity policy (${target.daysInactive} days inactive, ${target.noticesSent} warning emails sent)`,
+  });
+  return { ok: true, deleted: res.deleted };
 }

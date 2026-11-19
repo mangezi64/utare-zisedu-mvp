@@ -3,6 +3,7 @@ import {
   adminUnauthorizedResponse,
   getSessionFromRequest,
   isAdminRequest,
+  resolveBootstrapRole,
   unauthorizedResponse,
 } from "@/lib/auth-guard";
 import { hashPassword, verifyPassword } from "@/lib/password-hash";
@@ -161,22 +162,31 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      const effectiveRole = resolveBootstrapRole(
+        targetEmail,
+        targetUser?.role || supaUserMatch?.role || "candidate"
+      );
+      if (effectiveRole === "admin" || effectiveRole === "superuser") {
+        return NextResponse.json(
+          {
+            error:
+              "Privileged accounts cannot be reset via self-service name verification. Please contact a Superuser.",
+          },
+          { status: 403 }
+        );
+      }
+
       const knownNames = [
         targetUser?.name,
         candidate?.profile.fullName,
         supaUserMatch?.name,
-        targetEmail.split("@")[0],
       ]
         .filter(Boolean)
         .map((n) => String(n).trim().toLowerCase());
 
-      const firstNameToken = fullNameVerify.split(/\s+/)[0];
-      const nameMatches = knownNames.some(
-        (kn) =>
-          kn === fullNameVerify ||
-          kn.includes(firstNameToken) ||
-          fullNameVerify.includes(kn.split(/\s+/)[0])
-      );
+      const nameMatches =
+        fullNameVerify.length >= 2 &&
+        knownNames.some((kn) => kn === fullNameVerify);
 
       if (!nameMatches) {
         return NextResponse.json(

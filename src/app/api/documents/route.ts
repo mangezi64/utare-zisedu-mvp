@@ -20,9 +20,11 @@ import {
 import { buildDefaultCvDetails } from "@/lib/documents/sample-cv-details";
 import { matchNearestHub } from "@/lib/gemini/pathway-engine";
 import { saveCandidateCvArtifact } from "@/lib/store";
+import { getSessionFromRequest } from "@/lib/auth-guard";
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSessionFromRequest(req);
     const body = await req.json();
     const format: "json" | "cv-docx" | "letter-docx" = body.format || "json";
 
@@ -93,9 +95,14 @@ export async function POST(req: NextRequest) {
     const letterStyle = analyzeStyle(letterPlain);
 
     let artifact = null;
-    if (profile.email && body.saveVersion !== false) {
+    if (session && body.saveVersion !== false) {
+      const isAdmin =
+        session.role === "admin" || session.role === "superuser";
+      const targetEmail =
+        isAdmin && profile.email ? profile.email : session.email;
       artifact = await saveCandidateCvArtifact({
-        candidateEmail: profile.email,
+        userId: session.sub,
+        candidateEmail: targetEmail,
         jobId: body.jobId,
         jobTitle: target.title,
         company: target.company,
