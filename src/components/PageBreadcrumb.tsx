@@ -152,6 +152,9 @@ export default function PageBreadcrumb({
       } else if (pathname === "/opportunities") {
         trail.push({ label: "Admin Console", href: "/admin" });
         trail.push({ label: "Opportunities" });
+      } else if (pathname === "/faq") {
+        trail.push({ label: "Admin Console", href: "/admin" });
+        trail.push({ label: "FAQ" });
       } else if (pathname === "/admin") {
         trail.push({ label: "Admin Console" });
       } else {
@@ -166,6 +169,9 @@ export default function PageBreadcrumb({
       } else if (pathname === "/opportunities") {
         trail.push({ label: "Employer Portal", href: "/employer" });
         trail.push({ label: "Opportunities" });
+      } else if (pathname === "/faq") {
+        trail.push({ label: "Employer Portal", href: "/employer" });
+        trail.push({ label: "FAQ" });
       } else {
         trail.push({ label: pathname.replace(/^\//, "").replace(/-/g, " ") });
       }
@@ -190,6 +196,9 @@ export default function PageBreadcrumb({
       } else if (pathname === "/hubs") {
         trail.push({ label: "Workspace", href: "/account" });
         trail.push({ label: "Hubs" });
+      } else if (pathname === "/faq") {
+        trail.push({ label: "Workspace", href: "/account" });
+        trail.push({ label: "FAQ" });
       } else {
         trail.push({ label: "Workspace", href: "/account" });
         trail.push({ label: pathname.replace(/^\//, "").replace(/-/g, " ") });
@@ -213,6 +222,8 @@ export default function PageBreadcrumb({
         trail.push({ label: "How It Works" });
       } else if (pathname === "/contact") {
         trail.push({ label: "Contact" });
+      } else if (pathname === "/faq") {
+        trail.push({ label: "FAQ" });
       } else {
         trail.push({ label: pathname.replace(/^\//, "").replace(/-/g, " ") });
       }

@@ -212,6 +212,14 @@ export default function Navbar() {
               <span>About Us</span>
             </Link>
             <Link
+              href="/faq"
+              onClick={() => setMobileOpen(false)}
+              className="inline-flex items-center gap-1.5"
+            >
+              <HelpCircle className="h-3.5 w-3.5 shrink-0" />
+              <span>FAQ</span>
+            </Link>
+            <Link
               href="/contact"
               onClick={() => setMobileOpen(false)}
               className="inline-flex items-center gap-1.5"
@@ -414,6 +422,16 @@ export default function Navbar() {
                         <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
                       </Link>
                     )}
+
+                    <Link
+                      href="/faq"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                    >
+                      <span>Help &amp; FAQ</span>
+                      <HelpCircle className="h-3.5 w-3.5 text-slate-400" />
+                    </Link>
 
                     <button
                       type="button"

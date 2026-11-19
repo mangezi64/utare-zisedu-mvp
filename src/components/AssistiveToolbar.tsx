@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Accessibility, Headphones, Pause, Play, Square, Video } from "lucide-react";
+import Link from "next/link";
+import {
+  Accessibility,
+  Headphones,
+  HelpCircle,
+  Pause,
+  Play,
+  Square,
+  Video,
+} from "lucide-react";
 
 interface AudioStateDetail {
   isPlaying: boolean;
@@ -67,14 +76,22 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
         aria-label="Guided tour and accessibility controls"
       >
         <div className="text-[11.5px] text-slate-300">
-          <span className="font-semibold text-white">Guided Tour &amp; Accessibility</span>
+          <span className="font-semibold text-white">Guided Tour, FAQ &amp; Accessibility</span>
           <span className="hidden sm:inline text-slate-400">
             {" "}
-            — Listen to the audio walkthrough, watch the flow demo, or adjust display settings.
+            — Read quick FAQs, listen to the audio walkthrough, watch the flow demo, or adjust display settings.
           </span>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/faq"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-100 hover:bg-emerald-500/30 transition"
+          >
+            <HelpCircle className="h-3.5 w-3.5 text-emerald-300" />
+            <span>Quick Answers (FAQ)</span>
+          </Link>
+
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("utare-open-audio-explainer"))}

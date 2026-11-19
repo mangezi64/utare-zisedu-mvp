@@ -985,6 +985,12 @@ function LoginForm() {
               Explore public website &amp; overview
             </Link>
           </p>
+          <p className="mt-2 text-center text-xs text-[#667085]">
+            Trouble signing in, verifying your email, or resetting a password?{" "}
+            <Link href="/faq?category=login-accounts" className="text-link">
+              Read Login &amp; Account FAQs
+            </Link>
+          </p>
         </div>
       </section>
     </div>

@@ -129,6 +129,9 @@ export default function HowItWorksPage() {
           <Link href="/jobs" className="button">
             Open CV &amp; Cover Letter Studio
           </Link>
+          <Link href="/faq" className="button">
+            Frequently Asked Questions
+          </Link>
         </div>
       </section>
     </div>

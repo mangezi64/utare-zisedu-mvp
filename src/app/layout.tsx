@@ -8,6 +8,7 @@ import AudioExplainer from "@/components/AudioExplainer";
 import AccessibilityControls from "@/components/AccessibilityControls";
 import FlowVideoWalkthrough from "@/components/FlowVideoWalkthrough";
 import AssistiveToolbar from "@/components/AssistiveToolbar";
+import JourneyFaqStrip from "@/components/JourneyFaqStrip";
 
 export const metadata: Metadata = {
   title: "UTARE ZEM AI — Economic Mobility & Remote Bridge",
@@ -37,6 +38,7 @@ export default function RootLayout({
           <main id="main-content" className="flex-1">
             {children}
           </main>
+          <JourneyFaqStrip />
           <footer className="footer no-print">
             <div className="footer-top">
               <Link
@@ -63,6 +65,7 @@ export default function RootLayout({
                   <Link href="/skills">Skills</Link>
                   <Link href="/hubs">Hubs</Link>
                   <Link href="/employers">For Employers</Link>
+                  <Link href="/faq">FAQ</Link>
                   <Link href="/contact">Contact</Link>
                   <Link href="/data-policy">Data Policy &amp; Privacy</Link>
                 </div>
@@ -82,6 +85,12 @@ export default function RootLayout({
             <div className="footer-bottom">
               <span>© {new Date().getFullYear()} UTARE ZEM AI</span>
               <span className="flex flex-wrap items-center gap-4">
+                <Link
+                  href="/faq"
+                  className="underline underline-offset-4 hover:text-white"
+                >
+                  Frequently Asked Questions (FAQ)
+                </Link>
                 <Link
                   href="/data-policy"
                   className="underline underline-offset-4 hover:text-white"

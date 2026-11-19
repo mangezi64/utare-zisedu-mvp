@@ -1,7 +1,7 @@
 # UTARE ZEM AI — Uniform Team FAQ & Judge Defense Guide
 
 **Event:** Cross Sector Innovation Challenge — Week 6 Advisory & Judge Q&A  
-**Objective:** Standardized, uniform answers so that **any team member** (Stewart, Munashe, Future, Kudakwashe, Bheky, Amanda) can answer judges' questions with absolute consistency, authority, and emotional conviction.  
+**Objective:** Standardized, uniform answers so that **any team member** (Munashe Mugonda, Stewart Mangezi, Future, Amanda Mukute, Kudakwashe Maganzu, Bheki Ndlovu) can answer judges', testers', and users' questions with absolute consistency, authority, and emotional conviction.  
 **Advisory Alignment:** Coach Catherine Mapomba's Directive on Unified Voice & Preparedness.
 
 ---
@@ -16,12 +16,12 @@ While **every team member must be able to deliver the 30-second version of every
 
 | Team Member | Core Domain | Secondary Expertise | Judge Question Domains |
 | :--- | :--- | :--- | :--- |
-| **Amanda** | UI/UX Architecture & Database Setup | Candidate Onboarding & Design | Frontend experience, user accessibility, database schema, onboarding flow |
-| **Stewart Mangezi** | Platform Architecture & AI Engine | Security, Infrastructure & Docker | AI synthesis, Gemini integration, containerization, Supabase backend |
-| **Munashe** | Hub Partnerships & Field Operations | Candidate Diagnostic Intake | Physical hub operations, power backups, Starlink, candidate intake |
-| **Kudakwashe** | Market Validation & Job Verification | Anti-Scam & Competitor Analysis | Employer vetting, job scraping safeguards, payment rails, hiring market |
-| **Future** | Community Impact & User Testing | Qualitative Feedback & Accessibility | Family tester observations, assistive audio, low-literacy inclusion |
-| **Bheky** | Storytelling & Business Model | Strategic Partnerships & Revenue | Monetization, 10% placement fee, corporate sponsorships, 8-week vision |
+| **Amanda Mukute** | UI/UX Architecture & Database Setup | Candidate Onboarding & Design | Frontend experience, user accessibility, database schema, onboarding flow |
+| **Stewart Mangezi** | Platform Architecture & AI Engine | Security, Infrastructure & Safeguarding | AI synthesis, Gemini integration, containerization, Supabase backend, scam moderation & data protection |
+| **Munashe Mugonda** | Team Lead · Hub Partnerships & Field Operations | Candidate Diagnostic Intake | Physical hub operations, power backups, Starlink, candidate intake |
+| **Kudakwashe Maganzu** | Market Validation & Job Verification | Anti-Scam & Competitor Analysis | Employer vetting, job verification safeguards, payment rails, hiring market |
+| **Future** | Frontend Experience, UI & User Testing | Qualitative Feedback & Accessibility | Family tester observations, assistive audio, low-literacy inclusion |
+| **Bheki Ndlovu** | Storytelling & Partnerships | Candidate Advocacy & AI Appeals | Monetization, 10% placement fee, corporate sponsorships, human AI decision reviews |
 
 ### B. The 3-Step "Uniform Response Formula"
 Whenever a judge asks a question, whoever takes the floor follows this 3-step cadence:
@@ -227,3 +227,41 @@ Pilot Placement Goal             100 verified remote placements in 8-week challe
 Economic Inflow Impact           $720,000+ annualized foreign exchange for 100 placements.
 ========================================================================================
 ```
+
+---
+
+## 5. Platform Usage, Login, Safety & Feedback Iteration FAQs (User & Tester Support)
+
+> **Live Web App Knowledge Base:** All questions and answers below—alongside category filters and instant keyword search—are published directly inside the UTARE ZEM AI web application at **`/faq`** (`src/lib/faq-data.ts`).
+
+### Q11: "How do I create an account, and why does UTARE require email verification?"
+- **Answer:** Register on `/login?tab=register` as either **Candidate** or **Employer**, review and explicitly tick the **UTARE Data Policy consent checkbox** (never pre-ticked), and submit. UTARE rejects temporary/disposable email domains (e.g., Mailinator, TempMail, Yopmail) and undeliverable domains without MX records, then sends a confirmation link to activate the account via `/auth/callback`.
+
+### Q12: "What if the verification email didn't arrive, hit a rate limit, or the link expired?"
+- **Answer:** Check Spam/Junk first. If signing in before confirming on `/login`, click **"Resend Confirmation Email"** inside the notice banner; if an older link fails on `/auth/callback`, enter your email in **"Need a fresh confirmation link?"** and click **Resend Link**. If Supabase's free-tier mailer hits an hourly rate limit, the backend safely falls back via the Admin API so signups are not blocked.
+
+### Q13: "Why was my password rejected, and how do I reset or change it?"
+- **Answer:** Passwords must meet 4 rules (`src/lib/validation.ts`): **at least 8 characters**, **uppercase & lowercase letters**, **at least 1 number (0–9)**, and **at least 1 special symbol (`!@#$%...`)**. Missing rules are highlighted directly in red in `PasswordStrengthBox`.
+  - **Forgot password:** Click **"Forgot password? Reset here"** on `/login` and verify your registered email + registered full name (Candidates/Employers only; Admin/Superuser accounts require a Superuser reset for security).
+  - **Change password while signed in:** Use **My Workspace (`/account`) → Security & Password Update**.
+
+### Q14: "Where is the Employer or Admin login tab, and how does unified login route users?"
+- **Answer:** By security design, there is a single unified Sign In screen (`/login`) with no separate public Admin tab. The backend resolves each user's role (`candidate`, `employer`, `admin`, `superuser`) and routes directly to `/account`, `/employer`, or `/admin`. Logged-in users can click the circular **user avatar badge** in the top-right navbar to view their active role, open their workspace, visit Help & FAQ, or Sign Out.
+
+### Q15: "Why do I have to actively rate all 6 sliders on `/assessment`, and why aren't household income fields asked?"
+- **Answer:** Requiring every slider to be actively touched (even if deliberately set to `0`) ensures skipped sliders are never misscored as zero. Following **Kutunga Safety by Design** and statutory data minimization, unrelated income/employment survey fields were removed so intake collects only remote-work capability, skills, credentials, and Partner Hub support needs.
+
+### Q16: "How are AI Readiness Tiers explained, and how can a candidate appeal an AI decision?"
+- **Answer:** Both `/assessment` and `/pathway` display an **AI Qualification Decision** card detailing what the candidate currently qualifies for, exact reasons why they do not yet qualify for higher tiers, and concrete steps to unlock them. AI outputs are strictly advisory (never permanently blocking applications), candidates can retake the diagnostic anytime, and challenged decisions can be appealed for human review to **Bheki Ndlovu** (Human Decision Review & Appeals Lead) via `/contact`.
+
+### Q17: "How do profile photo CV opt-ins, the Versioned Credential Vault, and consent-gated employer sharing work?"
+- **Answer:** In `/account`, candidates can upload a compressed portrait and toggle **"Include my profile photo on generated CVs (.docx & PDF)"**, upload degrees/certificates/transcripts into the **Versioned Credential Vault** (`v1` → `v2` → `v3` auto-versioning), and review saved tailored CVs/letters. When applying on `/jobs`, candidates must toggle ON sharing consent (`sharedWithEmployer`), and can pause or resume employer access anytime from `/account`. Private phone numbers, power hours, internet barriers, diagnostic sub-scores, and hub bookings are never exposed to employers.
+
+### Q18: "What happens when someone reports a suspicious job listing, and is employer rejection feedback mandatory?"
+- **Answer:** Clicking **Report Listing** on `/jobs` immediately takes the listing off the public job board and escalates it exclusively to **Superusers** (led by Safeguarding Lead **Stewart Mangezi**) to review and either permanently delete or restore. In `/employer`, AI ranks consented applicants (`0–100% AI Fit`), while hiring decisions remain human-led and rejection feedback notes are strictly optional.
+
+### Q19: "How does UTARE comply with Zimbabwe's Cyber & Data Protection Act [Chapter 12:07], 1-year retention, and account deletion?"
+- **Answer:** Aligned with **Chapter 12:07** and **SI 155 of 2024 (POTRAZ)**, UTARE collects personal data solely on this authenticated web platform (never via unencrypted messaging bots), commits to **24-hour POTRAZ breach notification**, prompts inactive users after **1 full year (365 days)** with **at least 3 email notices** before removal, lets any signed-in user permanently erase all database records under **My Workspace → Data Policy & Account Deletion** by typing `delete`, and supports Superuser erasure on request for special circumstances (such as bereavement) via `utarezemai@gmail.com` or `/contact`. Full policy details live at `/data-policy`.
+
+### Q20: "How do the Assistive Audio Overview, 2-Min Flow Demo, Accessibility controls, and Two-Way Breadcrumbs work?"
+- **Answer:** Every page includes top and footer **Assistive Toolbars** for the 4-chapter **Audio Overview** (`0.85x`–`1.5x` speed, voice picker, transcript, instant Stop & auto-stop on route change), the 5-step **Flow Demo** (with Closed Captions), and **Accessibility** settings (WCAG AAA High Contrast, Deuteranopia/Protanopia/Tritanopia/Monochrome colorblind modes, Large/XL fonts, Dyslexia-friendly spacing, Reduced Motion). Inner pages also feature a sticky **Two-Way Breadcrumb** bar (`← Back` / `Next →`) for clean mobile and desktop navigation.

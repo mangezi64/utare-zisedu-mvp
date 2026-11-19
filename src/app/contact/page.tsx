@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Mail,
   Phone,
   Building2,
   CheckCircle2,
   ArrowRight,
+  HelpCircle,
 } from "lucide-react";
 
 export default function ContactPage() {
@@ -132,6 +134,25 @@ export default function ContactPage() {
                 >
                   utarezemai@gmail.com
                 </a>
+              </span>
+            </div>
+          </div>
+
+          <div className="contact-detail">
+            <span className="icon-tile">
+              <HelpCircle className="h-5 w-5" />
+            </span>
+            <div>
+              <b>Frequently Asked Questions</b>
+              <span>
+                Instant answers on login, passwords, hubs, CV Studio, scam
+                reporting, and data privacy:{" "}
+                <Link
+                  href="/faq"
+                  className="font-semibold text-[#08785f] underline underline-offset-2"
+                >
+                  Browse the FAQ Help Center →
+                </Link>
               </span>
             </div>
           </div>
