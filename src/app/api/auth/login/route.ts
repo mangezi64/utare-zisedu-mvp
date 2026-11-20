@@ -136,6 +136,15 @@ export async function POST(req: NextRequest) {
 
     // 2. Authenticate against backend password hash (scrypt)
     if (!authenticated && userRecord) {
+      if (userRecord.passwordHash === "supabase_managed") {
+        return NextResponse.json(
+          {
+            error:
+              "This account uses Google Sign-In. Please click 'Continue with Google' or use 'Forgot password? Reset here' to set a password.",
+          },
+          { status: 401 }
+        );
+      }
       if (!verifyPassword(password, userRecord.passwordHash)) {
         return NextResponse.json(
           { error: "Invalid email or password." },

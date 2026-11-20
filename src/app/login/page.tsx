@@ -10,19 +10,66 @@ import {
   CheckCircle2,
   Mail,
   GraduationCap,
-  Briefcase,
   AlertCircle,
   Building2,
   Globe,
-  BookOpen,
-  Users,
 } from "lucide-react";
 import { useViewMode } from "@/lib/view-mode-context";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
+import ZimbabweRadarVisual from "@/components/ZimbabweRadarVisual";
 import PasswordInput from "@/components/PasswordInput";
 import PasswordStrengthBox from "@/components/PasswordStrengthBox";
 import { validateEmail, validatePassword } from "@/lib/validation";
 import { resolvePostLoginDestination } from "@/lib/bootstrap-roles";
+
+function GoogleLogo() {
+  return (
+    <svg
+      className="h-4 w-4 flex-shrink-0"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        fill="#4285F4"
+        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"
+      />
+    </svg>
+  );
+}
+
+function GoogleAuthButton({
+  label,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="w-full inline-flex items-center justify-center gap-2.5 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50 hover:border-slate-400 transition disabled:opacity-60 disabled:cursor-not-allowed"
+    >
+      <GoogleLogo />
+      <span>{disabled ? "Redirecting to Google..." : label}</span>
+    </button>
+  );
+}
 
 function LoginForm() {
   const router = useRouter();
@@ -64,6 +111,7 @@ function LoginForm() {
   const [hiringModel, setHiringModel] = useState("100% Remote Contract");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isStartingGoogle, setIsStartingGoogle] = useState(false);
   const [regAttempted, setRegAttempted] = useState(false);
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [registerSuccess, setRegisterSuccess] = useState("");
@@ -76,6 +124,13 @@ function LoginForm() {
   const emailValidationRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    const oauthErr = searchParams.get("oauthError");
+    if (oauthErr) {
+      setLoginError(oauthErr);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     if (tab === "register" && signupAwaitingVerification) {
       emailValidationRef.current?.focus();
       emailValidationRef.current?.scrollIntoView({
@@ -84,6 +139,47 @@ function LoginForm() {
       });
     }
   }, [tab, signupAwaitingVerification]);
+
+  const handleGoogleAuth = (intent: "login" | "register") => {
+    setLoginError("");
+
+    if (intent === "register") {
+      setRegAttempted(true);
+      if (accountType === "employer" && !companyName.trim()) {
+        setLoginError("Company name is required for employer registration.");
+        return;
+      }
+      if (!consentAccepted) {
+        setLoginError(
+          "Please read and confirm the data & retention notice before creating your account."
+        );
+        return;
+      }
+    }
+
+    const params = new URLSearchParams({ intent });
+    if (redirectUrl) {
+      params.set("redirect", redirectUrl);
+    }
+
+    if (intent === "register") {
+      params.set("accountType", accountType);
+      params.set("dataPolicyAccepted", "true");
+      if (accountType === "employer") {
+        if (companyName.trim()) params.set("companyName", companyName.trim());
+        if (website.trim()) params.set("website", website.trim());
+        if (industry.trim()) params.set("industry", industry.trim());
+        if (hiringModel.trim()) params.set("hiringModel", hiringModel.trim());
+      } else {
+        if (city) params.set("city", city);
+        if (qualification) params.set("qualification", qualification);
+        if (fieldOfStudy.trim()) params.set("fieldOfStudy", fieldOfStudy.trim());
+      }
+    }
+
+    setIsStartingGoogle(true);
+    window.location.assign(`/api/auth/oauth/google?${params.toString()}`);
+  };
 
   const handleResendConfirmation = async (emailToResend: string) => {
     if (!emailToResend.trim()) return;
@@ -353,7 +449,7 @@ function LoginForm() {
 
   return (
     <div className="login-page">
-      {/* Faith & Amanda's Left Split-Screen Visual with Animated Orbital Nodes */}
+      {/* Faith & Amanda's Left Split-Screen Visual with Zimbabwe ("ZW") Radial Global Reach */}
       <section className="login-visual">
         <div className="login-visual-inner">
           <Link
@@ -382,27 +478,8 @@ function LoginForm() {
               reach opportunities beyond geographical boundaries.
             </p>
 
-            {/* Orbital Node Visual Graphic */}
-            <div className="visual-graphic" aria-hidden="true">
-              <div className="graphic-orbit orbit-a" />
-              <div className="graphic-orbit orbit-b" />
-              <div className="graphic-core">
-                <Building2 className="h-8 w-8" />
-              </div>
-              <span className="graphic-node node-a">
-                <BookOpen className="h-4 w-4" />
-              </span>
-              <span className="graphic-node node-b">
-                <Briefcase className="h-4 w-4" />
-              </span>
-              <span className="graphic-node node-c">
-                <Users className="h-4 w-4" />
-              </span>
-              <div className="graphic-caption">
-                <span className="pulse" /> Talent, skills &amp; opportunity in
-                motion
-              </div>
-            </div>
+            {/* Zimbabwe ("ZW") Radial Global Reach Illustration */}
+            <ZimbabweRadarVisual />
           </div>
 
           <div className="login-footnote">
@@ -598,6 +675,32 @@ function LoginForm() {
 
               {!showResetPassword ? (
                 <form onSubmit={handleSignIn} className="form-stack">
+                  <div className="space-y-2">
+                    <GoogleAuthButton
+                      label="Continue with Google"
+                      disabled={isStartingGoogle || isLoggingIn}
+                      onClick={() => handleGoogleAuth("login")}
+                    />
+                    <p className="text-center text-[11px] text-[#667085]">
+                      New Gmail users signing in with Google agree to the{" "}
+                      <Link
+                        href="/data-policy"
+                        className="font-semibold text-[#08785f] underline hover:text-[#065f46]"
+                      >
+                        UTARE Data Policy
+                      </Link>
+                      .
+                    </p>
+                  </div>
+
+                  <div className="relative flex items-center py-1">
+                    <div className="flex-grow border-t border-slate-200" />
+                    <span className="mx-3 flex-shrink text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                      or sign in with email
+                    </span>
+                    <div className="flex-grow border-t border-slate-200" />
+                  </div>
+
                   <label className="field">
                     <span>Email address</span>
                     <input
@@ -1109,7 +1212,7 @@ function LoginForm() {
 
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isStartingGoogle}
                 className="button button-wide button-green disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting
@@ -1119,6 +1222,24 @@ function LoginForm() {
                   : "Create Account & Start Bridge"}
                 <ArrowRight className="h-4 w-4" />
               </button>
+
+              <div className="relative flex items-center py-1">
+                <div className="flex-grow border-t border-slate-200" />
+                <span className="mx-3 flex-shrink text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  or
+                </span>
+                <div className="flex-grow border-t border-slate-200" />
+              </div>
+
+              <GoogleAuthButton
+                label={
+                  accountType === "employer"
+                    ? "Continue with Google as Employer"
+                    : "Continue with Google as Candidate"
+                }
+                disabled={isStartingGoogle || isSubmitting}
+                onClick={() => handleGoogleAuth("register")}
+              />
 
               <p className="text-center text-xs text-[#667085] pt-2">
                 Already registered?{" "}

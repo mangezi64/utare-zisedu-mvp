@@ -20,7 +20,7 @@ function AuthCallbackContent() {
   const [status, setStatus] = useState<"verifying" | "success" | "error">(
     "verifying"
   );
-  const [message, setMessage] = useState("Verifying your email address...");
+  const [message, setMessage] = useState("Completing sign-in & verifying your account...");
   const [targetHref, setTargetHref] = useState("/account");
 
   const [resendEmail, setResendEmail] = useState("");
@@ -60,10 +60,16 @@ function AuthCallbackContent() {
     if (authError && !token && !code && !tokenHash && !accessToken) {
       hasStartedRef.current = true;
       setStatus("error");
-      setMessage(
-        authError.replace(/\+/g, " ") ||
-          "This verification link is invalid or has expired."
-      );
+      const decodedError = authError.replace(/\+/g, " ");
+      if (decodedError.toLowerCase().includes("provider is not enabled")) {
+        setMessage(
+          "Google Sign-In is not yet enabled in Supabase Authentication settings. Please enable Google under Supabase → Authentication → Sign In / Providers, or sign in with email and password."
+        );
+      } else {
+        setMessage(
+          decodedError || "This verification link is invalid or has expired."
+        );
+      }
       return;
     }
 
@@ -110,15 +116,22 @@ function AuthCallbackContent() {
         }
         await refreshSession();
         const role = data.role || "candidate";
+        const safeRedirect =
+          typeof data.redirectTo === "string" &&
+          data.redirectTo.startsWith("/") &&
+          !data.redirectTo.startsWith("//")
+            ? data.redirectTo
+            : null;
         const destination =
-          role === "employer"
+          safeRedirect ||
+          (role === "employer"
             ? "/employer"
             : role === "admin" || role === "superuser"
             ? "/admin"
-            : "/assessment";
+            : "/assessment");
         setTargetHref(destination);
         setStatus("success");
-        setMessage("Email verified! Redirecting you to your workspace...");
+        setMessage("Signed in! Redirecting you to your workspace...");
         setTimeout(() => {
           router.push(destination);
         }, 1200);
@@ -174,7 +187,7 @@ function AuthCallbackContent() {
               <Sparkles className="h-6 w-6 animate-spin" />
             </div>
             <h1 className="text-xl font-bold text-slate-900">
-              Confirming Your Email
+              Completing Sign-In
             </h1>
             <p className="text-sm text-slate-600">{message}</p>
           </>
@@ -186,7 +199,7 @@ function AuthCallbackContent() {
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <h1 className="text-xl font-bold text-slate-900">
-              Email Confirmed
+              Account Verified
             </h1>
             <p className="text-sm text-slate-600">{message}</p>
             <div className="pt-2">

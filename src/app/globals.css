@@ -1362,89 +1362,11 @@ main {
   font-size: 13.5px;
   line-height: 1.85;
 }
-.visual-graphic {
-  height: 230px;
-  margin-top: 28px;
+.login-copy .hero-visual {
+  width: 100%;
   max-width: 490px;
-  position: relative;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  background: radial-gradient(ellipse at center, #1b3453, #101b34 72%);
+  margin-top: 28px;
   border: 1px solid #ffffff12;
-  border-radius: 16px;
-}
-.graphic-orbit {
-  position: absolute;
-  width: 210px;
-  height: 210px;
-  border: 1px solid #47ca9b78;
-  border-radius: 50%;
-}
-.orbit-b {
-  width: 144px;
-  height: 144px;
-  border-style: dashed;
-  border-color: #47ca9b40;
-}
-.graphic-core {
-  width: 74px;
-  height: 74px;
-  border-radius: 23px;
-  transform: rotate(45deg);
-  background: linear-gradient(145deg, #17bb8c, #08785f);
-  display: grid;
-  place-items: center;
-  color: #c7f4e4;
-  box-shadow: 0 10px 38px #0faf8345;
-}
-.graphic-core svg {
-  transform: rotate(-45deg);
-  width: 33px;
-  height: 33px;
-}
-.graphic-node {
-  position: absolute;
-  width: 35px;
-  height: 35px;
-  border-radius: 11px;
-  display: grid;
-  place-items: center;
-  color: #a3edcf;
-  background: #1a2f4c;
-  border: 1px solid #65d2ac55;
-}
-.graphic-node svg {
-  width: 16px;
-  height: 16px;
-}
-.node-a {
-  top: 28px;
-  left: 26%;
-}
-.node-b {
-  top: 46px;
-  right: 23%;
-}
-.node-c {
-  bottom: 40px;
-  left: 29%;
-}
-.graphic-caption {
-  position: absolute;
-  bottom: 15px;
-  right: 16px;
-  color: #a5b4c7;
-  font-size: 10px;
-}
-.pulse {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-right: 5px;
-  border-radius: 50%;
-  background: #3dd3a2;
-  box-shadow: 0 0 0 4px #3dd3a222;
 }
 .login-footnote {
   color: #8897ad;

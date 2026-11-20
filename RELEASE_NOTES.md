@@ -1,7 +1,18 @@
 # UTARE ZEM AI — Release Notes
 
-**Latest Release (`v2.3.0`):** November 20, 2026 (Email Verification UX, Employer Auth Parity, Release-Time Schema Migrations & Safety/FAQ/Accessibility Pack)  
+**Latest Release (`v2.4.0`):** November 20, 2026 (Google Sign-In via Supabase OAuth & Shared Zimbabwe Radar Visual)  
 **Target Environments:** Vercel Production (`utare-zisedu-mvp.vercel.app`), Supabase Cloud PostgreSQL (`stzsuwwmeiqdhsoghmrj`), and Containerized Local PostgreSQL (`utare-zisedu-db`)
+
+---
+
+## 10. Release v2.4.0 — Google Sign-In (Supabase OAuth) & Shared Zimbabwe Radar Visual (November 20, 2026)
+* **Sign in with Google (`src/app/login/page.tsx`, `src/app/api/auth/oauth/google/route.ts`, `src/app/api/auth/verify-email/route.ts`, `src/app/auth/callback/page.tsx`, `src/lib/auth-session.ts`):**
+  - Added server-side Google OAuth initiation (`GET /api/auth/oauth/google`) paired with a short-lived HMAC-signed HTTP-only `utare_oauth_intent` cookie to preserve signup role (`candidate` / `employer`), optional profile/company fields, Zimbabwe Data Policy consent acceptance, and safe post-login redirect paths without altering the Supabase `/auth/callback` redirect allowlist.
+  - Updated `POST /api/auth/verify-email` to provision missing `auth_users` (`passwordHash: "supabase_managed"`, `emailConfirmed: true`) and `candidate_profiles` or `employer_registrations` records in local store and Supabase PostgreSQL on first-time Google Sign-In while preserving existing users' password hashes, roles, and bootstrap superuser elevations (`resolveBootstrapRole`).
+  - Added **Continue with Google** buttons across both the Sign In and Create Account tabs on `/login` (with Data Policy consent and employer company name gates), improved `/auth/callback` redirect handling and provider setup error messages, and added clear password-login hints in `/api/auth/login` for Google-only accounts.
+  - Added 9 integration tests in [`src/__tests__/google-oauth.test.ts`](src/__tests__/google-oauth.test.ts) covering OAuth initiation, consent/employer gates, candidate & employer provisioning, existing account protection, superuser preservation, tampered cookie rejection, and login UI wiring.
+* **Unified Zimbabwe Radar Visual (`src/components/ZimbabweRadarVisual.tsx`, `src/app/page.tsx`, `src/app/login/page.tsx`, `src/app/globals.css`):**
+  - Extracted the Zimbabwe ("ZW") radial global reach illustration into a shared `<ZimbabweRadarVisual />` component rendered consistently across both the landing hero and the `/login` split-screen visual.
 
 ---
 
