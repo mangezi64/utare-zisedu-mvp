@@ -1,6 +1,6 @@
 # Kutunga Safety by Design — Complete Filled Booklet Draft (UTARE ZEM AI)
 
-Use this ready-to-paste draft to fill in the interactive **Safety by Design** PDF booklet. Every claim below is verified directly against our **UTARE User Journey & Economic Mobility Survey** (`N=23` + `Pulse Check Munashe`), our live platform store (`111` user accounts / `125` candidate profiles / `83` employer records / `195` applications), live accessibility testing (`Nyasha Gande`, Android TalkBack), and our verified codebase (`14` test suites, `76/76` passing tests).
+Use this ready-to-paste draft to fill in the interactive **Safety by Design** PDF booklet. Every claim below is verified directly against our **UTARE User Journey & Economic Mobility Survey** (`N=23` + `Pulse Check Munashe`), our live platform store (`111` user accounts / `125` candidate profiles / `83` employer records / `195` applications), live accessibility testing (`Nyasha Gande`, Android TalkBack), and our verified codebase (`15` test suites, `85/85` passing tests).
 
 ---
 
@@ -69,7 +69,7 @@ Use this ready-to-paste draft to fill in the interactive **Safety by Design** PD
 - `src/app/data-policy/page.tsx` (`/data-policy`, linked in global footer & signup)
 - `src/components/DeleteAccountPanel.tsx` & `DELETE /api/auth/account`
 - `src/app/api/jobs/report/route.ts` & `src/lib/store.ts` (`1-year` + `3-email` retention enforcement)
-- `src/__tests__/area-security.test.ts`, `area-flows.test.ts`, `area-compliance.test.ts`, `db-migration-and-auth-fixes.test.ts` (`76/76` tests passing across 14 suites)
+- `src/__tests__/area-security.test.ts`, `area-flows.test.ts`, `area-compliance.test.ts`, `db-migration-and-auth-fixes.test.ts`, `google-oauth.test.ts` (`85/85` tests passing across 15 suites)
 
 ---
 

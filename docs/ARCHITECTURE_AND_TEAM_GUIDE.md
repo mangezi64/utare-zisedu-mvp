@@ -20,7 +20,7 @@ flowchart TB
     end
 
     subgraph VercelServerless["Vercel Serverless Functions (Node.js Runtime: src/app/api/*)"]
-        AuthAPI["Auth & Vault APIs\n/api/auth/* (login, signup, verify-email, password, profile, attachments, session)"]
+        AuthAPI["Auth & Vault APIs\n/api/auth/* (login, signup, oauth/google, verify-email, password, profile, attachments, session)"]
         CandidateAPI["Candidate & AI APIs\n/api/pathway, /api/documents, /api/jobs, /api/hubs, /api/skills"]
         PortalAPI["Employer & Admin APIs\n/api/employer/portal, /api/employers, /api/admin/*, /api/ai/status, /api/contact"]
         StoreEngine["Unified Store & Guard Layer\nsrc/lib/store.ts + src/lib/auth-guard.ts + src/lib/bootstrap-roles.ts"]
@@ -28,7 +28,7 @@ flowchart TB
     end
 
     subgraph CloudServices["External Managed Cloud Services"]
-        SupabaseAuth["Supabase Auth\nEmail signup/confirmation, password reset, Admin API rate-limit fallback"]
+        SupabaseAuth["Supabase Auth\nEmail signup/confirmation, Google OAuth, password reset, Admin API rate-limit fallback"]
         SupabaseDB[("Supabase PostgreSQL (EU Central - Frankfurt)\n14 Tables via PostgREST Service-Role Client\n& Direct pg Pool Auto-Migrations")]
         GeminiAPI["Google Gemini API (@google/genai)\ngemini-2.5-flash / pro · JSON Schema Mode\n45s timeout + Deterministic Offline Fallback"]
     end
@@ -77,12 +77,14 @@ DATA_DIR      = IS_SERVERLESS ? "/tmp/.data" : "<repo>/.data"
    - **Two-Way Persistence Sync & Schema-Drift Protection:** Writes update the local/warm store (`writeStore`) and sync to Supabase PostgREST (via `safeSupabaseUpsert` / `safeSupabaseUpdate` in `src/lib/supabase/safe-write.ts`, which automatically strip pending migration columns on `PGRST204`/`42703` or fall back on `42P10`) and direct PostgreSQL (`src/lib/db.ts`).
    - **Automatic Release-Time & Runtime Migrations (`scripts/migrate-db.mjs` & `ensureDatabaseSchema()` in `src/lib/db.ts`):** `npm run build` automatically executes `node scripts/migrate-db.mjs` against `supabase/additive-schema.sql` (using `SUPABASE_DB_URL` / `POSTGRES_URL` with remote SSL, or optional `SUPABASE_ACCESS_TOKEN`), creating any missing tables/columns across all 14 tables and issuing `NOTIFY pgrst, 'reload schema';`. At runtime, `src/lib/db.ts` enforces the same `ADDITIVE_SCHEMA_DDL` (`src/lib/db-schema.ts`) on first query with remote SSL auto-detection and a 60-second retry cooldown.
 
-### C. Origin Resolution, Custom SMTP & Email Confirmation on Vercel
-In `src/app/api/auth/resend-confirmation/route.ts`, `src/app/api/auth/signup/route.ts`, and `src/app/api/employers/route.ts`, confirmation redirect URLs (`<origin>/auth/callback`) dynamically resolve in priority order:
+### C. Origin Resolution, Custom SMTP, Google OAuth & Email Confirmation on Vercel
+In `src/app/api/auth/resend-confirmation/route.ts`, `src/app/api/auth/signup/route.ts`, `src/app/api/auth/oauth/google/route.ts`, and `src/app/api/employers/route.ts`, confirmation and OAuth redirect URLs (`<origin>/auth/callback`) dynamically resolve in priority order:
 1. `origin` request header
 2. `x-forwarded-host` + `x-forwarded-proto` headers (Vercel's reverse proxy headers)
 3. `https://${process.env.VERCEL_URL}` (Vercel's built-in deployment host variable)
 4. `NEXT_PUBLIC_APP_URL` → fallback `http://localhost:3000`
+
+Google OAuth Sign-In (`Continue with Google` on `/login`) requires enabling **Google** under **Supabase Dashboard → Authentication → Sign In / Providers** and allowlisting `<origin>/auth/callback` in **URL Configuration → Redirect URLs** (no extra app env vars are required beyond the Supabase keys and `AUTH_SESSION_SECRET`).
 
 Custom SMTP is active in Supabase Auth (`utarezemai@gmail.com` via `smtp.gmail.com:587`), paired with a dedicated post-signup verification view on `/login`, `/employers`, `/auth/callback`, and backend auth APIs reminding users to check **Spam, Junk, or Promotions** folders (and mark as *"Not spam"*). For production scale and maximum inbox placement, migrating SMTP from personal Gmail to a dedicated transactional relay (e.g., Resend or Brevo) is recommended. Additionally, if Supabase's email mailer returns a rate-limit (`429`), `/api/auth/signup` and `/api/employers` automatically fall back to `supabaseAdmin.auth.admin.createUser({ email_confirm: true })` so candidate and employer signups never stall during live demos or user testing.
 
@@ -132,6 +134,7 @@ sequenceDiagram
 ### Key Security Controls
 - **Password Hashing (`src/lib/password-hash.ts`):** `PBKDF2-SHA256` with `100,000` iterations, random 16-byte salt, and constant-time comparison (`crypto.timingSafeEqual`).
 - **Validation & Anti-Fake-Domain Guard (`src/lib/validation.ts`, `src/lib/email-domain-check.ts`):** Rejects malformed emails, disposable email providers, and domains without valid DNS MX records during registration.
+- **Google Sign-In & Registration (Supabase OAuth — `/api/auth/oauth/google` & `src/lib/auth-session.ts`):** `GET /api/auth/oauth/google` enforces Zimbabwe Data Policy consent and employer company name gates, issues a 10-minute HMAC-signed HTTP-only `utare_oauth_intent` cookie, and redirects to Supabase's Google OAuth endpoint with `<origin>/auth/callback` (keeping the allowlisted callback URL clean). On return, `POST /api/auth/verify-email` exchanges the OAuth session, provisions missing `auth_users` (`password_hash: "supabase_managed"`) and `candidate_profiles` or `employer_registrations` records in local store and Supabase PostgreSQL, and preserves existing users' password hashes, roles, and bootstrap superusers (`resolveBootstrapRole`).
 - **Role Hierarchy (`src/types/index.ts`, `src/lib/auth-guard.ts`):**
   - `candidate`: Completes 6-factor diagnostic, generates AI pathway, reserves hub desks, uploads versioned credentials, generates tailored CVs/cover letters, applies to jobs.
   - `employer`: Self-registers with company details; requires **one-time admin verification** before posted roles appear publicly; `/api/employer/portal` strictly scopes applicants to the employer's own jobs and strips private candidate fields (phone, income bracket, hardware deficits, internal diagnostic scores) via `toEmployerApplicantView()`.
@@ -163,7 +166,7 @@ sequenceDiagram
 - **`recordAuditLog()` (`audit_logs` table):** Records immutable traceability entries whenever application statuses change, roles are promoted/demoted, passwords are reset, jobs are posted, or credentials/CV artifacts are saved.
 
 ### D. Inclusivity, Accessibility & Brand Visuals (`src/components/*`)
-- **`<ZimbabweMapGraphic />`:** Custom SVG vector map of Zimbabwe's 10 provinces with pulsing radar beacons for Harare, Bulawayo, and Mutare hubs.
+- **`<ZimbabweMapGraphic />` & `<ZimbabweRadarVisual />`:** Custom SVG vector map of Zimbabwe's 10 provinces with pulsing radar beacons for Harare, Bulawayo, and Mutare hubs, wrapped in the shared `<ZimbabweRadarVisual />` radial pathways illustration rendered consistently across both `/` and `/login`.
 - **`<FlowVideoWalkthrough />` & `<WatchDemoButton />`:** Interactive 5-step visual demo modal with auto-advance, playback speed, Closed Captions (CC), and pitch video embed support.
 - **`<AudioExplainer />`:** Zero-bandwidth Web Speech API narration (4 chapters in warm conversational tone with voice prioritization and transcript).
 - **`<AccessibilityControls />` & `<AssistiveToolbar />`:** Floating WCAG AAA High Contrast toggle, Deuteranopia/Protanopia/Tritanopia colorblind filters, font scaling, dyslexia spacing, and screen-reader outline announcer.
@@ -186,8 +189,8 @@ sequenceDiagram
 | `/skills` | Public | Modular skills development courses with interactive lesson progress modal |
 | `/employers` | Public | Employer overview & self-registration / inquiry form |
 | `/contact` | Public | General, Hub, and Partner inquiry form backed by `/api/contact` |
-| `/login` | Public | Split-screen Sign In, Candidate/Employer Registration, and Forgot/Reset Password flow |
-| `/auth/callback` | Public | Supabase / email verification callback handler |
+| `/login` | Public | Split-screen Sign In (Email + Google OAuth), shared Zimbabwe radar visual, Candidate/Employer Registration, and Forgot/Reset Password flow |
+| `/auth/callback` | Public | Supabase email verification & Google OAuth callback handler |
 | `/assessment` | Candidate | Smart Intake, 6-Factor Readiness Diagnostic, and Coach/Hub pairing |
 | `/pathway` | Candidate | Interactive 90-Day AI Career Roadmap, milestone tracker, and mentor session booking |
 | `/hubs` | Candidate / Public | Partner Innovation Hub directory (Harare, Bulawayo, Mutare, Gweru, Masvingo, Chinhoyi) & desk booking |
@@ -198,15 +201,16 @@ sequenceDiagram
 
 *(Plus the preserved standalone static walkthrough at `public/demo/index.html` → `/demo/index.html` and root `index.html`.)*
 
-### B. REST API Routes (`src/app/api/*` — 24 Endpoints)
+### B. REST API Routes (`src/app/api/*` — 25 Endpoints)
 
 | Endpoint | Methods | Auth Guard | Responsibility |
 | :--- | :--- | :--- | :--- |
 | `/api/auth/signup` | `POST` | Public | Validates email + MX domain + password strength + Data Policy consent; creates user in Supabase Auth (with Admin rate-limit fallback) & Postgres/store |
-| `/api/auth/login` | `POST` | Public | Verifies Supabase Auth or PBKDF2 hash; resolves bootstrap role; issues signed `utare_session` cookie |
+| `/api/auth/login` | `POST` | Public | Verifies Supabase Auth or PBKDF2 hash (with helpful Google Sign-In prompt for Google-only accounts); resolves bootstrap role; issues signed `utare_session` cookie |
 | `/api/auth/logout` | `POST` | Session | Signs out Supabase session and clears `utare_session` cookie |
+| `/api/auth/oauth/google` | `GET` | Public | Validates pre-OAuth signup consent/employer gates, sets HMAC-signed `utare_oauth_intent` cookie, and redirects to Supabase Google OAuth |
 | `/api/auth/session` | `GET` | Optional | Returns current authenticated user hydrated from candidate/employer DB tables |
-| `/api/auth/verify-email` | `GET`, `POST` | Public | Verifies email OTP / confirmation token and signs session cookie |
+| `/api/auth/verify-email` | `GET`, `POST` | Public | Exchanges email verification OTP/PKCE or Google OAuth sessions, provisions first-time OAuth user/profile records, and signs `utare_session` cookie |
 | `/api/auth/resend-confirmation` | `POST` | Public | Resends verification email with dynamically resolved Vercel/host origin |
 | `/api/auth/password` | `POST` | Session / Admin / Reset | Self-service password change, forgot-password reset, or admin override |
 | `/api/auth/profile` | `GET`, `POST`, `PATCH` | Session | Reads/updates candidate profile, photo (`avatarDataUrl`), and `includePhotoOnCv` |
@@ -282,4 +286,4 @@ sequenceDiagram
    npm run lint && npm run typecheck && npm run test:ci && npm run build
    ```
    *(Or inside Docker: `make ci-local`.)*
-4. **Open a Pull Request into `main` on GitHub** (automated CI runs ESLint, `tsc --noEmit`, all 14 Vitest suites / 76 tests in `src/__tests__/`, and `next build`).
+4. **Open a Pull Request into `main` on GitHub** (automated CI runs ESLint, `tsc --noEmit`, all 15 Vitest suites / 85 tests in `src/__tests__/`, and `next build`).
