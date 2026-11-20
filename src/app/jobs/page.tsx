@@ -113,25 +113,75 @@ export default function RemoteJobsPage() {
     fetch(`/api/jobs${candidateQuery}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.jobs) setJobs(data.jobs);
+        if (data.jobs) {
+          setJobs(data.jobs);
+        }
         if (data.applications) setApplications(data.applications);
+
+        let resolvedProfile: CandidateProfile = FALLBACK_CANDIDATE_PROFILE;
+        let resolvedHubName = "Impact Hub Harare — Utare Node";
+        let resolvedDetails = buildDefaultCvDetails(FALLBACK_CANDIDATE_PROFILE);
         if (data.activeCandidate) {
           setActiveCandidate(data.activeCandidate);
-          setCvDetails(buildDefaultCvDetails(data.activeCandidate.profile));
+          resolvedProfile = data.activeCandidate.profile;
+          resolvedHubName =
+            data.activeCandidate.pathway?.recommendedHub?.name || resolvedHubName;
+          resolvedDetails = buildDefaultCvDetails(data.activeCandidate.profile);
+          setCvDetails(resolvedDetails);
         } else if (user?.name) {
-          setCvDetails(
-            buildDefaultCvDetails({
-              ...FALLBACK_CANDIDATE_PROFILE,
-              fullName: user.name,
-              email: user.email || FALLBACK_CANDIDATE_PROFILE.email,
-              city: (user.city as any) || FALLBACK_CANDIDATE_PROFILE.city,
-              highestQualification:
-                (user.qualification as any) ||
-                FALLBACK_CANDIDATE_PROFILE.highestQualification,
-              fieldOfStudy:
-                user.fieldOfStudy || FALLBACK_CANDIDATE_PROFILE.fieldOfStudy,
-            })
-          );
+          resolvedProfile = {
+            ...FALLBACK_CANDIDATE_PROFILE,
+            fullName: user.name,
+            email: user.email || FALLBACK_CANDIDATE_PROFILE.email,
+            city: (user.city as any) || FALLBACK_CANDIDATE_PROFILE.city,
+            highestQualification:
+              (user.qualification as any) ||
+              FALLBACK_CANDIDATE_PROFILE.highestQualification,
+            fieldOfStudy:
+              user.fieldOfStudy || FALLBACK_CANDIDATE_PROFILE.fieldOfStudy,
+          };
+          resolvedDetails = buildDefaultCvDetails(resolvedProfile);
+          setCvDetails(resolvedDetails);
+        }
+
+        if (data.jobs && typeof window !== "undefined") {
+          const targetJobId = new URLSearchParams(window.location.search).get("jobId");
+          if (targetJobId) {
+            const matched = (data.jobs as RemoteJob[]).find((j) => j.id === targetJobId);
+            if (matched) {
+              setActiveJob(matched);
+              setStudioTab("cv");
+              setShareWithEmployer(false);
+              setSubmitError(null);
+              setTimeout(() => {
+                studioRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }, 100);
+              setGeneratingDocs(true);
+              fetch("/api/documents", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  format: "json",
+                  profile: resolvedProfile,
+                  details: resolvedDetails,
+                  hubName: resolvedHubName,
+                  target: {
+                    title: matched.title,
+                    company: matched.company,
+                    description: matched.description,
+                    requiredSkills: matched.requiredSkills,
+                  },
+                }),
+              })
+                .then((res) => res.json())
+                .then((docData) => {
+                  if (docData.cv && docData.coverLetter) {
+                    setGeneratedDocs(docData);
+                  }
+                })
+                .finally(() => setGeneratingDocs(false));
+            }
+          }
         }
       })
       .catch(() => {});

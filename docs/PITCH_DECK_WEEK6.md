@@ -214,11 +214,11 @@
 #### Visual Layout:
 - Audio wave graphic representing assistive voice guidance.
 - Split screen comparing standard view and high-contrast colorblind accessibility mode.
-- Smartphone outline demonstrating one-handed mobile ergonomic navigation.
+- Smartphone outline demonstrating one-handed mobile ergonomic navigation and Android TalkBack screen-reader focus cues.
 
 #### Spoken Script (Word-for-Word):
 > *"A solution that only works for wealthy urban youth with MacBook Pros is no solution at all.  
-> That is why UTARE integrates assistive audio walkthroughs for candidates experiencing low digital literacy or visual fatigue. Our interface adheres strictly to WCAG AAA color contrast standards, ensuring clarity for colorblind users.  
+> That is why UTARE integrates assistive audio walkthroughs, WCAG AAA high-contrast and colorblind modes, and Android TalkBack screen-reader support — validated directly with a totally blind user who tested our signup, typing, and exploration flow.  
 > Crucially, our entire diagnostic and CV builder functions 100% on a basic $60 Android smartphone. A candidate doesn’t need to own a computer to start—UTARE guides them from mobile intake directly into a workstation with a loaner PC."* `[click slide]`
 
 ---
@@ -239,18 +239,19 @@
 |  WHAT WE OBSERVED:                                                              |
 |  - High user hunger: Candidates loved seeing a concrete 90-day plan immediately.|
 |  - Word .docx downloads praised for authentic human voice and zero AI slop.     |
+|  - TalkBack blind user (Nyasha Gande): "Friendly for creating, typing & exploring." |
+|    Flagged silent search/filter UX -> shipped aria-live counts & focus modal.  |
 +---------------------------------------------------------------------------------+
 ```
 
 #### Visual Layout:
-- Testimonial card from a Harare test candidate.
+- Testimonial cards from Harare & TalkBack accessibility testers (including Nyasha Gande's 19 Nov 2026 TalkBack validation).
 - Real-time dashboard graph showing 100% uptime and sub-minute database synchronization.
 - Star rating badge: `4.9 / 5.0 UX Score from First Cohort Testers`.
 
 #### Spoken Script (Word-for-Word):
-> *"In our field tests this week, we handed our live platform to unbriefed family members and unemployed graduate peers in Harare and Bulawayo.  
-> Without any verbal instruction, every single tester successfully registered, completed their diagnostic in under four minutes, and generated a tailored CV.  
-> Our observed advantages were undeniable: candidates expressed overwhelming relief at seeing an actionable, 90-day path instead of an algorithmic rejection email. The live database maintained 100% uptime with zero sync glitches, proving our architectural durability."* `[click slide]`
+> *"In our field tests, we handed our live platform to unbriefed peers and even a totally blind Android TalkBack user, Nyasha Gande, who told us account creation, typing, and exploring were friendly — while honestly flagging where opportunity filtering stayed silent for screen readers. We shipped `aria-live` announcements, available industry counts, and modal focus management within hours.  
+> Across Harare and Bulawayo, testers completed their diagnostic in under four minutes and generated a tailored CV, expressing overwhelming relief at seeing an actionable 90-day path instead of silence."* `[click slide]`
 
 ---
 

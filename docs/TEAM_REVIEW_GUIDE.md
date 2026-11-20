@@ -8,6 +8,7 @@ Share this guide with the team (**Munashe Mugonda, Stewart Mangezi, Future, Aman
 
 | Document | Purpose | Recommended Reviewers |
 | :--- | :--- | :--- |
+| **[Kutunga Safety by Design Booklet Draft](SAFETY_BY_DESIGN_BOOKLET_DRAFT.md)** | Complete filled answers for Stages 1–4, Page 12 Ten-Standard Snapshot, Page 13 Open Risks, and Nyasha Gande's TalkBack testing evidence | **All Team** + **Coach Catherine** (priority for Dec 4 submission) |
 | **[Pitch Deck & 4-Minute Speaker Script](PITCH_DECK_WEEK6.md)** | Complete 10-slide Week 6 deck, visual layouts, stopwatch cues (`0:00 – 4:00`), and word-for-word storyteller script | **All Team** (especially **Bheki Ndlovu**, **Amanda Mukute**, **Future**) |
 | **[Uniform Team FAQ & Judge Defense Guide](TEAM_FAQ_UNIFORM.md)** | Standardized 30s & 60s answers, judge trap rebuttals, handoff rules, and rapid Q&A cheat sheet | **All Team** (mandatory alignment before Q&A) |
 | **[Coach Catherine Action Items & Sprint Matrix](COACH_CATHERINE_ACTION_ITEMS.md)** | Advisory directives, per-member deliverables, 7-day countdown, and risk register | **Munashe Mugonda** (Team Lead) + **All Domain Leads** |

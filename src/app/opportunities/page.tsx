@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import {
@@ -25,6 +25,8 @@ export default function OpportunitiesPage() {
   const [activeDetailJob, setActiveDetailJob] = useState<RemoteJob | null>(
     null
   );
+  const modalHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  const lastTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     fetch("/api/jobs")
@@ -37,34 +39,77 @@ export default function OpportunitiesPage() {
       .catch(() => {});
   }, []);
 
-  const categories = [
-    "All",
-    "Data",
-    "Operations",
-    "Marketing",
-    "Finance",
-    "Customer Support",
-    "Software",
-  ];
-  const industries = [
-    "All",
-    "Technology",
-    "Research",
-    "Media",
-    "Professional Services",
-  ];
-  const levels = ["All", "Entry", "Mid-level", "Experienced"];
-  const arrangements = ["All", "Remote", "Hybrid", "On-site"];
+  // Move focus into the modal for TalkBack / keyboard users and restore on close
+  useEffect(() => {
+    if (!activeDetailJob) return;
+    const t = setTimeout(() => {
+      modalHeadingRef.current?.focus();
+    }, 30);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveDetailJob(null);
+        setTimeout(() => lastTriggerRef.current?.focus(), 20);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [activeDetailJob]);
+
+  const closeDetailModal = () => {
+    setActiveDetailJob(null);
+    setTimeout(() => lastTriggerRef.current?.focus(), 20);
+  };
+
+  // Derive available categories, industries, levels, and arrangements from loaded jobs
+  // using the same display defaults so filters always match what cards show.
+  const categories = useMemo(
+    () => [
+      "All",
+      ...Array.from(new Set(jobs.map((j) => j.category || "General Remote"))),
+    ],
+    [jobs]
+  );
+  const industries = useMemo(
+    () => [
+      "All",
+      ...Array.from(new Set(jobs.map((j) => j.industry || "Technology"))),
+    ],
+    [jobs]
+  );
+  const levels = useMemo(
+    () => [
+      "All",
+      ...Array.from(new Set(jobs.map((j) => j.level || "Entry"))),
+    ],
+    [jobs]
+  );
+  const arrangements = useMemo(
+    () => [
+      "All",
+      ...Array.from(new Set(jobs.map((j) => j.arrangement || "Remote"))),
+    ],
+    [jobs]
+  );
 
   const filteredJobs = jobs.filter((job) => {
+    const q = search.trim().toLowerCase();
+    const jobIndustry = job.industry || "Technology";
+    const jobLevel = job.level || "Entry";
+    const jobArrangement = job.arrangement || "Remote";
+
     const matchesSearch =
-      search === "" ||
-      job.title.toLowerCase().includes(search.toLowerCase()) ||
-      job.company.toLowerCase().includes(search.toLowerCase()) ||
-      job.description.toLowerCase().includes(search.toLowerCase()) ||
-      job.requiredSkills.some((s) =>
-        s.toLowerCase().includes(search.toLowerCase())
-      );
+      q === "" ||
+      job.title.toLowerCase().includes(q) ||
+      job.company.toLowerCase().includes(q) ||
+      job.category.toLowerCase().includes(q) ||
+      jobIndustry.toLowerCase().includes(q) ||
+      jobArrangement.toLowerCase().includes(q) ||
+      job.description.toLowerCase().includes(q) ||
+      job.requiredSkills.some((s) => s.toLowerCase().includes(q)) ||
+      job.supportedPaymentRails.some((r) => r.toLowerCase().includes(q));
 
     const matchesCategory =
       selectedCategory === "All" ||
@@ -72,17 +117,15 @@ export default function OpportunitiesPage() {
 
     const matchesIndustry =
       selectedIndustry === "All" ||
-      (job.industry &&
-        job.industry.toLowerCase().includes(selectedIndustry.toLowerCase()));
+      jobIndustry.toLowerCase().includes(selectedIndustry.toLowerCase());
 
     const matchesLevel =
       selectedLevel === "All" ||
-      (job.level && job.level.toLowerCase() === selectedLevel.toLowerCase());
+      jobLevel.toLowerCase() === selectedLevel.toLowerCase();
 
     const matchesArrangement =
       selectedArrangement === "All" ||
-      (job.arrangement &&
-        job.arrangement.toLowerCase() === selectedArrangement.toLowerCase());
+      jobArrangement.toLowerCase() === selectedArrangement.toLowerCase();
 
     return (
       matchesSearch &&
@@ -92,6 +135,13 @@ export default function OpportunitiesPage() {
       matchesArrangement
     );
   });
+
+  const hasActiveFilters =
+    search.trim() !== "" ||
+    selectedCategory !== "All" ||
+    selectedIndustry !== "All" ||
+    selectedLevel !== "All" ||
+    selectedArrangement !== "All";
 
   const clearFilters = () => {
     setSearch("");
@@ -156,15 +206,50 @@ export default function OpportunitiesPage() {
           </div>
 
           <label className="search-box">
-            <Search className="h-4 w-4 shrink-0" />
+            <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
             <input
               type="search"
-              placeholder="Search roles, skills or company..."
-              aria-label="Search opportunities"
+              placeholder="Search roles, skills, industry or company..."
+              aria-label="Search opportunities by role, skill, category, or industry"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </label>
+        </div>
+
+        {/* Accessible Quick-Browse Overview of What Is Available (TalkBack / Screen-Reader Friendly) */}
+        <div
+          className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 space-y-2.5"
+          aria-label="Available industries and categories on UTARE"
+        >
+          <div className="text-xs font-bold text-slate-800">
+            Currently Available on UTARE ({jobs.length} verified roles across{" "}
+            {categories.length - 1} categories):
+          </div>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Quick filter by industry">
+            {industries.map((ind) => {
+              const count =
+                ind === "All"
+                  ? jobs.length
+                  : jobs.filter((j) => (j.industry || "Technology") === ind).length;
+              const isSelected = selectedIndustry === ind;
+              return (
+                <button
+                  key={ind}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => setSelectedIndustry(ind)}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 ${
+                    isSelected
+                      ? "bg-[#08785f] text-white"
+                      : "border border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100"
+                  }`}
+                >
+                  {ind === "All" ? `All industries (${count})` : `${ind} (${count})`}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* 4-Way Filter Bar */}
@@ -230,11 +315,47 @@ export default function OpportunitiesPage() {
           </button>
         </div>
 
+        {/* Screen-Reader Live Region Announcing Filter / Search Results */}
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="mb-4 text-xs font-medium text-slate-600"
+        >
+          {filteredJobs.length === 0
+            ? `0 opportunities match your current search or filters. Available categories: ${categories
+                .filter((c) => c !== "All")
+                .join(", ")}.`
+            : `Showing ${filteredJobs.length} of ${jobs.length} verified ${
+                filteredJobs.length === 1 ? "opportunity" : "opportunities"
+              }${
+                selectedIndustry !== "All" ? ` in ${selectedIndustry}` : ""
+              }${
+                selectedCategory !== "All" ? ` under ${selectedCategory}` : ""
+              }.`}
+        </div>
+
         {/* Opportunity Cards Grid */}
         {filteredJobs.length === 0 ? (
-          <div className="empty-message">
-            No opportunities match those filters. Try clearing or broadening
-            your search criteria.
+          <div className="empty-message space-y-3">
+            <p>
+              No opportunities match{" "}
+              {search.trim() ? `"${search.trim()}"` : "those filters"} right now.
+              Available categories include{" "}
+              <strong>
+                {categories.filter((c) => c !== "All").join(", ")}
+              </strong>
+              .
+            </p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="button button-green"
+              >
+                Clear all filters &amp; show all {jobs.length} opportunities
+              </button>
+            )}
           </div>
         ) : (
           <div className="opportunity-grid">
@@ -242,7 +363,7 @@ export default function OpportunitiesPage() {
               <article key={job.id} className="opportunity-card">
                 <div>
                   <div className="opportunity-top">
-                    <span className="opportunity-icon">
+                    <span className="opportunity-icon" aria-hidden="true">
                       <Briefcase className="h-4 w-4" />
                     </span>
                     <span className="demo-pill">
@@ -260,7 +381,7 @@ export default function OpportunitiesPage() {
                   <div className="job-meta">
                     <span>
                       {job.industry || "Technology"} ·{" "}
-                      {job.level || "Entry / Mid-level"}
+                      {job.level || "Entry"}
                     </span>
                     <span>
                       Skills: {job.requiredSkills.slice(0, 3).join(" · ")}
@@ -274,14 +395,19 @@ export default function OpportunitiesPage() {
                 <div className="flex items-center justify-between gap-2 pt-1">
                   <button
                     type="button"
-                    onClick={() => setActiveDetailJob(job)}
+                    aria-label={`View details for ${job.title} at ${job.company}`}
+                    onClick={(e) => {
+                      lastTriggerRef.current = e.currentTarget;
+                      setActiveDetailJob(job);
+                    }}
                     className="text-link"
                   >
-                    View details <ArrowRight className="h-3.5 w-3.5" />
+                    View details <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
 
                   <Link
-                    href="/jobs"
+                    href={`/jobs?jobId=${encodeURIComponent(job.id)}`}
+                    aria-label={`Tailor CV and apply for ${job.title} at ${job.company}`}
                     className="button button-green"
                     style={{
                       minHeight: "34px",
@@ -304,22 +430,23 @@ export default function OpportunitiesPage() {
         </p>
       </section>
 
-      {/* Role Detail Modal (Faith & Amanda's Modal Design) */}
+      {/* Role Detail Modal (Faith & Amanda's Modal Design + Screen-Reader Focus Management) */}
       {activeDetailJob && (
         <div
           className="modal-backdrop"
           role="dialog"
           aria-modal="true"
+          aria-labelledby="opportunity-modal-title"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setActiveDetailJob(null);
+            if (e.target === e.currentTarget) closeDetailModal();
           }}
         >
           <div className="simple-modal detail-modal">
             <button
               type="button"
               className="modal-close"
-              aria-label="Close"
-              onClick={() => setActiveDetailJob(null)}
+              aria-label="Close opportunity details"
+              onClick={closeDetailModal}
             >
               ×
             </button>
@@ -327,7 +454,9 @@ export default function OpportunitiesPage() {
               {(activeDetailJob.arrangement || "REMOTE").toUpperCase()} ·{" "}
               {activeDetailJob.category.toUpperCase()}
             </span>
-            <h2>{activeDetailJob.title}</h2>
+            <h2 id="opportunity-modal-title" tabIndex={-1} ref={modalHeadingRef}>
+              {activeDetailJob.title}
+            </h2>
             <p className="font-semibold text-[#202b3c] mb-2">
               {activeDetailJob.company} —{" "}
               <span className="text-[#08785f]">
@@ -347,7 +476,7 @@ export default function OpportunitiesPage() {
               </div>
               <div>
                 <dt>Experience level</dt>
-                <dd>{activeDetailJob.level || "Entry / Mid-level"}</dd>
+                <dd>{activeDetailJob.level || "Entry"}</dd>
               </div>
               <div>
                 <dt>Work arrangement</dt>
@@ -365,16 +494,16 @@ export default function OpportunitiesPage() {
 
             <div className="flex flex-wrap gap-2.5 mt-4">
               <Link
-                href="/jobs"
+                href={`/jobs?jobId=${encodeURIComponent(activeDetailJob.id)}`}
                 className="button button-green"
                 style={{ flex: 1 }}
               >
-                Tailor ATS CV &amp; Apply <ArrowRight className="h-4 w-4" />
+                Tailor ATS CV &amp; Apply <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <button
                 type="button"
                 className="button"
-                onClick={() => setActiveDetailJob(null)}
+                onClick={closeDetailModal}
               >
                 Close
               </button>
