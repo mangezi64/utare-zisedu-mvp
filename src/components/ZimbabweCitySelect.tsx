@@ -278,7 +278,7 @@ export default function ZimbabweCitySelect({
               {/* Major Cities Group */}
               {filteredMajorCities.length > 0 && (
                 <div className="pt-1">
-                  <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <div className="px-2 py-1 text-[0.72rem] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                     <Building2 className="h-3 w-3 text-emerald-700" />
                     Major Cities & Metropolitan Hubs
                   </div>
@@ -308,7 +308,7 @@ export default function ZimbabweCitySelect({
               {/* Towns, Municipalities & Urban Centres Group */}
               {filteredOtherTowns.length > 0 && (
                 <div className="pt-2">
-                  <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <div className="px-2 py-1 text-[0.72rem] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                     <MapPin className="h-3 w-3 text-slate-400" />
                     Towns & Urban Centres ({filteredOtherTowns.length})
                   </div>
@@ -338,7 +338,7 @@ export default function ZimbabweCitySelect({
               {/* International & Diaspora */}
               {showAbroad && (
                 <div className="pt-2">
-                  <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
+                  <div className="px-2 py-1 text-[0.72rem] font-extrabold uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
                     <Globe className="h-3 w-3 text-blue-600" />
                     International & Diaspora
                   </div>
@@ -363,7 +363,7 @@ export default function ZimbabweCitySelect({
               {/* Districts & Custom Locations */}
               {(showDistricts || !exactMatchExists) && (
                 <div className="pt-2">
-                  <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                  <div className="px-2 py-1 text-[0.72rem] font-extrabold uppercase tracking-wider text-slate-400">
                     Growth Points & Custom Options
                   </div>
 
@@ -446,7 +446,7 @@ export default function ZimbabweCitySelect({
               className={`w-full rounded-lg border border-emerald-300 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 focus:outline-none ${inputClassName}`}
             />
           </div>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[0.78rem] text-slate-500">
             We will pair you with the closest regional solar and Starlink-backed partner hub.
           </p>
         </div>
@@ -483,7 +483,7 @@ export default function ZimbabweCitySelect({
               className={`w-full rounded-lg border border-blue-300 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-700 focus:ring-1 focus:ring-blue-700 focus:outline-none ${inputClassName}`}
             />
           </div>
-          <div className="flex items-start gap-1.5 text-[11px] text-blue-800 pt-0.5">
+          <div className="flex items-start gap-1.5 text-[0.78rem] text-blue-800 pt-0.5">
             <Info className="h-3.5 w-3.5 shrink-0 text-blue-600 mt-0.5" />
             <span>
               <strong>Diaspora Notice:</strong> Full access to skills diagnostics, AI roadmaps, tailored ATS CVs, and remote job applications is active. (Physical innovation hub workstations operate inside Zimbabwe).

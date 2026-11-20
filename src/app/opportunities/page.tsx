@@ -479,7 +479,7 @@ export default function OpportunitiesPage() {
                         style={{
                           minHeight: "34px",
                           padding: "0 12px",
-                          fontSize: "11px",
+                          fontSize: "0.78rem",
                         }}
                       >
                         Manage in Employer Portal
@@ -495,7 +495,7 @@ export default function OpportunitiesPage() {
                         style={{
                           minHeight: "34px",
                           padding: "0 12px",
-                          fontSize: "11px",
+                          fontSize: "0.78rem",
                         }}
                       >
                         View Listing
@@ -508,13 +508,13 @@ export default function OpportunitiesPage() {
                       style={{
                         minHeight: "34px",
                         padding: "0 12px",
-                        fontSize: "11px",
+                        fontSize: "0.78rem",
                       }}
                     >
                       Manage in Admin Console
                     </Link>
                   ) : isHub ? (
-                    <span className="text-[11px] font-semibold text-slate-500">
+                    <span className="text-[0.78rem] font-semibold text-slate-500">
                       Read-only Hub View
                     </span>
                   ) : (
@@ -525,7 +525,7 @@ export default function OpportunitiesPage() {
                       style={{
                         minHeight: "34px",
                         padding: "0 12px",
-                        fontSize: "11px",
+                        fontSize: "0.78rem",
                       }}
                     >
                       Tailor CV &amp; Apply

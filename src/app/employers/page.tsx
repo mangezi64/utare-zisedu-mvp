@@ -482,7 +482,7 @@ export default function EmployersPage() {
 
         <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-6 space-y-6">
           <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-slate-50 p-6 sm:p-8 shadow-sm">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-800">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-[0.78rem] font-bold uppercase tracking-wider text-emerald-800">
               <ShieldCheck className="h-3.5 w-3.5" />
               Verified Hiring Partners
             </span>
@@ -586,7 +586,7 @@ export default function EmployersPage() {
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 font-extrabold text-sm">
                           {emp.companyName.slice(0, 2).toUpperCase()}
                         </div>
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[0.78rem] font-bold text-emerald-800">
                           <ShieldCheck className="h-3 w-3" />
                           Verified
                         </span>
@@ -604,7 +604,7 @@ export default function EmployersPage() {
                           {emp.rolesInterested.slice(0, 3).map((role) => (
                             <span
                               key={role}
-                              className="rounded-lg bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700"
+                              className="rounded-lg bg-slate-100 px-2 py-0.5 text-[0.78rem] font-medium text-slate-700"
                             >
                               {role}
                             </span>
@@ -641,7 +641,7 @@ export default function EmployersPage() {
             >
               <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
                 <div>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[0.78rem] font-bold text-emerald-800">
                     <ShieldCheck className="h-3 w-3" />
                     Verified Partner
                   </span>
@@ -734,7 +734,7 @@ export default function EmployersPage() {
                             </p>
                           </div>
                           {job.level && (
-                            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700">
+                            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[0.78rem] font-semibold text-slate-700">
                               {job.level}
                             </span>
                           )}
@@ -778,7 +778,7 @@ export default function EmployersPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-6 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-slate-50 p-6 shadow-sm">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-amber-900">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[0.78rem] font-bold uppercase tracking-wider text-amber-900">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Admin Operations
               </span>
@@ -945,7 +945,7 @@ export default function EmployersPage() {
                           {emp.companyName}
                         </h3>
                         <span
-                          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${badge.cls}`}
+                          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[0.78rem] font-bold ${badge.cls}`}
                         >
                           {badge.label}
                         </span>
@@ -955,7 +955,7 @@ export default function EmployersPage() {
                         {emp.email}) · {emp.industry} · {emp.hiringModel}
                       </p>
                       {emp.rolesInterested && emp.rolesInterested.length > 0 && (
-                        <p className="text-[11px] text-slate-500">
+                        <p className="text-[0.78rem] text-slate-500">
                           Roles: {emp.rolesInterested.join(", ")}
                         </p>
                       )}
@@ -1374,7 +1374,7 @@ export default function EmployersPage() {
                     style={{
                       minHeight: "36px",
                       padding: "0 14px",
-                      fontSize: "11.5px",
+                      fontSize: "0.8125rem",
                     }}
                   >
                     Confirm Email &amp; Open Employer Portal{" "}
@@ -1398,12 +1398,12 @@ export default function EmployersPage() {
                       onClick={() =>
                         handleResendConfirmation(pendingConfirmationEmail)
                       }
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#08785f]/30 bg-white px-3 py-1.5 text-[11.5px] font-bold text-[#08785f] hover:bg-[#f2fbf7] disabled:opacity-60 transition"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#08785f]/30 bg-white px-3 py-1.5 text-[0.8125rem] font-bold text-[#08785f] hover:bg-[#f2fbf7] disabled:opacity-60 transition"
                     >
                       {isResending ? "Sending..." : "Resend Confirmation Email"}
                     </button>
                     {resendNotice && (
-                      <span className="text-[11px] font-medium text-[#1b4d3e]">
+                      <span className="text-[0.78rem] font-medium text-[#1b4d3e]">
                         {resendNotice}
                       </span>
                     )}

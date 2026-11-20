@@ -306,10 +306,10 @@ export default function PathwayStudioPage() {
               </ul>
               {record.assessment.qualificationBreakdown.howToQualify.length > 0 && (
                 <div className="pt-2 border-t border-amber-200/70">
-                  <div className="text-[11px] font-bold text-amber-900 mb-1">
+                  <div className="text-[0.78rem] font-bold text-amber-900 mb-1">
                     Steps to Qualify:
                   </div>
-                  <ul className="list-disc pl-4 space-y-1 text-[11px] text-amber-900">
+                  <ul className="list-disc pl-4 space-y-1 text-[0.78rem] text-amber-900">
                     {record.assessment.qualificationBreakdown.howToQualify.map((h) => (
                       <li key={h}>{h}</li>
                     ))}
@@ -319,7 +319,7 @@ export default function PathwayStudioPage() {
             </div>
           </div>
 
-          <p className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 rounded-xl p-3 border border-slate-200">
+          <p className="text-[0.78rem] text-slate-500 leading-relaxed bg-slate-50 rounded-xl p-3 border border-slate-200">
             {record.assessment.qualificationBreakdown.aiRoleNotice}
           </p>
         </div>
@@ -363,7 +363,7 @@ export default function PathwayStudioPage() {
                     {m.phase}
                   </span>
                   {isDone ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2.5 py-0.5 text-[11px] font-bold text-white">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2.5 py-0.5 text-[0.78rem] font-bold text-white">
                       <CheckCircle2 className="h-3.5 w-3.5" /> Verified Done
                     </span>
                   ) : (

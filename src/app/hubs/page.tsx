@@ -320,7 +320,7 @@ export default function HubsDirectoryPage() {
                   </h3>
                   <p className="text-xs text-slate-500">{hub.address}</p>
                 </div>
-                <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[11px] font-bold text-emerald-800">
+                <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[0.78rem] font-bold text-emerald-800">
                   {isRecommended ? "Recommended for You" : "Utare Partner Pass"}
                 </span>
               </div>
@@ -331,7 +331,7 @@ export default function HubsDirectoryPage() {
                     <Wifi className="h-4 w-4 text-emerald-600" />
                     {hub.avgSpeedMbps} Mbps
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-500">
+                  <p className="mt-1 text-[0.78rem] text-slate-500">
                     {hub.internetProvider}
                   </p>
                 </div>
@@ -341,7 +341,7 @@ export default function HubsDirectoryPage() {
                     <Zap className="h-4 w-4 text-amber-600" />
                     {hub.hasSolarBackup ? "100% Solar" : "Grid Only"}
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-500">
+                  <p className="mt-1 text-[0.78rem] text-slate-500">
                     Uninterrupted Power
                   </p>
                 </div>
@@ -351,7 +351,7 @@ export default function HubsDirectoryPage() {
                     <Laptop className="h-4 w-4 text-blue-600" />
                     {hub.availableWorkstations} Desks
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-500">
+                  <p className="mt-1 text-[0.78rem] text-slate-500">
                     {hub.laptopLoanAvailable
                       ? "PC Loan Available"
                       : "Bring Own Device"}

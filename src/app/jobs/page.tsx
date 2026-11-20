@@ -556,7 +556,7 @@ export default function RemoteJobsPage() {
             <Sparkles className="h-4 w-4 text-emerald-700" />
             <div>
               <div className="font-bold">AI Career Engine Active</div>
-              <div className="text-[10px] text-emerald-700 font-normal">
+              <div className="text-[0.72rem] text-emerald-700 font-normal">
                 Anti-AI-Slop Verified • Grounded ATS Resume
               </div>
             </div>
@@ -649,7 +649,7 @@ export default function RemoteJobsPage() {
         <div className="no-print rounded-2xl border-2 border-amber-300 bg-amber-50/60 p-4 space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-amber-900">
             <span>🛠️ Facilitator Console: Switch Candidate Archetype (Demo Mode)</span>
-            <span className="text-[11px] font-normal text-amber-800">
+            <span className="text-[0.78rem] font-normal text-amber-800">
               Hidden from candidate view
             </span>
           </div>
@@ -1445,7 +1445,7 @@ export default function RemoteJobsPage() {
                   {job.requiredSkills.map((s) => (
                     <span
                       key={s}
-                      className="rounded-md bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700"
+                      className="rounded-md bg-slate-100 px-2.5 py-1 text-[0.78rem] font-medium text-slate-700"
                     >
                       {s}
                     </span>
@@ -1455,7 +1455,7 @@ export default function RemoteJobsPage() {
                   job.externalRoleUrl ||
                   job.sourceUrl ||
                   (job.attachmentDocuments && job.attachmentDocuments.length > 0)) && (
-                  <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
+                  <div className="flex flex-wrap items-center gap-2 pt-1 text-[0.78rem]">
                     {job.companyWebsite && (
                       <a
                         href={job.companyWebsite}
@@ -1502,7 +1502,7 @@ export default function RemoteJobsPage() {
                     <span>{job.supportedPaymentRails.join(", ")}</span>
                   </div>
                   {job.isAsyncFriendly && (
-                    <span className="rounded bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-800">
+                    <span className="rounded bg-blue-50 px-2 py-0.5 text-[0.78rem] font-semibold text-blue-800">
                       100% Async Friendly
                     </span>
                   )}
@@ -1510,7 +1510,7 @@ export default function RemoteJobsPage() {
 
                 {aiCheck && (
                   <div
-                    className={`rounded-xl border p-3 text-[11px] space-y-1 ${
+                    className={`rounded-xl border p-3 text-[0.78rem] space-y-1 ${
                       aiCheck.qualified
                         ? "border-emerald-200 bg-emerald-50/50 text-emerald-900"
                         : "border-amber-200 bg-amber-50/60 text-amber-950"
@@ -1528,7 +1528,7 @@ export default function RemoteJobsPage() {
                         ))}
                       </ul>
                     )}
-                    <div className="text-[10px] opacity-80">
+                    <div className="text-[0.72rem] opacity-80">
                       Advisory only — you may still apply; employers reserve final decision and feedback discretion.
                     </div>
                   </div>
@@ -1565,7 +1565,7 @@ export default function RemoteJobsPage() {
                       type="button"
                       onClick={() => setReportingJob(job)}
                       title="Report suspicious, misleading, or unsafe listing"
-                      className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition"
+                      className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-[0.78rem] font-bold text-rose-700 hover:bg-rose-100 transition"
                     >
                       <Flag className="h-3.5 w-3.5" />
                       Report

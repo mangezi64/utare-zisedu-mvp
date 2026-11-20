@@ -392,7 +392,7 @@ export default function Navbar() {
                       <p className="truncate text-sm font-bold text-slate-900">
                         {user.name}
                       </p>
-                      <p className="truncate text-[11px] text-slate-500">
+                      <p className="truncate text-[0.78rem] text-slate-500">
                         {user.email}
                       </p>
                     </div>
@@ -410,7 +410,7 @@ export default function Navbar() {
                         <User className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                       )}
                       <span
-                        className={`text-[11px] font-bold ${
+                        className={`text-[0.78rem] font-bold ${
                           isAdmin
                             ? "text-amber-900"
                             : isEmployer
@@ -423,7 +423,7 @@ export default function Navbar() {
                         {roleTitle}
                       </span>
                     </div>
-                    <p className="text-[11px] leading-snug text-slate-600">
+                    <p className="text-[0.78rem] leading-snug text-slate-600">
                       {roleSubtitle}
                     </p>
                   </div>
@@ -492,7 +492,7 @@ export default function Navbar() {
                 <Link
                   href="/login?tab=register"
                   className="button button-green whitespace-nowrap"
-                  style={{ minHeight: "36px", padding: "0 14px", fontSize: "12px" }}
+                  style={{ minHeight: "36px", padding: "0 14px", fontSize: "0.85rem" }}
                 >
                   Create Account
                 </Link>

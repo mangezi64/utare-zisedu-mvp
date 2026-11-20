@@ -188,7 +188,7 @@ export default function FaqExplorer() {
           >
             <span>All Topics</span>
             <span
-              className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+              className={`rounded-full px-1.5 py-0.5 text-[0.72rem] font-bold ${
                 selectedCategory === "all"
                   ? "bg-white/20 text-white"
                   : "bg-slate-200 text-slate-700"
@@ -215,7 +215,7 @@ export default function FaqExplorer() {
               >
                 <span>{cat.label}</span>
                 <span
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                  className={`rounded-full px-1.5 py-0.5 text-[0.72rem] font-bold ${
                     active
                       ? "bg-white/20 text-white"
                       : "bg-slate-200 text-slate-700"
@@ -312,7 +312,7 @@ export default function FaqExplorer() {
                   >
                     <div className="space-y-1.5 min-w-0">
                       {categoryInfo && (
-                        <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-emerald-800">
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide text-emerald-800">
                           {categoryInfo.label}
                         </span>
                       )}
@@ -347,7 +347,7 @@ export default function FaqExplorer() {
                     </div>
 
                     {item.bullets && item.bullets.length > 0 && (
-                      <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-[13px] text-slate-700">
+                      <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-[0.9rem] text-slate-700">
                         {item.bullets.map((bullet, idx) => (
                           <li key={idx}>{bullet}</li>
                         ))}
@@ -380,7 +380,7 @@ export default function FaqExplorer() {
       <section className="rounded-3xl border border-slate-200 bg-slate-900 p-6 sm:p-8 text-white space-y-5 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-1.5 max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+            <span className="inline-flex items-center gap-1.5 text-[0.78rem] font-bold uppercase tracking-wider text-emerald-400">
               <ShieldCheck className="h-4 w-4" />
               DIRECT SUPPORT &amp; ACCOUNTABILITY
             </span>

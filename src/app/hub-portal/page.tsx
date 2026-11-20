@@ -529,7 +529,7 @@ export default function HubPortalPage() {
             {/* Hub Snapshot Cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                <p className="text-[0.78rem] font-semibold text-slate-500 flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5 text-teal-700" />
                   Location
                 </p>
@@ -539,7 +539,7 @@ export default function HubPortalPage() {
                 <p className="text-xs text-slate-500 truncate">{hub.address}</p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                <p className="text-[0.78rem] font-semibold text-slate-500 flex items-center gap-1">
                   <Wifi className="h-3.5 w-3.5 text-teal-700" />
                   Connectivity
                 </p>
@@ -549,7 +549,7 @@ export default function HubPortalPage() {
                 <p className="text-xs text-slate-500">{hub.internetProvider}</p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                <p className="text-[0.78rem] font-semibold text-slate-500 flex items-center gap-1">
                   <Sun className="h-3.5 w-3.5 text-amber-600" />
                   Power &amp; Pricing
                 </p>
@@ -562,7 +562,7 @@ export default function HubPortalPage() {
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                <p className="text-[0.78rem] font-semibold text-slate-500 flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5 text-teal-700" />
                   Operating Hours
                 </p>
@@ -906,7 +906,7 @@ export default function HubPortalPage() {
                                 {member.name}
                               </span>
                               <span
-                                className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${
+                                className={`rounded-full border px-2 py-0.5 text-[0.72rem] font-bold ${
                                   isMemberAdmin
                                     ? "bg-teal-50 border-teal-200 text-teal-800"
                                     : "bg-slate-100 border-slate-200 text-slate-700"
@@ -925,14 +925,14 @@ export default function HubPortalPage() {
                             <button
                               type="button"
                               onClick={() => handleToggleStaffRole(member)}
-                              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[0.78rem] font-semibold text-slate-700 hover:bg-slate-50"
                             >
                               Make {isMemberAdmin ? "Team Member" : "Org Admin"}
                             </button>
                             <button
                               type="button"
                               onClick={() => handleStaffResetLink(member)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[0.78rem] font-semibold text-slate-700 hover:bg-slate-50"
                             >
                               <KeyRound className="h-3 w-3" />
                               Reset Link
@@ -940,7 +940,7 @@ export default function HubPortalPage() {
                             <button
                               type="button"
                               onClick={() => handleRemoveStaff(member)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-semibold text-rose-700 hover:bg-rose-100"
+                              className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[0.78rem] font-semibold text-rose-700 hover:bg-rose-100"
                             >
                               <Trash2 className="h-3 w-3" />
                               Remove

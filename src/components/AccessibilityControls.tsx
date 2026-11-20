@@ -267,7 +267,7 @@ export default function AccessibilityControls() {
                 <div>
                   <h2 id="a11y-dialog-title" className="text-base font-bold text-white flex items-center gap-2">
                     Accessibility &amp; Assistive Tech
-                    <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                    <span className="text-[0.72rem] font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
                       WCAG AAA
                     </span>
                   </h2>
@@ -316,7 +316,7 @@ export default function AccessibilityControls() {
                     <h3 className="text-xs font-bold text-white">
                       {t.a11yPanel.languageSectionTitle}
                     </h3>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[0.78rem] text-slate-400">
                       {t.a11yPanel.languageSectionDesc}
                     </p>
                   </div>
@@ -355,7 +355,7 @@ export default function AccessibilityControls() {
                     </span>
                     <div>
                       <h3 className="text-xs font-bold text-white">High Contrast Mode</h3>
-                      <p className="text-[11px] text-slate-400 leading-tight">
+                      <p className="text-[0.78rem] text-slate-400 leading-tight">
                         Maximum contrast ratio (7:1+), highlighted outlines, and high-visibility text.
                       </p>
                     </div>
@@ -392,7 +392,7 @@ export default function AccessibilityControls() {
                   </span>
                   <div>
                     <h3 className="text-xs font-bold text-white">Colorblind Filter Modes</h3>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[0.78rem] text-slate-400">
                       Safe contrast palettes and matrix filters for color vision deficiencies.
                     </p>
                   </div>
@@ -426,10 +426,10 @@ export default function AccessibilityControls() {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px]">{mode.label}</span>
+                          <span className="text-[0.78rem]">{mode.label}</span>
                           {isSelected && <Check className="w-3.5 h-3.5 text-emerald-400" />}
                         </div>
-                        <span className="text-[10px] text-slate-400 font-normal block mt-0.5">
+                        <span className="text-[0.72rem] text-slate-400 font-normal block mt-0.5">
                           {mode.desc}
                         </span>
                       </button>
@@ -447,7 +447,7 @@ export default function AccessibilityControls() {
                     </span>
                     <div>
                       <h3 className="text-xs font-bold text-white">Font Size Scaling</h3>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[0.78rem] text-slate-400">
                         Scale typography without breaking layout grids or forms.
                       </p>
                     </div>
@@ -480,7 +480,7 @@ export default function AccessibilityControls() {
                         }`}
                       >
                         <span className="block text-xs">{item.label}</span>
-                        <span className="block text-[10px] opacity-80 mt-0.5">{item.scale}</span>
+                        <span className="block text-[0.72rem] opacity-80 mt-0.5">{item.scale}</span>
                       </button>
                     );
                   })}
@@ -493,7 +493,7 @@ export default function AccessibilityControls() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h4 className="text-xs font-bold text-white">Reduced Motion</h4>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[0.78rem] text-slate-400">
                       Disable animations and smooth scrolling for vestibular comfort.
                     </p>
                   </div>
@@ -522,7 +522,7 @@ export default function AccessibilityControls() {
                 <div className="border-t border-slate-700/60 pt-2.5 flex items-center justify-between gap-3">
                   <div>
                     <h4 className="text-xs font-bold text-white">Dyslexia-Friendly Spacing</h4>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[0.78rem] text-slate-400">
                       Increased line-height and letter-spacing for improved reading flow.
                     </p>
                   </div>
@@ -559,17 +559,17 @@ export default function AccessibilityControls() {
                     <h3 className="text-xs font-bold text-white">
                       {t.a11yPanel.screenReaderSectionTitle}
                     </h3>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[0.78rem] text-slate-400">
                       {t.a11yPanel.screenReaderSectionDesc}
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-2 mb-3 rounded-lg bg-slate-900/70 border border-slate-700/60 p-2.5 space-y-1">
-                  <p className="text-[11px] font-semibold text-emerald-300">
+                  <p className="text-[0.78rem] font-semibold text-emerald-300">
                     {t.a11yPanel.disabilitySupportTitle}
                   </p>
-                  <ul className="space-y-1 text-[10.5px] text-slate-300 list-disc pl-4">
+                  <ul className="space-y-1 text-[0.75rem] text-slate-300 list-disc pl-4">
                     {t.a11yPanel.disabilitySupportBullets.map((b) => (
                       <li key={b}>{b}</li>
                     ))}
@@ -633,10 +633,10 @@ export default function AccessibilityControls() {
 
             {/* Footer / Reset Controls */}
             <div className="mt-5 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-              <span className="text-[11px]">Preferences saved automatically.</span>
+              <span className="text-[0.78rem]">Preferences saved automatically.</span>
               <button
                 onClick={handleReset}
-                className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded p-1"
+                className="flex items-center gap-1 text-[0.78rem] text-slate-400 hover:text-white transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded p-1"
               >
                 <RotateCcw className="w-3 h-3" />
                 Reset all settings

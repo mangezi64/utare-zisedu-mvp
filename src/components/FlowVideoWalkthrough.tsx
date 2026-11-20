@@ -300,11 +300,11 @@ export default function FlowVideoWalkthrough() {
                     className="text-sm sm:text-base font-extrabold text-white flex items-center gap-2"
                   >
                     UTARE ZEM AI — Interactive Flow &amp; Video Walkthrough
-                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
+                    <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[0.72rem] font-bold text-emerald-300 border border-emerald-500/30">
                       Live MVP Demo
                     </span>
                   </h2>
-                  <p className="text-[11px] text-slate-400 hidden sm:block">
+                  <p className="text-[0.78rem] text-slate-400 hidden sm:block">
                     Visual end-to-end journey from intake diagnostic to remote job placement
                   </p>
                 </div>
@@ -312,7 +312,7 @@ export default function FlowVideoWalkthrough() {
 
               {/* View Switcher & Close */}
               <div className="flex items-center gap-2">
-                <div className="hidden sm:flex rounded-lg bg-slate-800 p-0.5 text-[11px] font-semibold">
+                <div className="hidden sm:flex rounded-lg bg-slate-800 p-0.5 text-[0.78rem] font-semibold">
                   <button
                     type="button"
                     onClick={() => setActiveTab("interactive")}
@@ -363,13 +363,13 @@ export default function FlowVideoWalkthrough() {
                           setCurrentStepIndex(idx);
                           setProgressPercent(0);
                         }}
-                        className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 transition text-[11px] font-semibold ${
+                        className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 transition text-[0.78rem] font-semibold ${
                           active
                             ? "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold shadow-md"
                             : "bg-slate-800/80 text-slate-300 hover:bg-slate-700"
                         }`}
                       >
-                        <span className="font-mono text-[10px] opacity-80">
+                        <span className="font-mono text-[0.72rem] opacity-80">
                           {step.stepNumber}
                         </span>
                         <span>{step.title}</span>
@@ -387,11 +387,11 @@ export default function FlowVideoWalkthrough() {
                         <span className="h-3 w-3 rounded-full bg-red-500/80 inline-block" />
                         <span className="h-3 w-3 rounded-full bg-amber-500/80 inline-block" />
                         <span className="h-3 w-3 rounded-full bg-emerald-500/80 inline-block" />
-                        <span className="ml-2 font-mono text-[11px] text-slate-400">
+                        <span className="ml-2 font-mono text-[0.78rem] text-slate-400">
                           utare-zisedu-mvp.vercel.app/{currentStep.id}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                      <div className="flex items-center gap-1.5 text-[0.72rem] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                         <Sparkles className="h-3 w-3" />
                         {currentStep.category}
                       </div>
@@ -402,7 +402,7 @@ export default function FlowVideoWalkthrough() {
                       {/* Left: Summary & Live Highlights */}
                       <div className="md:col-span-2 space-y-4">
                         <div>
-                          <span className="text-[11px] font-extrabold uppercase text-amber-400 tracking-wider">
+                          <span className="text-[0.78rem] font-extrabold uppercase text-amber-400 tracking-wider">
                             Step {currentStep.stepNumber} · {currentStep.tagline}
                           </span>
                           <h3 className="text-lg sm:text-xl font-bold text-white mt-1">
@@ -428,7 +428,7 @@ export default function FlowVideoWalkthrough() {
                           {currentStep.screenSummary.uiBadges.map((b, i) => (
                             <span
                               key={i}
-                              className="rounded-full bg-slate-700/60 px-2.5 py-1 text-[11px] font-medium text-slate-300 border border-slate-600"
+                              className="rounded-full bg-slate-700/60 px-2.5 py-1 text-[0.78rem] font-medium text-slate-300 border border-slate-600"
                             >
                               {b}
                             </span>
@@ -445,7 +445,7 @@ export default function FlowVideoWalkthrough() {
                           <div className="space-y-3">
                             {currentStep.screenSummary.metrics.map((m, i) => (
                               <div key={i} className="rounded-lg bg-slate-800/80 p-2.5 border border-slate-700/60">
-                                <div className="text-[10px] text-slate-400">{m.label}</div>
+                                <div className="text-[0.72rem] text-slate-400">{m.label}</div>
                                 <div className="text-sm font-extrabold text-amber-300 mt-0.5">
                                   {m.value}
                                 </div>
@@ -454,7 +454,7 @@ export default function FlowVideoWalkthrough() {
                           </div>
                         </div>
 
-                        <div className="pt-2 text-[10px] text-slate-400 italic flex items-center gap-1.5 border-t border-slate-800">
+                        <div className="pt-2 text-[0.72rem] text-slate-400 italic flex items-center gap-1.5 border-t border-slate-800">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
                           {currentStep.screenSummary.actionPrompt}
                         </div>
@@ -465,7 +465,7 @@ export default function FlowVideoWalkthrough() {
                   {/* Subtitle / Closed Caption Bar (for deaf / hard of hearing) */}
                   {showCaptions && (
                     <div className="mt-4 mx-auto w-full max-w-4xl rounded-xl border border-amber-500/30 bg-slate-950/90 px-4 py-3 shadow-lg flex items-center gap-3">
-                      <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 uppercase">
+                      <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[0.72rem] font-bold text-amber-300 uppercase">
                         CC
                       </span>
                       <p className="text-xs sm:text-sm text-amber-100 font-medium leading-relaxed">
@@ -533,7 +533,7 @@ export default function FlowVideoWalkthrough() {
                     {/* Right Options: Speed, Captions, Voice Launch */}
                     <div className="flex items-center gap-2">
                       {/* Playback Speed */}
-                      <div className="flex items-center rounded-lg bg-slate-800 p-0.5 text-[11px] font-semibold text-slate-300">
+                      <div className="flex items-center rounded-lg bg-slate-800 p-0.5 text-[0.78rem] font-semibold text-slate-300">
                         {[0.75, 1.0, 1.25].map((spd) => (
                           <button
                             key={spd}

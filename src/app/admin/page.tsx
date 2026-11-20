@@ -747,7 +747,7 @@ export default function AdminConsolePage() {
           <Briefcase className="h-4 w-4" />
           <span>Remote Jobs & AI Discovery</span>
           {pendingJobCount > 0 && (
-            <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-black text-slate-950">
+            <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[0.72rem] font-black text-slate-950">
               {pendingJobCount}
             </span>
           )}
@@ -1087,12 +1087,12 @@ export default function AdminConsolePage() {
                       <div className="space-y-1.5">
                         <div className="flex flex-wrap items-center gap-2">
                           {isReported && (
-                            <span className="rounded-full bg-rose-700 text-white px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider">
+                            <span className="rounded-full bg-rose-700 text-white px-2.5 py-0.5 text-[0.78rem] font-black uppercase tracking-wider">
                               ⚠ Reported — Taken Off Platform (Superuser Review)
                             </span>
                           )}
                           {isPending && (
-                            <span className="rounded-full bg-amber-200 text-amber-900 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wider">
+                            <span className="rounded-full bg-amber-200 text-amber-900 px-2.5 py-0.5 text-[0.78rem] font-black uppercase tracking-wider">
                               AI Discovered — Needs Approval
                             </span>
                           )}
@@ -1121,7 +1121,7 @@ export default function AdminConsolePage() {
                               Safety Report(s) ({job.reports.length}):
                             </div>
                             {job.reports.map((rep) => (
-                              <div key={rep.id} className="text-[11px] text-rose-900">
+                              <div key={rep.id} className="text-[0.78rem] text-rose-900">
                                 • <strong>{rep.reason}</strong>
                                 {rep.details ? ` — "${rep.details}"` : ""} (reported by{" "}
                                 {rep.reportedByEmail} on{" "}
@@ -1135,7 +1135,7 @@ export default function AdminConsolePage() {
                           {job.supportedPaymentRails.map((rail) => (
                             <span
                               key={rail}
-                              className="rounded bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-medium text-blue-800"
+                              className="rounded bg-blue-50 border border-blue-200 px-2 py-0.5 text-[0.78rem] font-medium text-blue-800"
                             >
                               {rail}
                             </span>
@@ -1167,7 +1167,7 @@ export default function AdminConsolePage() {
                               </button>
                             </div>
                           ) : (
-                            <span className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-rose-800">
+                            <span className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-[0.78rem] font-semibold text-rose-800">
                               Awaiting Superuser Evaluation
                             </span>
                           )
@@ -1208,7 +1208,7 @@ export default function AdminConsolePage() {
                             href={job.applicationUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:underline"
+                            className="inline-flex items-center gap-1 text-[0.78rem] text-blue-600 hover:underline"
                           >
                             <span>Original Link</span>
                             <ExternalLink className="h-3 w-3" />
@@ -1423,7 +1423,7 @@ export default function AdminConsolePage() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <span className="rounded bg-emerald-100 text-emerald-900 px-2 py-0.5 text-[10px] font-bold uppercase">
+                    <span className="rounded bg-emerald-100 text-emerald-900 px-2 py-0.5 text-[0.72rem] font-bold uppercase">
                       {hub.city}
                     </span>
                     <h3 className="text-base font-bold text-slate-900 mt-1">
@@ -1568,13 +1568,13 @@ export default function AdminConsolePage() {
 
                   <div className="border-t border-slate-100 pt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
                     <div className="flex flex-wrap gap-2">
-                      <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">
+                      <span className="bg-slate-100 px-2 py-0.5 rounded text-[0.78rem]">
                         Device: {cand.profile.primaryDevice}
                       </span>
-                      <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">
+                      <span className="bg-slate-100 px-2 py-0.5 rounded text-[0.78rem]">
                         Internet: {cand.profile.internetAccessType}
                       </span>
-                      <span className="bg-slate-100 px-2 py-0.5 rounded text-[11px]">
+                      <span className="bg-slate-100 px-2 py-0.5 rounded text-[0.78rem]">
                         Power: {cand.profile.powerReliabilityHours} hrs/day
                       </span>
                     </div>
@@ -1750,7 +1750,7 @@ export default function AdminConsolePage() {
                     <div className="flex flex-wrap items-center gap-1.5 text-xs border-t border-slate-100 pt-3">
                       <span className="font-semibold text-slate-700">Roles Interested:</span>
                       {emp.rolesInterested.map((r) => (
-                        <span key={r} className="rounded bg-slate-100 px-2 py-0.5 text-slate-700 text-[11px]">
+                        <span key={r} className="rounded bg-slate-100 px-2 py-0.5 text-slate-700 text-[0.78rem]">
                           {r}
                         </span>
                       ))}
@@ -1885,7 +1885,7 @@ export default function AdminConsolePage() {
                           {u.name}
                         </span>
                         <span
-                          className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                          className={`rounded-full px-2.5 py-0.5 text-[0.78rem] font-bold ${
                             u.role === "admin" || u.role === "superuser"
                               ? "bg-amber-100 text-amber-900"
                               : u.role === "employer"
@@ -1896,11 +1896,11 @@ export default function AdminConsolePage() {
                           {u.role}
                         </span>
                         {u.emailConfirmed ? (
-                          <span className="text-[11px] font-semibold text-emerald-700">
+                          <span className="text-[0.78rem] font-semibold text-emerald-700">
                             ✓ Email verified
                           </span>
                         ) : (
-                          <span className="text-[11px] font-semibold text-amber-700">
+                          <span className="text-[0.78rem] font-semibold text-amber-700">
                             Unverified email
                           </span>
                         )}
@@ -2006,7 +2006,7 @@ export default function AdminConsolePage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-[11px] font-bold text-rose-950 mb-1">
+                  <label className="block text-[0.78rem] font-bold text-rose-950 mb-1">
                     Reason for Erasure
                   </label>
                   <input
@@ -2018,7 +2018,7 @@ export default function AdminConsolePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-rose-950 mb-1">
+                  <label className="block text-[0.78rem] font-bold text-rose-950 mb-1">
                     Type &quot;delete&quot; to confirm permanent erasure
                   </label>
                   <input
@@ -2092,7 +2092,7 @@ export default function AdminConsolePage() {
                             <button
                               type="button"
                               onClick={() => handleSendInactivityNotice(rs.email)}
-                              className="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-900 hover:bg-amber-100"
+                              className="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-[0.78rem] font-bold text-amber-900 hover:bg-amber-100"
                             >
                               Send Login-to-Remain Email ({rs.noticesSent}/3)
                             </button>
@@ -2100,13 +2100,13 @@ export default function AdminConsolePage() {
                               type="button"
                               disabled={!rs.eligibleForDeletion}
                               onClick={() => handlePurgeInactiveUser(rs.email)}
-                              className="rounded-lg bg-rose-700 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-rose-800 disabled:opacity-40"
+                              className="rounded-lg bg-rose-700 px-2.5 py-1 text-[0.78rem] font-bold text-white hover:bg-rose-800 disabled:opacity-40"
                             >
                               Delete After 3 Notices
                             </button>
                           </>
                         ) : (
-                          <span className="text-[11px] font-semibold text-emerald-700">
+                          <span className="text-[0.78rem] font-semibold text-emerald-700">
                             Active (&lt; 365 days)
                           </span>
                         )}
@@ -2147,7 +2147,7 @@ export default function AdminConsolePage() {
                       <span className="font-bold text-slate-900">
                         {log.summary}
                       </span>
-                      <div className="text-[11px] text-slate-500">
+                      <div className="text-[0.78rem] text-slate-500">
                         Actor: <strong>{log.actorEmail}</strong> ({log.actorRole}) • Entity:{" "}
                         <span className="uppercase">{log.entityType}</span>
                         {log.previousValue && log.newValue
@@ -2155,7 +2155,7 @@ export default function AdminConsolePage() {
                           : ""}
                       </div>
                     </div>
-                    <span className="text-[11px] font-medium text-slate-400">
+                    <span className="text-[0.78rem] font-medium text-slate-400">
                       {new Date(log.createdAt).toLocaleString()}
                     </span>
                   </div>

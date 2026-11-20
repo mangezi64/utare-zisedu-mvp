@@ -415,7 +415,7 @@ function AuthCallbackContent() {
                 >
                   Need a fresh confirmation link?
                 </label>
-                <p className="text-[11px] text-slate-600">
+                <p className="text-[0.78rem] text-slate-600">
                   Be sure to check your <strong>Spam, Junk, or Promotions</strong> folder for emails from <strong>UTARE ZEM AI</strong> (<code>utarezemai@gmail.com</code>).
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2">
@@ -437,12 +437,12 @@ function AuthCallbackContent() {
                   </button>
                 </div>
                 {resendError && (
-                  <p className="text-[11px] text-red-700 font-medium">
+                  <p className="text-[0.78rem] text-red-700 font-medium">
                     {resendError}
                   </p>
                 )}
                 {resendStatus && (
-                  <p className="text-[11px] text-emerald-700 font-medium">
+                  <p className="text-[0.78rem] text-emerald-700 font-medium">
                     {resendStatus}
                   </p>
                 )}

@@ -96,7 +96,7 @@ export default function HomePageContent() {
           className="mx-auto mt-5 max-w-[1220px] rounded-2xl border border-emerald-500/25 bg-slate-900/95 p-4 sm:p-5 text-white shadow-lg"
           aria-label={t.hero.resilienceHeading}
         >
-          <p className="mb-3 text-[10.5px] font-bold tracking-wider uppercase text-emerald-300">
+          <p className="mb-3 text-[0.75rem] font-bold tracking-wider uppercase text-emerald-300">
             {t.hero.resilienceHeading}
           </p>
           <div className="grid gap-3 md:grid-cols-3">
@@ -108,7 +108,7 @@ export default function HomePageContent() {
                 <h2 className="text-xs font-bold text-white">
                   {t.hero.mobileBadgeTitle}
                 </h2>
-                <p className="mt-1 text-[11.5px] leading-relaxed text-slate-300">
+                <p className="mt-1 text-[0.8125rem] leading-relaxed text-slate-300">
                   {t.hero.mobileBadgeDesc}
                 </p>
               </div>
@@ -122,7 +122,7 @@ export default function HomePageContent() {
                 <h2 className="text-xs font-bold text-white">
                   {t.hero.offlineBadgeTitle}
                 </h2>
-                <p className="mt-1 text-[11.5px] leading-relaxed text-slate-300">
+                <p className="mt-1 text-[0.8125rem] leading-relaxed text-slate-300">
                   {t.hero.offlineBadgeDesc}
                 </p>
               </div>
@@ -136,7 +136,7 @@ export default function HomePageContent() {
                 <h2 className="text-xs font-bold text-white">
                   {t.hero.inclusionBadgeTitle}
                 </h2>
-                <p className="mt-1 text-[11.5px] leading-relaxed text-slate-300">
+                <p className="mt-1 text-[0.8125rem] leading-relaxed text-slate-300">
                   {t.hero.inclusionBadgeDesc}
                 </p>
                 <button
@@ -144,7 +144,7 @@ export default function HomePageContent() {
                   onClick={() =>
                     window.dispatchEvent(new CustomEvent("utare-open-accessibility"))
                   }
-                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 underline underline-offset-2 hover:text-emerald-200"
+                  className="mt-2 inline-flex items-center gap-1 text-[0.78rem] font-bold text-emerald-300 underline underline-offset-2 hover:text-emerald-200"
                 >
                   Open Accessibility &amp; Language Panel →
                 </button>

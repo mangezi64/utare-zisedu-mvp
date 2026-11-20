@@ -103,7 +103,7 @@ export default function RoleOverviewBanner() {
                   Welcome back, {user.name}
                 </span>
                 <span
-                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${roleBadgeClass}`}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[0.78rem] font-bold ${roleBadgeClass}`}
                 >
                   <LayoutDashboard className="h-3 w-3" aria-hidden="true" />
                   {roleLabel}

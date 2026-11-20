@@ -49,12 +49,12 @@ export default function DeleteAccountPanel() {
           <ShieldAlert className="h-4 w-4 text-rose-600" />
           Data Policy &amp; Account Deletion
         </h3>
-        <span className="text-[11px] font-semibold text-rose-700">
+        <span className="text-[0.78rem] font-semibold text-rose-700">
           Your Data Control
         </span>
       </div>
 
-      <div className="rounded-xl bg-slate-50 border border-slate-200 p-3.5 text-[11px] text-slate-600 space-y-1.5 leading-relaxed">
+      <div className="rounded-xl bg-slate-50 border border-slate-200 p-3.5 text-[0.78rem] text-slate-600 space-y-1.5 leading-relaxed">
         <p>
           <strong>1-Year Inactivity Retention Policy:</strong> If your account
           has no activity for <strong>1 full year</strong>, we will prompt you to
@@ -95,7 +95,7 @@ export default function DeleteAccountPanel() {
               <p className="font-bold">
                 Are you sure you want to delete your account ({user?.email})?
               </p>
-              <p className="text-[11px] text-rose-900 leading-relaxed">
+              <p className="text-[0.78rem] text-rose-900 leading-relaxed">
                 Deleting your account permanently takes it off the platform and{" "}
                 <strong>erases all your data from the database</strong>{" "}
                 (profile, diagnostic scores, career pathway, uploaded documents,
@@ -106,7 +106,7 @@ export default function DeleteAccountPanel() {
           </div>
 
           {error && (
-            <div className="rounded-lg bg-white border border-rose-300 px-3 py-2 text-[11px] font-semibold text-rose-700">
+            <div className="rounded-lg bg-white border border-rose-300 px-3 py-2 text-[0.78rem] font-semibold text-rose-700">
               {error}
             </div>
           )}
@@ -114,7 +114,7 @@ export default function DeleteAccountPanel() {
           <div>
             <label
               htmlFor="delete-confirm-input"
-              className="block text-[11px] font-bold text-rose-950 mb-1"
+              className="block text-[0.78rem] font-bold text-rose-950 mb-1"
             >
               Type <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-rose-200">delete</span> to confirm permanent erasure:
             </label>

@@ -140,7 +140,7 @@ export default function SkillsDevelopmentPage() {
                       {c.skillsTaught.map((sk) => (
                         <span
                           key={sk}
-                          className="rounded bg-[#f0f5f4] px-2 py-0.5 text-[10.5px] font-semibold text-[#344054]"
+                          className="rounded bg-[#f0f5f4] px-2 py-0.5 text-[0.75rem] font-semibold text-[#344054]"
                         >
                           {sk}
                         </span>

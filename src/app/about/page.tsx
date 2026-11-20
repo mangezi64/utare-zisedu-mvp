@@ -186,7 +186,7 @@ export default function AboutPage() {
               >
                 {b.label}
               </div>
-              <p className="text-[11.5px] text-[#667085] mt-1 leading-relaxed">
+              <p className="text-[0.8125rem] text-[#667085] mt-1 leading-relaxed">
                 {b.detail}
               </p>
             </div>

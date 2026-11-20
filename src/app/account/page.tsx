@@ -588,7 +588,7 @@ export default function CandidateAccountPage() {
             <p className="text-xs sm:text-sm text-slate-600">
               {profile.highestQualification} in {profile.fieldOfStudy} • {profile.city}
             </p>
-            <label className="inline-flex items-center gap-1.5 pt-0.5 text-[11px] font-semibold text-emerald-800 cursor-pointer">
+            <label className="inline-flex items-center gap-1.5 pt-0.5 text-[0.78rem] font-semibold text-emerald-800 cursor-pointer">
               <input
                 type="checkbox"
                 checked={Boolean(profile.includePhotoOnCv)}
@@ -632,7 +632,7 @@ export default function CandidateAccountPage() {
 
       {/* Quick Workspace Navigation Bar */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xs">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2">
+        <span className="text-[0.78rem] font-bold uppercase tracking-wider text-slate-400 px-2">
           Jump to:
         </span>
         {[
@@ -831,15 +831,15 @@ export default function CandidateAccountPage() {
               <div className="space-y-3 text-xs text-slate-600">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Email:</span>
+                    <span className="text-slate-400 block text-[0.78rem]">Email:</span>
                     <span className="font-semibold text-slate-800">{profile.email}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Phone:</span>
+                    <span className="text-slate-400 block text-[0.78rem]">Phone:</span>
                     <span className="font-semibold text-slate-800">{profile.phone}</span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Remote / Hub Mode:</span>
+                    <span className="text-slate-400 block text-[0.78rem]">Remote / Hub Mode:</span>
                     <span className="font-semibold text-slate-800">
                       {profile.hubSupportNeed
                         ? profile.hubSupportNeed.split("(")[0].trim()
@@ -849,7 +849,7 @@ export default function CandidateAccountPage() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Primary Goal:</span>
+                    <span className="text-slate-400 block text-[0.78rem]">Primary Goal:</span>
                     <span className="font-semibold text-slate-800">{profile.primaryGoal}</span>
                   </div>
                 </div>
@@ -883,14 +883,14 @@ export default function CandidateAccountPage() {
                 </div>
 
                 <div className="border-t border-slate-100 pt-3">
-                  <span className="text-slate-400 block text-[11px] mb-1.5">
+                  <span className="text-slate-400 block text-[0.78rem] mb-1.5">
                     Skills on File:
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {profile.currentSkills.map((sk) => (
                       <span
                         key={sk}
-                        className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700"
+                        className="rounded bg-slate-100 px-2 py-0.5 text-[0.78rem] font-medium text-slate-700"
                       >
                         {sk}
                       </span>
@@ -915,7 +915,7 @@ export default function CandidateAccountPage() {
                 <KeyRound className="h-4 w-4 text-emerald-700" />
                 Security &amp; Password Update
               </h3>
-              <span className="text-[11px] font-semibold text-slate-400">
+              <span className="text-[0.78rem] font-semibold text-slate-400">
                 Synced with Supabase Auth
               </span>
             </div>
@@ -1174,7 +1174,7 @@ export default function CandidateAccountPage() {
                   Degrees, Certificates &amp; Supporting Documents ({documents.length})
                 </h3>
               </div>
-              <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+              <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[0.78rem] font-bold text-emerald-800">
                 Versioned Vault
               </span>
             </div>
@@ -1189,7 +1189,7 @@ export default function CandidateAccountPage() {
             >
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  <label className="block text-[0.78rem] font-semibold text-slate-700 mb-1">
                     Document Category *
                   </label>
                   <select
@@ -1209,7 +1209,7 @@ export default function CandidateAccountPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  <label className="block text-[0.78rem] font-semibold text-slate-700 mb-1">
                     Document Title *
                   </label>
                   <input
@@ -1223,7 +1223,7 @@ export default function CandidateAccountPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  <label className="block text-[0.78rem] font-semibold text-slate-700 mb-1">
                     Institution &amp; Year
                   </label>
                   <div className="flex gap-1.5">
@@ -1290,14 +1290,14 @@ export default function CandidateAccountPage() {
                         <span className="font-bold text-slate-900">
                           {doc.title}
                         </span>
-                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[0.72rem] font-bold text-emerald-800">
                           v{doc.version} {doc.isLatest ? "· Latest" : ""}
                         </span>
-                        <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-700">
+                        <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[0.72rem] font-semibold uppercase text-slate-700">
                           {doc.category}
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-500">
+                      <div className="text-[0.78rem] text-slate-500">
                         {doc.issuer ? `${doc.issuer} • ` : ""}
                         {doc.issueYear ? `${doc.issueYear} • ` : ""}
                         {doc.fileName} ({Math.max(1, Math.round(doc.fileSizeBytes / 1024))} KB)
@@ -1308,7 +1308,7 @@ export default function CandidateAccountPage() {
                       <a
                         href={doc.dataUrl}
                         download={doc.fileName}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[0.78rem] font-bold text-slate-700 hover:bg-slate-100"
                       >
                         <Download className="h-3 w-3" />
                         Download
@@ -1316,7 +1316,7 @@ export default function CandidateAccountPage() {
                       <button
                         type="button"
                         onClick={() => handleDeleteDocument(doc.id)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-white px-2 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-white px-2 py-1 text-[0.78rem] font-semibold text-rose-700 hover:bg-rose-50"
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>
@@ -1344,7 +1344,7 @@ export default function CandidateAccountPage() {
                     Saved Tailored CVs &amp; Application Letters ({cvArtifacts.length})
                   </h3>
                 </div>
-                <span className="text-[11px] font-semibold text-slate-500">
+                <span className="text-[0.78rem] font-semibold text-slate-500">
                   Version History
                 </span>
               </div>
@@ -1360,11 +1360,11 @@ export default function CandidateAccountPage() {
                         <span className="font-bold text-slate-900">
                           {art.jobTitle} — {art.company}
                         </span>
-                        <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-800">
+                        <span className="rounded bg-indigo-100 px-2 py-0.5 text-[0.72rem] font-bold text-indigo-800">
                           Version v{art.version}
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">
+                      <div className="text-[0.78rem] text-slate-500 mt-0.5">
                         Generated {new Date(art.createdAt).toLocaleString()}
                       </div>
                     </div>
@@ -1376,7 +1376,7 @@ export default function CandidateAccountPage() {
                         onClick={() =>
                           handleDownloadCvDocx(art.generatedCv, `cv-${art.id}`)
                         }
-                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-800 transition disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-3 py-1.5 text-[0.78rem] font-bold text-white hover:bg-emerald-800 transition disabled:opacity-50"
                       >
                         <Download className="h-3 w-3" />
                         {downloadingId === `cv-${art.id}`
@@ -1392,7 +1392,7 @@ export default function CandidateAccountPage() {
                             `let-${art.id}`
                           )
                         }
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition disabled:opacity-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[0.78rem] font-bold text-slate-700 hover:bg-slate-100 transition disabled:opacity-50"
                       >
                         <Download className="h-3 w-3" />
                         {downloadingId === `let-${art.id}`
@@ -1453,7 +1453,7 @@ export default function CandidateAccountPage() {
                         <div className="text-slate-600">{app.company}</div>
                       </div>
                       <span
-                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                        className={`rounded-full px-2.5 py-0.5 text-[0.78rem] font-bold ${
                           app.status === "hired"
                             ? "bg-emerald-100 text-emerald-800"
                             : app.status === "shortlisted"
@@ -1482,19 +1482,19 @@ export default function CandidateAccountPage() {
                     </p>
 
                     {app.employerFeedbackNote ? (
-                      <div className="rounded-lg border border-slate-200 bg-white p-2.5 text-[11px] text-slate-700">
+                      <div className="rounded-lg border border-slate-200 bg-white p-2.5 text-[0.78rem] text-slate-700">
                         <strong className="text-slate-900">Employer Feedback: </strong>
                         {app.employerFeedbackNote}
                       </div>
                     ) : app.status === "rejected" ? (
-                      <div className="rounded-lg border border-slate-200 bg-white p-2.5 text-[11px] text-slate-500">
+                      <div className="rounded-lg border border-slate-200 bg-white p-2.5 text-[0.78rem] text-slate-500">
                         The employer exercised their right not to share specific feedback for this hiring decision.
                       </div>
                     ) : null}
 
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                       <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[0.72rem] font-bold ${
                           app.sharedWithEmployer === false
                             ? "bg-amber-100 text-amber-900"
                             : "bg-emerald-100 text-emerald-800"
@@ -1531,7 +1531,7 @@ export default function CandidateAccountPage() {
                             );
                           }
                         }}
-                        className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-700 hover:bg-slate-100"
+                        className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[0.72rem] font-semibold text-slate-700 hover:bg-slate-100"
                       >
                         {app.sharedWithEmployer === false
                           ? "Share with Employer"
@@ -1539,7 +1539,7 @@ export default function CandidateAccountPage() {
                       </button>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 pt-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[0.78rem] text-slate-500 pt-1">
                       <div>
                         <span>Applied: {new Date(app.appliedAt).toLocaleDateString()}</span>
                         {app.updatedAt && app.updatedBy && (
@@ -1559,7 +1559,7 @@ export default function CandidateAccountPage() {
                                 `app-cv-${app.id}`
                               )
                             }
-                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-800 transition"
+                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-2.5 py-1 text-[0.78rem] font-bold text-white hover:bg-emerald-800 transition"
                           >
                             <Download className="h-3 w-3" />
                             Download CV (.docx)
@@ -1574,7 +1574,7 @@ export default function CandidateAccountPage() {
                                 `app-let-${app.id}`
                               )
                             }
-                            className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition"
+                            className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[0.78rem] font-bold text-slate-700 hover:bg-slate-100 transition"
                           >
                             <Download className="h-3 w-3" />
                             Download Letter (.docx)

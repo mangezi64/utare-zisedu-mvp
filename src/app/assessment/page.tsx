@@ -272,7 +272,7 @@ export default function AssessmentAndPathwayPage() {
             <span className="text-xs font-bold uppercase tracking-wider text-amber-900">
               🛠️ Facilitator Console: Quick-Load Demographic Archetypes:
             </span>
-            <span className="text-[11px] font-medium text-amber-800">
+            <span className="text-[0.78rem] font-medium text-amber-800">
               Hidden from candidate view
             </span>
           </div>
@@ -312,11 +312,11 @@ export default function AssessmentAndPathwayPage() {
               </h2>
               <div className="flex flex-wrap items-center gap-1.5">
                 {draftSaved && (
-                  <span className="text-[11px] font-medium text-sky-800 bg-sky-50 border border-sky-200 rounded-full px-2.5 py-0.5">
+                  <span className="text-[0.78rem] font-medium text-sky-800 bg-sky-50 border border-sky-200 rounded-full px-2.5 py-0.5">
                     Draft Saved on Device
                   </span>
                 )}
-                <span className="text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5">
+                <span className="text-[0.78rem] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5">
                   Minimal Data Only
                 </span>
               </div>
@@ -678,7 +678,7 @@ export default function AssessmentAndPathwayPage() {
               and asynchronous communication readiness.
             </p>
 
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[0.78rem] text-slate-500">
               Rate yourself from 0 (no experience) to 100 (expert). Rated{" "}
               <strong>{ratedKeys.size}</strong> of {DIAGNOSTIC_QUESTIONS.length}.
             </p>
@@ -855,10 +855,10 @@ export default function AssessmentAndPathwayPage() {
                   </ul>
                   {result.assessment.qualificationBreakdown.howToQualify.length > 0 && (
                     <div className="pt-2 border-t border-amber-200/70">
-                      <div className="text-[11px] font-bold text-amber-900 mb-1">
+                      <div className="text-[0.78rem] font-bold text-amber-900 mb-1">
                         How to Qualify:
                       </div>
-                      <ul className="list-disc pl-4 space-y-1 text-[11px] text-amber-900">
+                      <ul className="list-disc pl-4 space-y-1 text-[0.78rem] text-amber-900">
                         {result.assessment.qualificationBreakdown.howToQualify.map((h) => (
                           <li key={h}>{h}</li>
                         ))}
@@ -868,7 +868,7 @@ export default function AssessmentAndPathwayPage() {
                 </div>
               </div>
 
-              <p className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 rounded-xl p-3 border border-slate-200">
+              <p className="text-[0.78rem] text-slate-500 leading-relaxed bg-slate-50 rounded-xl p-3 border border-slate-200">
                 {result.assessment.qualificationBreakdown.aiRoleNotice}
               </p>
             </div>
@@ -967,19 +967,19 @@ export default function AssessmentAndPathwayPage() {
                   <div className="text-xs font-bold text-slate-900">
                     {result.pathway.recommendedHub.avgSpeedMbps} Mbps
                   </div>
-                  <div className="text-[11px] text-slate-500">Starlink/Fiber</div>
+                  <div className="text-[0.78rem] text-slate-500">Starlink/Fiber</div>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-2.5">
                   <div className="text-xs font-bold text-slate-900">
                     100% Solar
                   </div>
-                  <div className="text-[11px] text-slate-500">ZESA Backup</div>
+                  <div className="text-[0.78rem] text-slate-500">ZESA Backup</div>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-2.5">
                   <div className="text-xs font-bold text-slate-900">
                     {result.pathway.recommendedHub.availableWorkstations} Desks
                   </div>
-                  <div className="text-[11px] text-slate-500">PC Access</div>
+                  <div className="text-[0.78rem] text-slate-500">PC Access</div>
                 </div>
               </div>
 
@@ -1010,7 +1010,7 @@ export default function AssessmentAndPathwayPage() {
                       {m.phase}
                     </span>
                     {m.lowBandwidthFriendly && (
-                      <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+                      <span className="rounded bg-emerald-100 px-2 py-0.5 text-[0.72rem] font-semibold text-emerald-800">
                         Offline / Low-Data Ready
                       </span>
                     )}

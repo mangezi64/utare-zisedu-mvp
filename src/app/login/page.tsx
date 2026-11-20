@@ -520,7 +520,7 @@ function LoginForm() {
                 flex: 1,
                 minHeight: "38px",
                 padding: "0 12px",
-                fontSize: "12px",
+                fontSize: "0.85rem",
                 ...(tab !== "login"
                   ? { background: "white", color: "#334155" }
                   : {}),
@@ -542,7 +542,7 @@ function LoginForm() {
                 flex: 1,
                 minHeight: "38px",
                 padding: "0 12px",
-                fontSize: "12px",
+                fontSize: "0.85rem",
                 ...(tab !== "register"
                   ? { background: "white", color: "#334155" }
                   : {}),
@@ -599,7 +599,7 @@ function LoginForm() {
               )}
               {pendingConfirmationEmail && !confirmationPath && (
                 <div className="pt-1 space-y-2">
-                  <p className="text-[11.5px] leading-relaxed text-red-900">
+                  <p className="text-[0.8125rem] leading-relaxed text-red-900">
                     Can&apos;t find the verification email? Check your{" "}
                     <strong>Spam, Junk, or Promotions</strong> folder (look for{" "}
                     <strong>UTARE ZEM AI</strong> / <code>utarezemai@gmail.com</code>),
@@ -615,7 +615,7 @@ function LoginForm() {
                       {isResendingConfirmation ? "Sending..." : "Resend Confirmation Email"}
                     </button>
                     {resendNotice && (
-                      <span className="text-[11px] font-medium text-red-900">
+                      <span className="text-[0.78rem] font-medium text-red-900">
                         {resendNotice}
                       </span>
                     )}
@@ -653,7 +653,7 @@ function LoginForm() {
                     style={{
                       minHeight: "36px",
                       padding: "0 14px",
-                      fontSize: "11.5px",
+                      fontSize: "0.8125rem",
                     }}
                   >
                     Verify Email &amp; Continue{" "}
@@ -681,7 +681,7 @@ function LoginForm() {
                       disabled={isStartingGoogle || isLoggingIn}
                       onClick={() => handleGoogleAuth("login")}
                     />
-                    <p className="text-center text-[11px] text-[#667085]">
+                    <p className="text-center text-[0.78rem] text-[#667085]">
                       New Gmail users signing in with Google agree to the{" "}
                       <Link
                         href="/data-policy"
@@ -695,7 +695,7 @@ function LoginForm() {
 
                   <div className="relative flex items-center py-1">
                     <div className="flex-grow border-t border-slate-200" />
-                    <span className="mx-3 flex-shrink text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    <span className="mx-3 flex-shrink text-[0.78rem] font-semibold uppercase tracking-wide text-slate-400">
                       or sign in with email
                     </span>
                     <div className="flex-grow border-t border-slate-200" />
@@ -852,7 +852,7 @@ function LoginForm() {
                   <Mail className="h-5 w-5" />
                 </span>
                 <div className="min-w-0">
-                  <span className="inline-flex items-center rounded-full bg-[#e0f3ea] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[#08785f]">
+                  <span className="inline-flex items-center rounded-full bg-[#e0f3ea] px-2.5 py-0.5 text-[0.78rem] font-bold uppercase tracking-wide text-[#08785f]">
                     Email Verification Pending
                   </span>
                   <h3
@@ -869,7 +869,7 @@ function LoginForm() {
               </div>
 
               <div className="rounded-xl border border-[#c2e2d4] bg-white p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#667085]">
+                <p className="text-[0.78rem] font-semibold uppercase tracking-wide text-[#667085]">
                   Confirmation email sent to
                 </p>
                 <p className="mt-1 font-mono text-sm font-bold text-[#08785f] break-all">
@@ -1045,7 +1045,7 @@ function LoginForm() {
                   aria-invalid={showRegEmailError || undefined}
                 />
                 {showRegEmailError && (
-                  <p className="text-[11px] text-red-600 m-0">
+                  <p className="text-[0.78rem] text-red-600 m-0">
                     {regEmailCheck.error}
                   </p>
                 )}
@@ -1078,7 +1078,7 @@ function LoginForm() {
                     }
                   />
                   {confirmMismatch && (
-                    <p className="text-[11px] text-red-600 m-0">
+                    <p className="text-[0.78rem] text-red-600 m-0">
                       Passwords do not match.
                     </p>
                   )}
@@ -1177,7 +1177,7 @@ function LoginForm() {
               )}
 
               <div
-                className={`rounded-xl border p-3 text-[11px] space-y-1.5 transition-colors ${
+                className={`rounded-xl border p-3 text-[0.78rem] space-y-1.5 transition-colors ${
                   regAttempted && !consentAccepted
                     ? "border-2 border-red-400 bg-red-50 text-red-900"
                     : "border-slate-200 bg-slate-50 text-slate-700"
@@ -1225,7 +1225,7 @@ function LoginForm() {
 
               <div className="relative flex items-center py-1">
                 <div className="flex-grow border-t border-slate-200" />
-                <span className="mx-3 flex-shrink text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <span className="mx-3 flex-shrink text-[0.78rem] font-semibold uppercase tracking-wide text-slate-400">
                   or
                 </span>
                 <div className="flex-grow border-t border-slate-200" />

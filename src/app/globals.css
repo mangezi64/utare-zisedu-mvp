@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -10,12 +10,12 @@
   --navy: #101a33;
   --navy-2: #172544;
   --emerald: #0faf83;
-  --green: #08785f;
+  --green: #066751;
   --white: #fff;
   --bg: #f5f8f8;
   --soft: #eef2f5;
-  --ink: #202b3c;
-  --muted: #667085;
+  --ink: #141d2e;
+  --muted: #3f4d5f;
   --line: #e1e7ec;
   --shadow: 0 18px 60px #101a3310;
   --heading: "Manrope", system-ui, -apple-system, sans-serif;
@@ -23,6 +23,7 @@
 }
 
 html {
+  font-size: 100%;
   scroll-behavior: smooth;
   overflow-x: hidden;
   max-width: 100%;
@@ -35,7 +36,11 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--body);
-  -webkit-font-smoothing: antialiased;
+  font-size: 1rem;
+  font-weight: 450;
+  line-height: 1.65;
+  letter-spacing: 0.008em;
+  font-optical-sizing: auto;
   overflow-x: hidden;
   max-width: 100%;
   width: 100%;
@@ -92,7 +97,7 @@ main {
   gap: 10px;
   flex: none;
   color: var(--navy);
-  font: 700 15px var(--heading);
+  font: 700 1.05rem var(--heading);
   letter-spacing: -0.35px;
   line-height: 1.15;
   text-decoration: none;
@@ -105,7 +110,7 @@ main {
 }
 .brand small {
   display: block;
-  font: 500 10px var(--body);
+  font: 500 0.75rem var(--body);
   color: var(--muted);
   letter-spacing: 0;
   margin-top: 4px;
@@ -113,7 +118,7 @@ main {
 .site-header .brand small {
   max-width: 142px;
   white-space: normal;
-  font-size: 9.5px;
+  font-size: 0.72rem;
   line-height: 1.22;
   margin-top: 2px;
 }
@@ -125,7 +130,7 @@ main {
   color: #fff;
   display: grid;
   place-items: center;
-  font: 800 20px var(--heading);
+  font: 800 1.3rem var(--heading);
   position: relative;
   flex-shrink: 0;
 }
@@ -164,9 +169,9 @@ main {
 }
 .main-nav a {
   padding: 7px 9px;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #5d687a;
+  color: #374456;
   border-radius: 8px;
   white-space: nowrap;
   transition: 0.18s;
@@ -187,7 +192,7 @@ main {
   gap: 6px;
 }
 .signin-link {
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--green);
   padding: 8px 12px;
@@ -207,7 +212,7 @@ main {
   border-radius: 50%;
   background: #dff3eb;
   color: var(--green);
-  font-size: 11px;
+  font-size: 0.8125rem;
   font-weight: 800;
   flex-shrink: 0;
 }
@@ -229,7 +234,7 @@ main {
   border-radius: 9px;
   background: var(--navy);
   color: #fff;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
@@ -271,7 +276,7 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 10px;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 1.35px;
   text-transform: uppercase;
@@ -281,15 +286,17 @@ main {
   color: #8ee3c2;
 }
 .section-heading h2 {
-  font: 750 29px/1.2 var(--heading);
+  font: 750 1.85rem/1.2 var(--heading);
   letter-spacing: -1.1px;
   color: var(--navy);
   margin: 10px 0 9px;
 }
 .section-heading p {
-  max-width: 620px;
+  max-width: 660px;
   color: var(--muted);
-  font-size: 13px;
+  font-weight: 450;
+  letter-spacing: 0.008em;
+  font-size: 0.95rem;
   line-height: 1.75;
   margin: 0;
 }
@@ -328,7 +335,7 @@ main {
 }
 .hero-text h1 {
   max-width: 620px;
-  font: 800 clamp(22px, 2.6vw, 34px)/1.15 var(--heading);
+  font: 800 clamp(1.45rem, 2.6vw, 2.25rem)/1.15 var(--heading);
   letter-spacing: -1.2px;
   margin: 10px 0 10px;
 }
@@ -339,7 +346,7 @@ main {
 .hero-text > p {
   max-width: 580px;
   color: #cbd5e1;
-  font-size: 12.5px;
+  font-size: 0.92rem;
   line-height: 1.65;
   margin: 0;
 }
@@ -353,7 +360,7 @@ main {
 .hero-actions .button {
   min-height: 38px;
   padding: 0 14px;
-  font-size: 11.5px;
+  font-size: 0.84rem;
   gap: 7px;
 }
 .hero-note {
@@ -361,7 +368,7 @@ main {
   align-items: center;
   gap: 8px;
   color: #94a3b8;
-  font-size: 11px;
+  font-size: 0.8125rem;
   margin-top: 12px;
 }
 .hero-note svg {
@@ -432,13 +439,13 @@ main {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 .map-center-overlay span {
-  font: 800 11px var(--heading);
+  font: 800 0.8125rem var(--heading);
   color: #ffffff;
   letter-spacing: 0.5px;
   line-height: 1.2;
 }
 .map-center-overlay small {
-  font-size: 6px;
+  font-size: 0.45rem;
   letter-spacing: 1px;
   color: #34d399;
   font-weight: 700;
@@ -500,12 +507,12 @@ main {
   bottom: 12px;
   right: 16px;
   text-align: right;
-  font-size: 10px;
+  font-size: 0.75rem;
   line-height: 1.45;
   color: #9aabc1;
 }
 .map-label b {
-  font-size: 10.5px;
+  font-size: 0.78rem;
   color: #34d399;
 }
 .survey-section {
@@ -520,7 +527,7 @@ main {
   box-sizing: border-box;
 }
 .survey-section .section-heading h2 {
-  font-size: 23px;
+  font-size: 1.5rem;
   margin: 6px 0 8px;
 }
 .survey-placeholder {
@@ -550,13 +557,13 @@ main {
   height: 18px;
 }
 .survey-placeholder b {
-  font: 700 13px var(--heading);
+  font: 700 0.95rem var(--heading);
   color: var(--navy);
 }
 .survey-placeholder p {
   max-width: 480px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 0.875rem;
   line-height: 1.65;
   margin: 6px 0 0;
 }
@@ -566,7 +573,7 @@ main {
   background: #e9f6f1;
   border-radius: 20px;
   color: var(--green);
-  font-size: 9px;
+  font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.8px;
   white-space: nowrap;
@@ -629,18 +636,18 @@ main {
   right: 19px;
   top: 21px;
   color: #aab3be;
-  font: 700 12px var(--heading);
+  font: 700 0.875rem var(--heading);
   letter-spacing: 1px;
 }
 .journey-card h3,
 .feature-card h3 {
-  font: 750 15px/1.4 var(--heading);
+  font: 750 1.05rem/1.4 var(--heading);
   color: var(--navy);
   margin: 18px 0 8px;
 }
 .journey-card p,
 .feature-card p {
-  font-size: 12px;
+  font-size: 0.875rem;
   line-height: 1.7;
   color: var(--muted);
   min-height: 54px;
@@ -651,7 +658,7 @@ main {
   align-items: center;
   gap: 7px;
   color: var(--green);
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 750;
   background: transparent;
   border: 0;
@@ -698,7 +705,7 @@ main {
   border: 1px solid #e6ebed;
   border-radius: 10px;
   color: #465368;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.5;
 }
@@ -745,14 +752,14 @@ main {
 }
 .closing-cta h2 {
   max-width: 600px;
-  font: 750 26px/1.25 var(--heading);
+  font: 750 1.65rem/1.25 var(--heading);
   letter-spacing: -0.9px;
   margin: 10px 0 8px;
 }
 .closing-cta p {
   margin: 0;
   color: #b8c4d5;
-  font-size: 13px;
+  font-size: 0.95rem;
 }
 .closing-actions {
   display: flex;
@@ -784,7 +791,7 @@ main {
 }
 .footer-top > p {
   max-width: 320px;
-  font-size: 12px;
+  font-size: 0.875rem;
   line-height: 1.7;
   color: #aab6c8;
   margin: 0;
@@ -801,7 +808,7 @@ main {
   gap: 16px;
   flex-wrap: wrap;
   color: #c4cede;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 .footer-links a:hover {
@@ -813,7 +820,7 @@ main {
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
-  font-size: 11.5px;
+  font-size: 0.84rem;
   color: #94a3b8;
 }
 .footer-contact a {
@@ -836,7 +843,7 @@ main {
   display: flex;
   justify-content: space-between;
   color: #8794a9;
-  font-size: 11px;
+  font-size: 0.8125rem;
 }
 .page-hero {
   padding: 68px max(30px, calc((100% - 1160px) / 2)) 56px;
@@ -846,15 +853,17 @@ main {
 .page-hero h1 {
   max-width: 820px;
   color: var(--navy);
-  font: 800 clamp(34px, 3.8vw, 50px)/1.12 var(--heading);
+  font: 800 clamp(2.125rem, 3.8vw, 3.25rem)/1.12 var(--heading);
   letter-spacing: -2px;
   margin: 13px 0 14px;
 }
 .page-hero > p {
-  max-width: 680px;
-  font-size: 14px;
+  max-width: 720px;
+  font-size: 1.02rem;
+  font-weight: 450;
+  letter-spacing: 0.008em;
   line-height: 1.8;
-  color: #586679;
+  color: #374456;
   margin: 0;
 }
 .page-hero .hero-actions {
@@ -872,9 +881,9 @@ main {
   align-items: start;
 }
 .prose p {
-  font-size: 13.5px;
+  font-size: 0.98rem;
   line-height: 1.85;
-  color: #566477;
+  color: #374456;
   margin: 0 0 17px;
 }
 .callout {
@@ -885,8 +894,8 @@ main {
   padding: 18px;
   border-radius: 11px;
   background: #eaf5f0;
-  color: #4b5a67;
-  font-size: 12px;
+  color: #334155;
+  font-size: 0.875rem;
   line-height: 1.7;
 }
 .callout svg {
@@ -911,16 +920,16 @@ main {
   border-left: 2px solid var(--emerald);
 }
 .values-band article > span {
-  font: 700 11px var(--heading);
+  font: 700 0.8125rem var(--heading);
   letter-spacing: 1px;
   color: #82dfbd;
 }
 .values-band h3 {
-  font: 700 17px var(--heading);
+  font: 700 1.15rem var(--heading);
   margin: 10px 0 6px;
 }
 .values-band p {
-  font-size: 12px;
+  font-size: 0.875rem;
   line-height: 1.7;
   color: #bcc8d8;
   margin: 0;
@@ -956,23 +965,23 @@ main {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  font-size: 8px;
+  font-size: 0.55rem;
   font-weight: 800;
 }
 .journey-row h2 {
-  font: 750 20px var(--heading);
+  font: 750 1.3rem var(--heading);
   color: var(--navy);
   margin: 6px 0;
 }
 .journey-row p {
-  font-size: 13px;
+  font-size: 0.95rem;
   line-height: 1.7;
-  color: #586679;
+  color: #374456;
   margin: 0 0 6px;
 }
 .journey-row p.muted {
   color: #8993a1;
-  font-size: 11.5px;
+  font-size: 0.84rem;
 }
 .notice-band {
   max-width: 1160px;
@@ -995,13 +1004,13 @@ main {
 .notice-band b {
   display: block;
   color: var(--navy);
-  font: 700 14px var(--heading);
+  font: 700 1.02rem var(--heading);
   margin: 0 0 4px;
 }
 .notice-band p {
-  font-size: 12.5px;
+  font-size: 0.92rem;
   line-height: 1.7;
-  color: #566477;
+  color: #374456;
   margin: 0;
 }
 .compact-cta {
@@ -1011,7 +1020,7 @@ main {
   gap: 25px;
 }
 .compact-cta .section-heading h2 {
-  font-size: 24px;
+  font-size: 1.55rem;
 }
 .opportunity-grid {
   display: grid;
@@ -1052,16 +1061,16 @@ main {
   height: 18px;
 }
 .opportunity-card .eyebrow {
-  font-size: 9px;
+  font-size: 0.72rem;
   letter-spacing: 1px;
 }
 .opportunity-card h3 {
-  font: 750 16px/1.35 var(--heading);
+  font: 750 1.1rem/1.35 var(--heading);
   color: var(--navy);
   margin: 8px 0 4px;
 }
 .org-name {
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #667085;
   margin: 0;
@@ -1074,8 +1083,8 @@ main {
   display: flex;
   flex-direction: column;
   gap: 7px;
-  color: #586679;
-  font-size: 11.5px;
+  color: #374456;
+  font-size: 0.84rem;
 }
 .directory-top {
   display: flex;
@@ -1085,7 +1094,7 @@ main {
   margin-bottom: 22px;
 }
 .directory-top .section-heading h2 {
-  font-size: 25px;
+  font-size: 1.6rem;
 }
 .search-box {
   height: 42px;
@@ -1104,18 +1113,18 @@ main {
   outline: 0;
   width: 100%;
   color: var(--ink);
-  font-size: 12.5px;
+  font-size: 0.92rem;
   background: transparent;
 }
 .empty-message {
   padding: 35px;
   text-align: center;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 0.95rem;
 }
 .content-disclaimer {
   color: #8993a1;
-  font-size: 11px;
+  font-size: 0.8125rem;
   line-height: 1.7;
   margin-top: 17px;
 }
@@ -1143,16 +1152,16 @@ main {
   margin-bottom: 18px;
 }
 .course-card .eyebrow {
-  font-size: 9px;
+  font-size: 0.72rem;
 }
 .course-card h3 {
-  font: 750 17px/1.4 var(--heading);
+  font: 750 1.15rem/1.4 var(--heading);
   color: var(--navy);
   margin: 8px 0;
 }
 .course-card p {
   color: var(--muted);
-  font-size: 12.5px;
+  font-size: 0.92rem;
   line-height: 1.7;
 }
 .course-foot {
@@ -1164,11 +1173,11 @@ main {
   margin-top: 14px;
   border-top: 1px solid var(--line);
   color: #667085;
-  font-size: 11px;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 .course-foot .text-link {
-  font-size: 12px;
+  font-size: 0.875rem;
 }
 .skills-note {
   padding-top: 0;
@@ -1205,12 +1214,12 @@ main {
   border-radius: 13px;
 }
 .partner-options h3 {
-  font: 750 16px var(--heading);
+  font: 750 1.1rem var(--heading);
   color: var(--navy);
   margin: 12px 0 7px;
 }
 .partner-options p {
-  font-size: 12.5px;
+  font-size: 0.92rem;
   line-height: 1.7;
   color: var(--muted);
   margin: 0;
@@ -1239,7 +1248,7 @@ main {
   gap: 6px;
 }
 .field > span:first-child {
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 700;
   color: #344054;
 }
@@ -1254,7 +1263,7 @@ main {
   outline: none;
   background: white;
   color: #344054;
-  font-size: 13px;
+  font-size: 0.95rem;
 }
 .field textarea {
   resize: vertical;
@@ -1267,7 +1276,7 @@ main {
   box-shadow: 0 0 0 3px #0faf8319;
 }
 .form-feedback {
-  font-size: 12px;
+  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--green);
   margin: 0;
@@ -1293,12 +1302,12 @@ main {
   display: block;
 }
 .contact-detail b {
-  font: 700 13px var(--heading);
+  font: 700 0.95rem var(--heading);
   color: var(--navy);
   margin-bottom: 4px;
 }
 .contact-detail span {
-  font-size: 12px;
+  font-size: 0.875rem;
   color: var(--muted);
 }
 .contact-grid .form-card {
@@ -1348,7 +1357,7 @@ main {
 }
 .login-copy h1 {
   max-width: 560px;
-  font: 800 clamp(34px, 3.6vw, 50px)/1.12 var(--heading);
+  font: 800 clamp(2.125rem, 3.6vw, 3.25rem)/1.12 var(--heading);
   letter-spacing: -2px;
   margin: 16px 0;
 }
@@ -1359,7 +1368,7 @@ main {
 .login-copy > p {
   max-width: 500px;
   color: #c5cfdd;
-  font-size: 13.5px;
+  font-size: 0.98rem;
   line-height: 1.85;
 }
 .login-copy .hero-visual {
@@ -1370,7 +1379,7 @@ main {
 }
 .login-footnote {
   color: #8897ad;
-  font-size: 11px;
+  font-size: 0.8125rem;
 }
 .login-form-side {
   display: grid;
@@ -1384,13 +1393,13 @@ main {
   margin-bottom: 10px;
 }
 .login-form-wrap h2 {
-  font: 800 28px var(--heading);
+  font: 800 1.8rem var(--heading);
   letter-spacing: -0.9px;
   color: var(--navy);
   margin: 0 0 7px;
 }
 .login-intro {
-  font-size: 13px;
+  font-size: 0.95rem;
   color: var(--muted);
   margin: 0 0 20px;
 }
@@ -1399,7 +1408,7 @@ main {
   padding: 0;
   background: transparent;
   color: var(--green);
-  font-size: 11.5px;
+  font-size: 0.84rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -1425,12 +1434,12 @@ main {
   box-shadow: 0 25px 80px #0003;
 }
 .simple-modal h2 {
-  font: 750 22px var(--heading);
+  font: 750 1.42rem var(--heading);
   color: var(--navy);
   margin: 10px 0;
 }
 .simple-modal p {
-  font-size: 13px;
+  font-size: 0.95rem;
   line-height: 1.75;
   color: var(--muted);
   margin: 0 0 20px;
@@ -1442,7 +1451,7 @@ main {
   border: 0;
   background: transparent;
   color: #778294;
-  font-size: 24px;
+  font-size: 1.55rem;
   cursor: pointer;
 }
 .team-section {
@@ -1477,24 +1486,24 @@ main {
   margin-bottom: 14px;
   background: #e3f2ed;
   color: var(--green);
-  font: 800 13px var(--heading);
+  font: 800 0.95rem var(--heading);
 }
 .team-card .eyebrow {
-  font-size: 9px;
+  font-size: 0.72rem;
 }
 .team-card h3 {
-  font: 750 15px var(--heading);
+  font: 750 1.05rem var(--heading);
   color: var(--navy);
   margin: 8px 0 5px;
 }
 .team-card p {
-  font-size: 12px;
+  font-size: 0.875rem;
   line-height: 1.65;
   color: var(--muted);
   margin: 0;
 }
 .challenge-index {
-  font: 800 12px var(--heading);
+  font: 800 0.875rem var(--heading);
   color: var(--emerald);
   letter-spacing: 1px;
 }
@@ -1512,10 +1521,10 @@ main {
   background: #eaf5f0;
 }
 .solution-banner .section-heading h2 {
-  font-size: 21px;
+  font-size: 1.375rem;
 }
 .solution-banner .section-heading p {
-  font-size: 12.5px;
+  font-size: 0.92rem;
 }
 .filter-bar {
   display: grid;
@@ -1533,7 +1542,7 @@ main {
   flex-direction: column;
   gap: 6px;
   color: #657184;
-  font-size: 11px;
+  font-size: 0.8125rem;
   font-weight: 700;
 }
 .filter-bar select {
@@ -1545,7 +1554,7 @@ main {
   border-radius: 7px;
   background: white;
   color: #3c4859;
-  font-size: 12px;
+  font-size: 0.875rem;
 }
 .filter-bar .text-button {
   height: 38px;
@@ -1560,12 +1569,12 @@ main {
   justify-content: space-between;
   gap: 8px;
   color: #667085;
-  font-size: 11px;
+  font-size: 0.8125rem;
   margin-bottom: 7px;
 }
 .course-progress b {
   color: var(--green);
-  font-size: 11px;
+  font-size: 0.8125rem;
 }
 .course-progress .progress-track {
   height: 6px;
@@ -1577,15 +1586,15 @@ main {
   overflow: auto;
 }
 .course-modal h3 {
-  font: 700 13px var(--heading);
+  font: 700 0.95rem var(--heading);
   color: var(--navy);
   margin: 18px 0 8px;
 }
 .course-modal ol {
   padding-left: 22px;
   margin: 0 0 15px;
-  color: #586679;
-  font-size: 12.5px;
+  color: #374456;
+  font-size: 0.92rem;
   line-height: 2;
   list-style: decimal;
 }
@@ -1605,14 +1614,14 @@ main {
   border-radius: 8px;
 }
 .detail-list dt {
-  font-size: 10px;
+  font-size: 0.75rem;
   color: #8893a1;
   margin-bottom: 4px;
 }
 .detail-list dd {
   margin: 0;
   color: #344054;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 650;
 }
 .employer-steps {
@@ -1622,13 +1631,13 @@ main {
   padding: 22px;
 }
 .employer-steps article .eyebrow {
-  font-size: 9px;
+  font-size: 0.72rem;
 }
 .employer-steps article h3 {
   margin: 10px 0 6px;
 }
 .employer-steps article p {
-  font-size: 12px;
+  font-size: 0.875rem;
   line-height: 1.7;
   color: var(--muted);
   margin: 0;
@@ -1641,14 +1650,14 @@ main {
   }
   .site-header .brand small {
     max-width: 130px;
-    font-size: 9px;
+    font-size: 0.72rem;
   }
   .main-nav {
     gap: 2px;
   }
   .main-nav a {
     padding: 6px 8px;
-    font-size: 11.5px;
+    font-size: 0.84rem;
     gap: 3px;
   }
   .main-nav a svg {
@@ -1872,6 +1881,43 @@ html.font-size-large {
 
 html.font-size-xl {
   font-size: 130% !important;
+}
+
+/* Keep display headings & layout frames balanced when font size is scaled up */
+html.font-size-large .page-hero h1,
+html.font-size-large .login-copy h1 {
+  font-size: clamp(2.125rem, 3.8vw, 55px);
+}
+
+html.font-size-xl .page-hero h1,
+html.font-size-xl .login-copy h1 {
+  font-size: clamp(2.125rem, 4vw, 58px);
+}
+
+html.font-size-large .header-inner,
+html.font-size-xl .header-inner {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+html.font-size-large .button,
+html.font-size-xl .button,
+html.font-size-large .signin-link,
+html.font-size-xl .signin-link {
+  height: auto;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  line-height: 1.3;
+}
+
+html.font-size-large .feature-card,
+html.font-size-large .journey-card,
+html.font-size-large .partner-options article,
+html.font-size-xl .feature-card,
+html.font-size-xl .journey-card,
+html.font-size-xl .partner-options article {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 /* Dyslexia-Friendly Reading Spacing */

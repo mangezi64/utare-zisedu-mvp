@@ -1043,7 +1043,7 @@ export default function EmployerPortalPage() {
                           {member.name}
                         </span>
                         <span
-                          className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${
+                          className={`rounded-full border px-2 py-0.5 text-[0.72rem] font-bold ${
                             isMemberAdmin
                               ? "bg-blue-50 border-blue-200 text-blue-800"
                               : "bg-slate-100 border-slate-200 text-slate-700"
@@ -1058,14 +1058,14 @@ export default function EmployerPortalPage() {
                       <button
                         type="button"
                         onClick={() => handleToggleMemberRole(member)}
-                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[0.78rem] font-semibold text-slate-700 hover:bg-slate-50"
                       >
                         Make {isMemberAdmin ? "Team Member" : "Org Admin"}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleMemberResetLink(member)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[0.78rem] font-semibold text-slate-700 hover:bg-slate-50"
                       >
                         <KeyRound className="h-3 w-3" />
                         Reset Link
@@ -1073,7 +1073,7 @@ export default function EmployerPortalPage() {
                       <button
                         type="button"
                         onClick={() => handleRemoveMember(member)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-semibold text-rose-700 hover:bg-rose-100"
+                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[0.78rem] font-semibold text-rose-700 hover:bg-rose-100"
                       >
                         <Trash2 className="h-3 w-3" />
                         Remove
@@ -1230,7 +1230,7 @@ export default function EmployerPortalPage() {
                 <p className="text-xs font-semibold text-slate-700">
                   You haven&apos;t posted any roles yet.
                 </p>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[0.78rem] text-slate-500">
                   Click &ldquo;Post New Remote Role&rdquo; above to share an open
                   position on the platform and receive tailored applications.
                 </p>
@@ -1269,7 +1269,7 @@ export default function EmployerPortalPage() {
                           </p>
                         </div>
                         <span
-                          className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                          className={`rounded-full px-2.5 py-0.5 text-[0.72rem] font-bold ${
                             job.status === "approved"
                               ? "bg-emerald-100 text-emerald-800"
                               : job.status === "archived"
@@ -1299,7 +1299,7 @@ export default function EmployerPortalPage() {
                         <button
                           type="button"
                           onClick={() => handleToggleJobArchive(job)}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800"
+                          className="inline-flex items-center gap-1 text-[0.78rem] font-semibold text-slate-500 hover:text-slate-800"
                         >
                           <Archive className="h-3 w-3" />
                           {job.status === "archived" ? "Re-open" : "Archive"}
@@ -1318,7 +1318,7 @@ export default function EmployerPortalPage() {
               <ShieldCheck className="h-4 w-4 text-emerald-700" />
               Scoped Applicant View
             </div>
-            <p className="text-[11px] text-slate-600 leading-relaxed">
+            <p className="text-[0.78rem] text-slate-600 leading-relaxed">
               To protect candidate privacy, this portal displays only
               application-related credentials, verified readiness tier, skills,
               and submitted CV/cover letter documents for candidates who
@@ -1363,7 +1363,7 @@ export default function EmployerPortalPage() {
                 <p className="text-xs font-semibold text-slate-700">
                   No applications match the current filter.
                 </p>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[0.78rem] text-slate-500">
                   When candidates apply to your posted roles, their tailored
                   applications and CVs will appear here.
                 </p>
@@ -1385,13 +1385,13 @@ export default function EmployerPortalPage() {
                               {app.candidateName}
                             </h3>
                             <span
-                              className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${statusMeta.badge}`}
+                              className={`rounded-full border px-2.5 py-0.5 text-[0.72rem] font-bold ${statusMeta.badge}`}
                             >
                               {statusMeta.label}
                             </span>
                             {app.aiEvaluation && (
                               <span
-                                className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
+                                className={`rounded-full px-2.5 py-0.5 text-[0.72rem] font-extrabold ${
                                   app.aiEvaluation.fitScore >= 82
                                     ? "bg-emerald-700 text-white"
                                     : app.aiEvaluation.fitScore >= 70
@@ -1428,7 +1428,7 @@ export default function EmployerPortalPage() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <label className="text-[11px] font-semibold text-slate-500">
+                          <label className="text-[0.78rem] font-semibold text-slate-500">
                             Stage:
                           </label>
                           <select
@@ -1456,18 +1456,18 @@ export default function EmployerPortalPage() {
 
                       {/* Readiness Tier & Skills */}
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+                        <span className="rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[0.78rem] font-semibold text-emerald-800">
                           {app.readinessTier}
                         </span>
                         {app.documents && app.documents.length > 0 && (
-                          <span className="rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-bold text-amber-900">
+                          <span className="rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[0.78rem] font-bold text-amber-900">
                             📄 {app.documents.length} Verified Credential(s) Attached
                           </span>
                         )}
                         {app.skills.slice(0, 6).map((skill) => (
                           <span
                             key={skill}
-                            className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700"
+                            className="rounded-md bg-slate-100 px-2 py-0.5 text-[0.78rem] font-medium text-slate-700"
                           >
                             {skill}
                           </span>
@@ -1477,13 +1477,13 @@ export default function EmployerPortalPage() {
                       {/* AI Candidate Fit Recommendation */}
                       {app.aiEvaluation && (
                         <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3.5 space-y-1">
-                          <div className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-900">
+                          <div className="text-[0.78rem] font-extrabold uppercase tracking-wider text-emerald-900">
                             AI Candidate Fit &amp; Ranking Assessment ({app.aiEvaluation.fitScore}% Match)
                           </div>
                           <p className="text-xs text-emerald-950 leading-relaxed">
                             {app.aiEvaluation.recommendationSummary}
                           </p>
-                          <p className="text-[11px] text-emerald-800 font-medium">
+                          <p className="text-[0.78rem] text-emerald-800 font-medium">
                             {app.aiEvaluation.credentialsSummary}
                           </p>
                         </div>
@@ -1491,7 +1491,7 @@ export default function EmployerPortalPage() {
 
                       {/* Tailored Application Summary / Pitch */}
                       <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-3.5 space-y-1">
-                        <div className="text-[11px] font-bold text-slate-700">
+                        <div className="text-[0.78rem] font-bold text-slate-700">
                           Submitted Application Summary:
                         </div>
                         <p className="text-xs text-slate-700 leading-relaxed">
@@ -1501,7 +1501,7 @@ export default function EmployerPortalPage() {
 
                       {/* Optional Employer Feedback Note (Employer Discretion) */}
                       <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5">
-                        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-[0.78rem]">
                           <span className="font-semibold text-slate-700">
                             Optional Candidate Feedback
                           </span>
@@ -1530,7 +1530,7 @@ export default function EmployerPortalPage() {
                       </div>
 
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
-                        <span className="text-[11px] text-slate-400">
+                        <span className="text-[0.78rem] text-slate-400">
                           Applied {new Date(app.appliedAt).toLocaleDateString()}
                           {app.updatedAt && app.updatedBy
                             ? ` • Stage updated by ${app.updatedBy} on ${new Date(
@@ -1697,14 +1697,14 @@ export default function EmployerPortalPage() {
                           <div className="font-bold text-slate-900">
                             {doc.title} (v{doc.version})
                           </div>
-                          <div className="text-[11px] text-slate-500">
+                          <div className="text-[0.78rem] text-slate-500">
                             {doc.category.toUpperCase()} • {doc.fileName}
                           </div>
                         </div>
                         <a
                           href={doc.dataUrl}
                           download={doc.fileName}
-                          className="rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700"
+                          className="rounded-lg bg-slate-900 px-3 py-1.5 text-[0.78rem] font-bold text-white hover:bg-emerald-700"
                         >
                           Download
                         </a>

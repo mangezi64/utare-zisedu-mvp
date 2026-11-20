@@ -82,7 +82,7 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
         className="mt-5 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3"
         aria-label="Guided tour and accessibility controls"
       >
-        <div className="text-[11.5px] text-slate-300">
+        <div className="text-[0.8125rem] text-slate-300">
           <span className="font-semibold text-white">{t.toolbar.footerTitle}</span>
           <span className="hidden sm:inline text-slate-400">
             {" "}
@@ -103,7 +103,7 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
                 type="button"
                 onClick={() => setLang(opt.code as SupportedLanguage)}
                 aria-pressed={lang === opt.code}
-                className={`rounded-md px-2 py-1 text-[11px] font-semibold transition ${
+                className={`rounded-md px-2 py-1 text-[0.78rem] font-semibold transition ${
                   lang === opt.code
                     ? "bg-emerald-500 text-slate-950"
                     : "text-slate-200 hover:bg-white/10"
@@ -183,7 +183,7 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
       aria-label="Page tools: Audio overview, flow demo, and accessibility"
     >
       <div className="mx-auto flex max-w-[1220px] flex-wrap items-center justify-between gap-2 px-4 py-2">
-        <span className="hidden md:inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+        <span className="hidden md:inline-flex items-center gap-1.5 text-[0.78rem] font-medium text-slate-500">
           {t.toolbar.prompt}
         </span>
 
@@ -192,7 +192,7 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent("utare-open-audio-explainer"))}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11.5px] font-semibold text-slate-800 shadow-sm hover:border-emerald-300 hover:bg-emerald-50/60 transition"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[0.8125rem] font-semibold text-slate-800 shadow-sm hover:border-emerald-300 hover:bg-emerald-50/60 transition"
             >
               <Headphones className="h-3.5 w-3.5 text-emerald-700 shrink-0" />
               <span>
@@ -216,7 +216,7 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
                 <button
                   type="button"
                   onClick={() => window.dispatchEvent(new CustomEvent("utare-toggle-audio-play"))}
-                  className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 transition"
+                  className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2 py-1 text-[0.78rem] font-bold text-emerald-800 hover:bg-emerald-100 transition"
                   aria-label={audioState.isPaused ? "Resume audio" : "Pause audio"}
                 >
                   {audioState.isPaused ? (
@@ -231,7 +231,7 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
                 <button
                   type="button"
                   onClick={() => window.dispatchEvent(new CustomEvent("utare-stop-audio"))}
-                  className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-[11px] font-bold text-red-700 hover:bg-red-100 transition"
+                  className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-[0.78rem] font-bold text-red-700 hover:bg-red-100 transition"
                   aria-label="Stop audio"
                 >
                   <Square className="h-2.5 w-2.5 fill-current" />
@@ -243,7 +243,7 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent("utare-open-video-walkthrough"))}
-              className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50/90 px-2.5 py-1 text-[11.5px] font-semibold text-amber-900 shadow-sm hover:bg-amber-100 transition"
+              className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50/90 px-2.5 py-1 text-[0.8125rem] font-semibold text-amber-900 shadow-sm hover:bg-amber-100 transition"
               title="Watch 2-Min Flow Demo"
               aria-label="Watch interactive platform flow demo"
             >
@@ -265,7 +265,7 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
                 onClick={() => setLang(opt.code as SupportedLanguage)}
                 aria-pressed={lang === opt.code}
                 title={`Switch language to ${opt.label}`}
-                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold transition ${
+                className={`rounded-full px-2 py-0.5 text-[0.78rem] font-semibold transition ${
                   lang === opt.code
                     ? "bg-emerald-600 text-white"
                     : "text-slate-700 hover:bg-slate-100"
@@ -279,7 +279,7 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("utare-open-accessibility"))}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11.5px] font-semibold text-slate-800 shadow-sm hover:border-emerald-300 hover:bg-emerald-50/60 transition"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[0.8125rem] font-semibold text-slate-800 shadow-sm hover:border-emerald-300 hover:bg-emerald-50/60 transition"
             aria-label="Open Accessibility & Assistive Tech Settings"
           >
             <Accessibility className="h-3.5 w-3.5 text-emerald-700 shrink-0" />

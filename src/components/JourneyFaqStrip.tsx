@@ -27,7 +27,7 @@ export default function JourneyFaqStrip() {
       <div className="mx-auto w-full max-w-[1188px] px-4 py-10 sm:px-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="space-y-1.5 max-w-2xl min-w-0">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-emerald-800">
+            <span className="inline-flex items-center gap-1.5 text-[0.78rem] font-extrabold uppercase tracking-wider text-emerald-800">
               <HelpCircle className="h-3.5 w-3.5 text-emerald-700 shrink-0" />
               QUICK ANSWERS · USER JOURNEY HELP
             </span>
@@ -111,7 +111,7 @@ export default function JourneyFaqStrip() {
                     </div>
 
                     {item.bullets && item.bullets.length > 0 && (
-                      <ul className="list-disc pl-4 space-y-1 text-[11.5px] text-slate-700">
+                      <ul className="list-disc pl-4 space-y-1 text-[0.8125rem] text-slate-700">
                         {item.bullets.map((bullet, idx) => (
                           <li key={idx}>{bullet}</li>
                         ))}
@@ -123,7 +123,7 @@ export default function JourneyFaqStrip() {
                         <Link
                           key={`${item.id}-${link.href}`}
                           href={link.href}
-                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50/70 px-2.5 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 transition"
+                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50/70 px-2.5 py-1 text-[0.78rem] font-bold text-emerald-800 hover:bg-emerald-100 transition"
                         >
                           <span>{link.label}</span>
                           <ArrowRight className="h-3 w-3" />
@@ -131,7 +131,7 @@ export default function JourneyFaqStrip() {
                       ))}
                       <Link
                         href={`/faq#${item.id}`}
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-emerald-800 underline underline-offset-2"
+                        className="inline-flex items-center gap-1 text-[0.78rem] font-semibold text-slate-600 hover:text-emerald-800 underline underline-offset-2"
                       >
                         <span>Read in full FAQ</span>
                         <ArrowRight className="h-3 w-3" />

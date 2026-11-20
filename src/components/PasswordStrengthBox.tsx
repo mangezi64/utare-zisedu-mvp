@@ -43,7 +43,7 @@ export default function PasswordStrengthBox({
           : "border border-slate-200 bg-slate-50"
       }`}
     >
-      <div className="flex items-center justify-between text-[11px] font-semibold">
+      <div className="flex items-center justify-between text-[0.78rem] font-semibold">
         <span className={hasIssues ? "text-red-800 font-bold" : "text-slate-700"}>
           {hasIssues
             ? "Password missing required rules:"
@@ -83,7 +83,7 @@ export default function PasswordStrengthBox({
           return (
             <li
               key={r.id}
-              className={`flex items-center gap-1.5 text-[11px] rounded-md px-1.5 py-0.5 transition-colors ${
+              className={`flex items-center gap-1.5 text-[0.78rem] rounded-md px-1.5 py-0.5 transition-colors ${
                 r.met
                   ? "text-emerald-700 font-medium"
                   : highlightRed

@@ -295,13 +295,13 @@ export default function CandidateQuickInfoModal({
             {/* Candidate Identity Details */}
             <div className="space-y-1.5 flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">
+                <span className="rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 text-[0.78rem] font-bold uppercase tracking-wider">
                   {userRole}
                 </span>
-                <span className="rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 text-[11px] font-semibold">
+                <span className="rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 text-[0.78rem] font-semibold">
                   {profile?.city || "Zimbabwe"}
                 </span>
-                <span className="rounded-md bg-white/10 text-slate-200 px-2 py-0.5 text-[11px] font-medium">
+                <span className="rounded-md bg-white/10 text-slate-200 px-2 py-0.5 text-[0.78rem] font-medium">
                   {assessment?.readinessTier || "Bridge-Ready"}
                 </span>
                 {createdAt && (
@@ -421,7 +421,7 @@ export default function CandidateQuickInfoModal({
               {/* Profile Card Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-1">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <div className="text-[0.78rem] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                     <Compass className="h-3.5 w-3.5 text-emerald-600" />
                     Target Role &amp; Goal
                   </div>
@@ -432,7 +432,7 @@ export default function CandidateQuickInfoModal({
                 </div>
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-1">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <div className="text-[0.78rem] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                     <GraduationCap className="h-3.5 w-3.5 text-blue-600" />
                     Qualification &amp; Field
                   </div>
@@ -445,7 +445,7 @@ export default function CandidateQuickInfoModal({
                 </div>
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-1">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <div className="text-[0.78rem] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                     <MapPin className="h-3.5 w-3.5 text-rose-600" />
                     Location &amp; Status
                   </div>
@@ -496,11 +496,11 @@ export default function CandidateQuickInfoModal({
                         className="rounded-xl border border-slate-200 bg-white p-3 text-xs space-y-1 shadow-2xs"
                       >
                         <div className="font-bold text-slate-900">{app.jobTitle}</div>
-                        <div className="text-slate-500 text-[11px]">
+                        <div className="text-slate-500 text-[0.78rem]">
                           {app.company} • Applied: {new Date(app.appliedAt).toLocaleDateString()}
                         </div>
                         {app.status && (
-                          <span className="inline-block rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-700">
+                          <span className="inline-block rounded bg-slate-100 px-2 py-0.5 text-[0.72rem] font-bold uppercase text-slate-700">
                             Status: {app.status}
                           </span>
                         )}
@@ -519,14 +519,14 @@ export default function CandidateQuickInfoModal({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 space-y-2">
                   <div className="flex items-center justify-between text-slate-500">
-                    <span className="text-[11px] font-bold uppercase tracking-wider">Device Type</span>
+                    <span className="text-[0.78rem] font-bold uppercase tracking-wider">Device Type</span>
                     <Laptop className="h-4 w-4 text-emerald-600" />
                   </div>
                   <div className="font-bold text-slate-900 text-sm">
                     {profile?.primaryDevice || "Smartphone Only"}
                   </div>
                   <span
-                    className={`inline-block rounded px-2 py-0.5 text-[10px] font-bold ${
+                    className={`inline-block rounded px-2 py-0.5 text-[0.72rem] font-bold ${
                       profile?.hasDedicatedLaptop
                         ? "bg-emerald-100 text-emerald-800"
                         : "bg-amber-100 text-amber-800"
@@ -538,40 +538,40 @@ export default function CandidateQuickInfoModal({
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 space-y-2">
                   <div className="flex items-center justify-between text-slate-500">
-                    <span className="text-[11px] font-bold uppercase tracking-wider">Internet Setup</span>
+                    <span className="text-[0.78rem] font-bold uppercase tracking-wider">Internet Setup</span>
                     <Wifi className="h-4 w-4 text-blue-600" />
                   </div>
                   <div className="font-bold text-slate-900 text-sm">
                     {profile?.internetAccessType || "Mobile Bundles"}
                   </div>
-                  <div className="text-[11px] text-slate-500">
+                  <div className="text-[0.78rem] text-slate-500">
                     Connectivity: {profile?.internetAccessType?.includes("Fiber") || profile?.internetAccessType?.includes("Starlink") ? "High Bandwidth" : "Constrained / Cellular"}
                   </div>
                 </div>
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 space-y-2">
                   <div className="flex items-center justify-between text-slate-500">
-                    <span className="text-[11px] font-bold uppercase tracking-wider">Power Reliability</span>
+                    <span className="text-[0.78rem] font-bold uppercase tracking-wider">Power Reliability</span>
                     <Sun className="h-4 w-4 text-amber-500" />
                   </div>
                   <div className="font-bold text-slate-900 text-sm">
                     {powerHours} hrs / day
                   </div>
-                  <div className="text-[11px] text-slate-500">
+                  <div className="text-[0.78rem] text-slate-500">
                     Est. {estimatedWeeklyHours} hrs/wk productive capacity
                   </div>
                 </div>
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 space-y-2">
                   <div className="flex items-center justify-between text-slate-500">
-                    <span className="text-[11px] font-bold uppercase tracking-wider">Payment Rail</span>
+                    <span className="text-[0.78rem] font-bold uppercase tracking-wider">Payment Rail</span>
                     <Globe className="h-4 w-4 text-purple-600" />
                   </div>
                   <div className="font-bold text-slate-900 text-sm">
                     {profile?.hasGlobalPaymentRail ? "Configured" : "Needs Onboarding"}
                   </div>
                   <span
-                    className={`inline-block rounded px-2 py-0.5 text-[10px] font-bold ${
+                    className={`inline-block rounded px-2 py-0.5 text-[0.72rem] font-bold ${
                       profile?.hasGlobalPaymentRail
                         ? "bg-purple-100 text-purple-800"
                         : "bg-slate-200 text-slate-700"
@@ -750,10 +750,10 @@ export default function CandidateQuickInfoModal({
                         <div className="space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-bold text-slate-900 text-sm">{doc.title}</span>
-                            <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 uppercase">
+                            <span className="rounded bg-emerald-100 text-emerald-800 text-[0.72rem] font-bold px-1.5 py-0.5 uppercase">
                               {doc.category}
                             </span>
-                            <span className="rounded bg-slate-100 text-slate-600 text-[10px] font-semibold px-1.5 py-0.5">
+                            <span className="rounded bg-slate-100 text-slate-600 text-[0.72rem] font-semibold px-1.5 py-0.5">
                               v{doc.version} {doc.isLatest ? "· Latest" : ""}
                             </span>
                           </div>
@@ -822,7 +822,7 @@ export default function CandidateQuickInfoModal({
                               {art.jobTitle}
                             </span>
                             <span className="text-xs text-slate-600">at {art.company}</span>
-                            <span className="rounded bg-blue-100 text-blue-800 text-[10px] font-bold px-1.5 py-0.5">
+                            <span className="rounded bg-blue-100 text-blue-800 text-[0.72rem] font-bold px-1.5 py-0.5">
                               v{art.version}
                             </span>
                           </div>
@@ -867,7 +867,7 @@ export default function CandidateQuickInfoModal({
               {/* Executive Diagnosis & Bridge Plan */}
               <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50/60 to-teal-50/30 p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="rounded-md bg-emerald-700 text-white text-[11px] font-bold px-2.5 py-0.5 uppercase tracking-wide">
+                  <span className="rounded-md bg-emerald-700 text-white text-[0.78rem] font-bold px-2.5 py-0.5 uppercase tracking-wide">
                     {pathway?.recommendedTrack || "Career Track"}
                   </span>
                   <span className="text-xs font-semibold text-emerald-900">
@@ -906,7 +906,7 @@ export default function CandidateQuickInfoModal({
                       Assigned Industry Coach
                     </span>
                     <span
-                      className={`font-semibold px-2 py-0.5 rounded text-[10px] ${
+                      className={`font-semibold px-2 py-0.5 rounded text-[0.72rem] ${
                         candidate.coachingStatus === "Session Confirmed"
                           ? "bg-emerald-100 text-emerald-800"
                           : "bg-slate-200 text-slate-700"
@@ -936,11 +936,11 @@ export default function CandidateQuickInfoModal({
                       Matched Partner Hub
                     </span>
                     {candidate.bookedHubDesk ? (
-                      <span className="font-bold text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                      <span className="font-bold text-[0.72rem] bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
                         ✓ Desk Booked
                       </span>
                     ) : (
-                      <span className="text-[10px] text-slate-500">Pass Available</span>
+                      <span className="text-[0.72rem] text-slate-500">Pass Available</span>
                     )}
                   </div>
 
@@ -950,7 +950,7 @@ export default function CandidateQuickInfoModal({
                   <div className="text-xs text-slate-600">
                     {pathway?.recommendedHub?.city} • {pathway?.recommendedHub?.address}
                   </div>
-                  <div className="flex flex-wrap gap-2 text-[11px] text-slate-600 pt-1">
+                  <div className="flex flex-wrap gap-2 text-[0.78rem] text-slate-600 pt-1">
                     <span className="bg-white border border-slate-200 px-2 py-0.5 rounded font-medium">
                       ☀️ Solar Backup: {pathway?.recommendedHub?.hasSolarBackup ? "Yes" : "Standard"}
                     </span>
@@ -979,11 +979,11 @@ export default function CandidateQuickInfoModal({
                       >
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-900">{role.role}</span>
-                          <span className="rounded bg-emerald-100 text-emerald-900 font-bold px-2 py-0.5 text-[11px]">
+                          <span className="rounded bg-emerald-100 text-emerald-900 font-bold px-2 py-0.5 text-[0.78rem]">
                             {role.estimatedMonthlyUsd}
                           </span>
                         </div>
-                        <p className="text-slate-500 text-[11px]">{role.matchReason}</p>
+                        <p className="text-slate-500 text-[0.78rem]">{role.matchReason}</p>
                       </div>
                     ))}
                   </div>
@@ -1015,10 +1015,10 @@ export default function CandidateQuickInfoModal({
                           <div className="flex-1 space-y-0.5">
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-slate-900">{m.phase}: {m.title}</span>
-                              <span className="text-[10px] text-slate-400">({m.durationWeeks} wks)</span>
+                              <span className="text-[0.72rem] text-slate-400">({m.durationWeeks} wks)</span>
                             </div>
-                            <div className="text-slate-600 text-[11px]">{m.objective}</div>
-                            <div className="text-slate-500 text-[11px]">
+                            <div className="text-slate-600 text-[0.78rem]">{m.objective}</div>
+                            <div className="text-slate-500 text-[0.78rem]">
                               <strong>Deliverable:</strong> {m.deliverable}
                             </div>
                           </div>
@@ -1080,7 +1080,7 @@ export default function CandidateQuickInfoModal({
               <div className="flex items-center gap-2 min-w-0">
                 <FileText className="h-4 w-4 text-emerald-400 shrink-0" />
                 <span className="font-bold text-sm truncate">{previewDoc.title}</span>
-                <span className="rounded bg-white/20 text-[10px] font-bold px-1.5 py-0.5 text-slate-200">
+                <span className="rounded bg-white/20 text-[0.72rem] font-bold px-1.5 py-0.5 text-slate-200">
                   {previewDoc.fileName}
                 </span>
               </div>
