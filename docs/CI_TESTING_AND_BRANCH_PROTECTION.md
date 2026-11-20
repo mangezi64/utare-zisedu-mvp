@@ -12,7 +12,7 @@ Every Pull Request targeting `main` (or `master`) automatically triggers the Git
    - Configured in [`.eslintrc.json`](../.eslintrc.json) using `next/core-web-vitals`.
 2. **TypeScript Strict Check (`npm run typecheck` / `make typecheck`)**:
    - Runs `tsc --noEmit` to catch type mismatches across candidate profiles, role guards, Supabase schemas, and Gemini AI payloads.
-3. **Vitest Unit & Integration Suite (`npm run test:ci` / `make test`) — 14 Suites / 76 Tests**:
+3. **Vitest Unit & Integration Suite (`npm run test:ci` / `make test`) — 15 Suites / 85 Tests**:
    - Configured in [`vitest.config.ts`](../vitest.config.ts).
    - [`src/__tests__/pathway-engine.test.ts`](../src/__tests__/pathway-engine.test.ts): Tests `computeAssessmentScores`, `matchNearestHub`, `matchBestCoach`, and `generateAICareerPathway` across diverse Zimbabwean personas (university graduates, TVET artisans, school leavers, and creatives).
    - [`src/__tests__/mock-data.test.ts`](../src/__tests__/mock-data.test.ts): Verifies empirical UTARE survey benchmarks, Innovation Hubs, Coaches, and Remote Job payment rail schemas.
@@ -20,6 +20,7 @@ Every Pull Request targeting `main` (or `master`) automatically triggers the Git
    - [`src/__tests__/end-to-end-flow.test.ts`](../src/__tests__/end-to-end-flow.test.ts): Tests full candidate lifecycle persistence, milestone toggling, coach confirmation, hub booking, and job application submission.
    - [`src/__tests__/admin-and-account.test.ts`](../src/__tests__/admin-and-account.test.ts): Tests PBKDF2 password hashing, HMAC session tokens, role promotion, employer verification auto-approval, versioned credentials/CV artifacts, and audit logs.
    - [`src/__tests__/auth-verification.test.ts`](../src/__tests__/auth-verification.test.ts): Tests Supabase implicit/OTP/PKCE and custom token email verification flows.
+   - [`src/__tests__/google-oauth.test.ts`](../src/__tests__/google-oauth.test.ts): Tests Google OAuth initiation, consent/employer gates, candidate & employer provisioning, existing account protection, superuser preservation, tampered cookie rejection, and `/login` UI wiring.
    - [`src/__tests__/area-security.test.ts`](../src/__tests__/area-security.test.ts): Verifies RBAC enforcement, PII stripping in employer applicant views, and cross-tenant isolation across API routes.
    - [`src/__tests__/area-flows.test.ts`](../src/__tests__/area-flows.test.ts): End-to-end route tests across candidate onboarding/application/deletion, scam reporting/moderation, and employer portal flows.
    - [`src/__tests__/area-compliance.test.ts`](../src/__tests__/area-compliance.test.ts): Verifies Zimbabwe Cyber & Data Protection Act [Chapter 12:07], SI 155/2024, consent gates, 365-day + 3-email retention, and Kutunga Safety by Design controls.

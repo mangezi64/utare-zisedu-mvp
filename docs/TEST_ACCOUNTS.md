@@ -1,6 +1,6 @@
 # Utare ZEM AI — Internal Role Provisioning & Test Accounts Guide
 
-> **Security Policy:** Passwords must **never** be committed to the repository. Public sign-up (`/login?tab=register` and `/employers`) can only create `candidate` or `employer` accounts. Facilitator (`admin`) and `superuser` roles can only be assigned from the backend.
+> **Security Policy:** Passwords must **never** be committed to the repository. Public sign-up (`/login?tab=register` and `/employers`) can only create `candidate` or `employer` accounts. Facilitator (`admin`) and `superuser` roles can only be assigned from the backend. `/login` also supports **Continue with Google** (Supabase Google OAuth), and `SUPERUSER_EMAILS` / `ADMIN_EMAILS` bootstrap role promotion applies equally to Google Sign-In accounts.
 
 ## Roles Overview
 

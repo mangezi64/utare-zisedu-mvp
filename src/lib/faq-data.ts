@@ -135,6 +135,34 @@ export const FAQ_ITEMS: FaqItem[] = [
     ],
   },
   {
+    id: "google-sign-in-oauth",
+    category: "login-accounts",
+    question: "How does 'Continue with Google' work for signing in or registering?",
+    answer: [
+      "You can click 'Continue with Google' on either the Sign In tab or the Create Account tab at /login to authenticate directly with your Google account without waiting for an email confirmation link.",
+      "When creating a new account with Google, you must still choose whether you are registering as a Candidate or an Employer, provide a Company Name if registering as an Employer, and read and tick the UTARE Data Policy consent checkbox before continuing.",
+    ],
+    bullets: [
+      "First-time Google users are automatically verified and routed to their workspace (/assessment for candidates, /employer for employers, or /admin for authorized facilitators).",
+      "If you later want to sign in with an email and password instead of Google, click 'Forgot password? Reset here' on /login to set a password for your account.",
+      "Existing email-and-password accounts keep their password, role, and profile data intact when signing in with the same verified Google email.",
+    ],
+    links: [
+      { label: "Sign In with Google", href: "/login" },
+      { label: "Create Account", href: "/login?tab=register" },
+      { label: "Read Data Policy", href: "/data-policy" },
+    ],
+    keywords: [
+      "google",
+      "google sign-in",
+      "continue with google",
+      "oauth",
+      "gmail",
+      "supabase oauth",
+      "password",
+    ],
+  },
+  {
     id: "password-requirements",
     category: "login-accounts",
     question:
@@ -741,6 +769,7 @@ export function getJourneyFaqsForPath(
       categoryHref: "/faq?category=login-accounts",
       items: pickFaqItems([
         "create-account-email-confirmation",
+        "google-sign-in-oauth",
         "missing-or-expired-verification",
         "password-requirements",
         "forgot-or-change-password",

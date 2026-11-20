@@ -23,7 +23,7 @@ In Zimbabwe, high academic qualification no longer translates automatically into
 ### Option A: Full Next.js Platform with Containerized PostgreSQL Database (Recommended)
 
 Runs identically across macOS, Windows (WSL2), and Linux using Docker Compose with zero host environment pollution:
-- **`web`**: Next.js 14 frontend featuring **Faith Wenzira & Amanda's unified design system** (`Manrope` & `Inter` typography, deep navy `#101a33` & emerald `#0faf83` palette, animated `ZW` global-reach radar map, and orbital login graphic), dynamic routes, and REST API server (Port `3000`).
+- **`web`**: Next.js 14 frontend featuring **Faith Wenzira & Amanda's unified design system** (`Manrope` & `Inter` typography, deep navy `#101a33` & emerald `#0faf83` palette, and the shared `ZW` global-reach radar visual across the overview hero and sign-in screen), dynamic routes, and REST API server (Port `3000`).
 - **`db`**: Containerized PostgreSQL 16 Alpine database with pre-seeded Zimbabwe hubs, coaches, courses, and empirical cohort data (Port `5432`).
 
 #### Step 1: Clone the Repository
@@ -77,6 +77,7 @@ Open `index.html` in any modern browser without needing a build step or package 
 
 ### A. Public & Candidate Experience (`candidate` role)
 - **Executive Overview (`/`):** Unified hero banner with the animated Zimbabwe (`ZW`) global-reach radar graphic, empirical survey benchmarks, 4-stage `"01–04"` mobility cards, and challenge checklist.
+- **Unified Sign In & Registration (`/login`):** Split-screen authentication featuring the shared `ZW` radial pathways graphic, email/password sign-in, **Continue with Google (Supabase OAuth)** across both Sign In and Create Account tabs, unticked Zimbabwe Data Policy consent gates, and post-signup Spam/Junk folder verification guidance.
 - **About Us (`/about`):** *"Six young people, one shared challenge"* story (Mastercard Foundation Scholars & USAP alumnus context), Mission/Vision/Proposal band, `01–04` challenge cards, and the 6-person team showcase.
 - **How It Works (`/how-it-works`):** 4-stage mobility walkthrough linking directly into each live platform module.
 - **Frequently Asked Questions (`/faq`):** Searchable, category-filtered help center covering login, email verification, password rules, AI readiness tiers & appeals, grounded CV Studio, solar hubs, anti-scam reporting, employer portals, accessibility tools, and Zimbabwe Data Policy compliance.
@@ -92,7 +93,7 @@ Open `index.html` in any modern browser without needing a build step or package 
   - **One-Click Downloads:** Export ready-to-send **Word (`.docx`)** files, **A4 Print/PDF**, or plain text.
 
 ### B. Scoped Employer Portal (`/employer` — `employer` role)
-- **Self-Registration & One-Time Admin Verification (`/login?tab=register&role=employer` & `/employers`):** Employers register with email confirmation. Once an admin verifies the company once, all current and future job postings from that employer auto-publish.
+- **Self-Registration & One-Time Admin Verification (`/login?tab=register&role=employer` & `/employers`):** Employers register with email confirmation or **Continue with Google** (requiring company name and Data Policy consent). Once an admin verifies the company once, all current and future job postings from that employer auto-publish.
 - **Job Pipeline Management (`/employer`):** Post new remote/hybrid roles, archive filled roles, or delete listings.
 - **Scoped Applicant Review:** View applicants strictly for the employer's own jobs, inspect tailored resume pitches, and update applicant status (`under_review`, `shortlisted`, `rejected`, `hired`). Strict server-side scoping strips all private candidate fields (phone, income bracket, hardware deficits, and internal diagnostic scores).
 
@@ -117,7 +118,7 @@ utare-zisedu-mvp/
 ├── scripts/
 │   ├── manage-user.mjs            # Backend CLI to create/promote/demote admin, superuser & employer accounts
 │   ├── migrate-db.mjs             # Automatic release-time & CLI additive database schema migration runner
-│   ├── pre-push-ci-check.sh       # Runs ESLint, Typecheck, Vitest (76 tests) & Next.js build in Docker
+│   ├── pre-push-ci-check.sh       # Runs ESLint, Typecheck, Vitest (85 tests) & Next.js build in Docker
 │   └── safe-pr-merge.sh           # Runs local CI + remote GitHub Actions check before merging a PR
 ├── Dockerfile.dev                 # Development container (Node 20 LTS Alpine + hot-reload polling)
 ├── Dockerfile                     # Multi-stage production container build
@@ -135,7 +136,7 @@ utare-zisedu-mvp/
 ├── public/
 │   └── demo/                      # Static walkthrough hosted at /demo/index.html
 └── src/
-    ├── __tests__/                 # 14 Vitest suites (76 automated unit & integration tests)
+    ├── __tests__/                 # 15 Vitest suites (85 automated unit & integration tests)
     ├── middleware.ts              # Server-side route protection for /admin, /employer, /account, /pathway
     ├── types/
     │   └── index.ts               # Core TypeScript interfaces for all platform modules & roles
@@ -164,7 +165,9 @@ utare-zisedu-mvp/
     ├── components/
     │   ├── Navbar.tsx             # Unified header with "U" brand mark & role-aware navigation
     │   ├── PasswordInput.tsx      # Accessible password input with show/hide toggle
-    │   └── ZimbabweCitySelect.tsx # Searchable Zimbabwean towns, growth points & diaspora combobox
+    │   ├── ZimbabweCitySelect.tsx # Searchable Zimbabwean towns, growth points & diaspora combobox
+    │   ├── ZimbabweMapGraphic.tsx # Custom 10-province Zimbabwe vector map with hub radar beacons
+    │   └── ZimbabweRadarVisual.tsx # Shared ZW radial pathways illustration for `/` & `/login`
     └── app/
         ├── globals.css            # Faith & Amanda's design system integrated with Tailwind CSS
         ├── layout.tsx             # Root layout with Manrope/Inter fonts & dark navy footer
@@ -178,8 +181,8 @@ utare-zisedu-mvp/
         ├── employers/page.tsx     # For Employers & Partners + PostgreSQL / Portal enrolment form
         ├── employer/page.tsx      # Scoped Employer Portal: post roles & manage applicants
         ├── contact/page.tsx       # Partner & General Inquiries (PostgreSQL backed)
-        ├── login/page.tsx         # Split-screen orbital visual Sign In & Candidate/Employer Registration
-        ├── auth/callback/page.tsx # Email verification callback handler
+        ├── login/page.tsx         # Split-screen Zimbabwe radar visual Sign In (Email + Google OAuth) & Candidate/Employer Registration
+        ├── auth/callback/page.tsx # Email verification & Google OAuth callback handler
         ├── account/page.tsx       # Candidate Main Dashboard & Workspace
         ├── admin/page.tsx         # Facilitator & Admin Console (Employers, Jobs, Hubs, Cohort, User Roles)
         ├── assessment/page.tsx    # Smart Intake, 6-Factor Diagnostic & AI Coach Pairing
@@ -218,7 +221,7 @@ To guarantee `main` never breaks on merge:
 | Team Member | Assigned Tasks & Contributions | Primary Files / Directories |
 | :--- | :--- | :--- |
 | **Stewart Mangezi** | **Task #3 & Platform Architecture** (Candidate accounts, 6-factor readiness diagnostic, Gemini AI pathway engine, human coach pairing, auth/security & Docker setup) | `src/lib/gemini/pathway-engine.ts`, `src/app/assessment/page.tsx`, `src/lib/auth-session.ts`, `src/app/admin/page.tsx` |
-| **Faith Wenzira** | **Frontend Experience & UI Design** (Visual identity, `Manrope`/`Inter` design system, `ZW` hero & orbital graphics, interactive candidate walkthrough, Opportunities & Skills UI) | `styles.css`, `src/app/globals.css`, `src/app/page.tsx`, `src/app/about/page.tsx`, `src/app/opportunities/page.tsx`, `src/app/skills/page.tsx` |
+| **Faith Wenzira** | **Frontend Experience & UI Design** (Visual identity, `Manrope`/`Inter` design system, `ZW` hero & shared sign-in radar graphics, interactive candidate walkthrough, Opportunities & Skills UI) | `styles.css`, `src/app/globals.css`, `src/app/page.tsx`, `src/app/about/page.tsx`, `src/app/opportunities/page.tsx`, `src/app/skills/page.tsx` |
 | **Amanda** | **Frontend Architecture & Database Setup** (UI/UX co-design, responsive page layouts, Partner Hub interface polish & PostgreSQL / Supabase schema deployment) | `supabase/schema.sql`, `src/lib/supabase/client.ts`, `src/components/Navbar.tsx`, `src/app/globals.css` |
 | **Munashe** | **Tasks #3 & #4** (Co-managing candidate diagnostic intake & Partner Innovation Hub mapping/enlistment across Zimbabwe) | `src/app/hubs/page.tsx`, `src/app/api/hubs/route.ts`, `src/lib/mock-data.ts` |
 | **Kudakwashe** | **Task #5: Competitor Analysis & Market Validation** (Evaluating local/global platforms & curating verified remote job criteria and payment rails) | `src/app/jobs/page.tsx`, `src/app/opportunities/page.tsx`, `docs/` |
@@ -232,7 +235,8 @@ To guarantee `main` never breaks on merge:
 - **[Week 6 Pitch Deck & 4-Minute Speaker Script](docs/PITCH_DECK_WEEK6.md)** — Complete 10-slide presentation deck, stopwatch timing cues, and word-for-word storyteller script.
 - **[Uniform Team FAQ & Judge Defense Guide](docs/TEAM_FAQ_UNIFORM.md)** — Standardized 30s/60s answers, judge trap rebuttals, and rapid Q&A cheat sheet.
 - **[Coach Catherine Action Items & Sprint Matrix](docs/COACH_CATHERINE_ACTION_ITEMS.md)** — Week 6 to Week 7 deliverables matrix, 7-day countdown, and risk register.
-- **[Release Notes (`v2.3.0`)](RELEASE_NOTES.md)** — Latest platform features, email verification UX & spam guidance, automatic release schema migrations, Zimbabwe map radar, and Flow Video Walkthrough.
+- **[Release Notes (`v2.4.0`)](RELEASE_NOTES.md)** — Latest Google Sign-In OAuth (`Continue with Google`), shared Zimbabwe radar visual, email verification UX & spam guidance, automatic release schema migrations, and Flow Video Walkthrough.
+- **[Pitch Day Readiness & Judge Defense Brief](docs/PITCH_DAY_READINESS_AND_DEFENSE_BRIEF.md)** — Grounded practicality, reliability, sustainability, youth testing evidence, and honest limitation responses for Pitch Day.
 - **[Container & Setup Guide](docs/CONTAINER_AND_SETUP_GUIDE.md)** — How to run, debug, and manage the Docker environment on macOS, Windows (WSL2), and Linux.
 - **[Internal Role Provisioning & Test Accounts](docs/TEST_ACCOUNTS.md)** — How to provision `superuser`, `admin`, and `employer` roles via the UI or `scripts/manage-user.mjs`.
 - **[CI/CD & Branch Protection Guide](docs/CI_TESTING_AND_BRANCH_PROTECTION.md)** — Automated lint, typecheck, Vitest suites, and PR governance.

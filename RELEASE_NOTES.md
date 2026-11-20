@@ -13,6 +13,8 @@
   - Added 9 integration tests in [`src/__tests__/google-oauth.test.ts`](src/__tests__/google-oauth.test.ts) covering OAuth initiation, consent/employer gates, candidate & employer provisioning, existing account protection, superuser preservation, tampered cookie rejection, and login UI wiring.
 * **Unified Zimbabwe Radar Visual (`src/components/ZimbabweRadarVisual.tsx`, `src/app/page.tsx`, `src/app/login/page.tsx`, `src/app/globals.css`):**
   - Extracted the Zimbabwe ("ZW") radial global reach illustration into a shared `<ZimbabweRadarVisual />` component rendered consistently across both the landing hero and the `/login` split-screen visual.
+* **Documentation & Login FAQ Alignment (`README.md`, `docs/*`, `.env.example`, `src/lib/faq-data.ts`):**
+  - Synchronized `README.md`, `docs/ARCHITECTURE_AND_TEAM_GUIDE.md` (updated to 25 REST API endpoints & 15 Vitest suites / 85 tests), `docs/CI_TESTING_AND_BRANCH_PROTECTION.md`, `docs/TEAM_REVIEW_GUIDE.md`, `docs/SAFETY_BY_DESIGN_BOOKLET_DRAFT.md`, `docs/PITCH_DAY_READINESS_AND_DEFENSE_BRIEF.md`, `docs/TEST_ACCOUNTS.md`, `.env.example`, and the in-app `/faq` + `/login` quick-answers strip with the `v2.4.0` Google OAuth & shared radar visual changes.
 
 ---
 
