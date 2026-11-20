@@ -102,7 +102,7 @@ function LoginForm() {
       setResendNotice(
         data.message ||
           data.error ||
-          "Confirmation email dispatched. Please check your inbox and spam folder."
+          "Confirmation email dispatched. Please check your inbox, Spam, or Junk folder."
       );
     } catch {
       setResendNotice("Unable to resend confirmation email right now.");
@@ -521,20 +521,28 @@ function LoginForm() {
                 </div>
               )}
               {pendingConfirmationEmail && !confirmationPath && (
-                <div className="pt-1 flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={isResendingConfirmation}
-                    onClick={() => handleResendConfirmation(pendingConfirmationEmail)}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-red-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-800 disabled:opacity-60 transition"
-                  >
-                    {isResendingConfirmation ? "Sending..." : "Resend Confirmation Email"}
-                  </button>
-                  {resendNotice && (
-                    <span className="text-[11px] font-medium text-red-900">
-                      {resendNotice}
-                    </span>
-                  )}
+                <div className="pt-1 space-y-2">
+                  <p className="text-[11.5px] leading-relaxed text-red-900">
+                    Can&apos;t find the verification email? Check your{" "}
+                    <strong>Spam, Junk, or Promotions</strong> folder (look for{" "}
+                    <strong>UTARE ZEM AI</strong> / <code>utarezemai@gmail.com</code>),
+                    mark it as <strong>Not Spam</strong>, and click the confirmation link.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={isResendingConfirmation}
+                      onClick={() => handleResendConfirmation(pendingConfirmationEmail)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-red-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-800 disabled:opacity-60 transition"
+                    >
+                      {isResendingConfirmation ? "Sending..." : "Resend Confirmation Email"}
+                    </button>
+                    {resendNotice && (
+                      <span className="text-[11px] font-medium text-red-900">
+                        {resendNotice}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -765,8 +773,21 @@ function LoginForm() {
                   {registeredEmail || pendingConfirmationEmail || regEmail.trim().toLowerCase()}
                 </p>
                 <p className="mt-2 text-xs leading-relaxed text-[#475467]">
-                  Open your inbox (and check your Spam or Promotions folder) and click{" "}
+                  Open your inbox and click{" "}
                   <strong>&ldquo;Confirm email address&rdquo;</strong> to finish validating your account.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-left space-y-1">
+                <p className="text-xs font-bold text-amber-950">
+                  Not seeing it in your inbox? Check your Spam folder
+                </p>
+                <p className="text-xs leading-relaxed text-amber-900">
+                  Verification emails can sometimes arrive in{" "}
+                  <strong>Spam, Junk, or Promotions</strong>. Look for an email from{" "}
+                  <strong>UTARE ZEM AI</strong> (<code>utarezemai@gmail.com</code>),
+                  mark it as <strong>&ldquo;Not spam&rdquo;</strong>, and open the
+                  verification link inside.
                 </p>
               </div>
 

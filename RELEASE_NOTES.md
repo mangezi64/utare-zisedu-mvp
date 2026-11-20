@@ -1,11 +1,30 @@
 # UTARE ZEM AI — Release Notes
 
-**Release Date:** November 16, 2026 (Night Release — Zimbabwe Map Radar, Video Walkthrough, Voice Humanization & Zero-Overflow Packaging)  
-**Target Environments:** Vercel Production (`utare-zisedu-mvp.vercel.app`), Supabase Cloud PostgreSQL, and Containerized Local PostgreSQL (`utare-zisedu-db`)
+**Latest Release (`v2.3.0`):** November 20, 2026 (Email Verification UX, Employer Auth Parity, Release-Time Schema Migrations & Safety/FAQ/Accessibility Pack)  
+**Target Environments:** Vercel Production (`utare-zisedu-mvp.vercel.app`), Supabase Cloud PostgreSQL (`stzsuwwmeiqdhsoghmrj`), and Containerized Local PostgreSQL (`utare-zisedu-db`)
 
 ---
 
-## 8. Zimbabwe Map Radar, Interactive Flow Video Walkthrough & Polished Page Packaging
+## 9. Release v2.3.0 — Email Verification Guidance, Employer Auth Parity & Automated Release Schema Sync (November 20, 2026)
+* **Dedicated Post-Signup Email Validation Screen & Spam Folder Guidance (`/login`, `/employers`, `/auth/callback`, `/api/auth/*`):**
+  - After registering on `/login?tab=register`, unconfirmed users now transition to a focused **Check your email to validate your account** view displaying their registered email address, a one-click **Resend Verification Email** action, and a prominent amber reminder to check **Spam, Junk, or Promotions** folders for messages from **UTARE ZEM AI** (`utarezemai@gmail.com`) and mark them as *"Not spam"*.
+  - Added matching Spam/Junk/Promotions folder guidance across the Sign-In `EMAIL_NOT_CONFIRMED` notice banner, `/auth/callback` resend helper, `/employers` registration confirmation card, and backend auth responses (`/api/auth/login`, `/api/auth/signup`, `/api/auth/resend-confirmation`).
+* **Employer Self-Registration Confirmation Parity (`POST /api/employers` & `/employers`):**
+  - Employer registrations with a password from `/employers` now register through `supabase.auth.signUp()` with dynamic `/auth/callback` redirect URLs, Admin API rate-limit fallback (`email_confirm: true`), `confirmation_token` persistence, and an inline resend/spam-folder UI matching `/login`.
+* **Automatic Release-Time & Runtime Database Schema Migrations (`scripts/migrate-db.mjs`, `supabase/additive-schema.sql`, `src/lib/db.ts`):**
+  - Added a single DDL-only non-destructive schema source of truth ([`supabase/additive-schema.sql`](supabase/additive-schema.sql) and [`src/lib/db-schema.ts`](src/lib/db-schema.ts)) covering all **14 tables**, additive columns, safe unique index checks on `employer_registrations(email)`, and `NOTIFY pgrst, 'reload schema';`.
+  - Wired `node scripts/migrate-db.mjs` directly into `npm run build` (and exposed `npm run db:migrate`, `npm run db:migrate:strict`, and `make db-migrate`) so every release automatically syncs schema changes before building when `SUPABASE_DB_URL` / `POSTGRES_URL` (or `SUPABASE_ACCESS_TOKEN`) is configured.
+  - Upgraded `src/lib/db.ts` with cloud-first Postgres URL resolution, automatic remote SSL (`{ rejectUnauthorized: false }`), and a 60-second retry cooldown if startup DB connection is transiently unavailable.
+* **Schema-Drift-Resilient Supabase Persistence (`src/lib/supabase/safe-write.ts`):**
+  - Added `safeSupabaseUpsert` and `safeSupabaseUpdate` across `src/lib/store.ts`, `/api/auth/signup`, `/api/auth/password`, `/api/pathway`, and `/api/employers` so live writes automatically strip pending migration columns (`PGRST204` / `42703`) or fall back cleanly on `42P10` constraint mismatches instead of failing silently, and wired `job_applications` + `employer_registrations` two-way sync to Supabase.
+* **Platform Safety, Privacy, FAQ & TalkBack Milestones (Nov 18–20, 2026):**
+  - **Kutunga Safety by Design & Zimbabwe Data Policy (`/data-policy`, `/api/jobs/report`, `/api/auth/account`):** Unticked signup & employer-sharing consent gates, immediate job scam reporting & Superuser moderation, 1-year inactivity + 3-notice retention enforcement, and typed-`delete` account erasure.
+  - **Searchable FAQ Help Center (`/faq`) & Journey Quick-Answers (`src/lib/faq-data.ts`):** 7-category searchable knowledge base plus contextual FAQ strips at the bottom of core pages.
+  - **Android TalkBack Accessibility (`/opportunities`):** Upfront *"Currently Available on UTARE"* industry counts, `aria-live="polite"` result announcements, and accessible modal focus management validated with totally blind tester **Nyasha Gande**.
+
+---
+
+## 8. Zimbabwe Map Radar, Interactive Flow Video Walkthrough & Polished Page Packaging (November 16, 2026)
 * **Authentic Zimbabwe Map Vector Graphic (`<ZimbabweMapGraphic />`):**
   - Designed an SVG map of Zimbabwe's 10 provinces (Mashonaland, Matabeleland, Midlands, Masvingo, Manicaland, Bulawayo, and Harare) with emerald gradient styling and glow filters.
   - Replaced the generic green rotated square inside the two concentric radar circles with the actual Zimbabwe map, centered with pulsing radar beacons for Harare, Bulawayo, and Mutare innovation hubs and a frosted "ZW ZIMBABWE" indicator badge.

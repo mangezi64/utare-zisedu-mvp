@@ -5,8 +5,10 @@
   "description": "UTARE ZEM AI — Economic Mobility Bridge for Zimbabwean Tertiary Talent (Next.js + Supabase + Gemini AI)",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/migrate-db.mjs && next build",
     "start": "next start",
+    "db:migrate": "node scripts/migrate-db.mjs",
+    "db:migrate:strict": "node scripts/migrate-db.mjs --strict",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest",

@@ -50,10 +50,13 @@ docker compose up --build
 | **Start app (with build check)** | `docker compose up --build` | `make up` |
 | **Start app in background** | `docker compose up -d` | — |
 | **Stop app** | `docker compose down` | `make down` |
+| **Sync additive DB schema** | `docker compose exec -T web npm run db:migrate:strict` | `make db-migrate` |
 | **View live logs** | `docker compose logs -f web` | `make logs` |
 | **Open terminal inside container** | `docker compose exec web bash` | `make shell` |
 | **Install a new npm package** | `docker compose exec web npm install <pkg>` | — |
-| **Wipe cache & rebuild fresh** | `docker compose down -v && docker compose up --build` | `make clean && make up` |
+| **Rebuild app non-destructively** | `docker compose up -d --build` | `make restart` |
+
+*(Zero Data Loss Rule: Never run `docker compose down -v` in development or deployment workflows so the PostgreSQL volume `utare_pgdata` is always preserved.)*
 
 ---
 
@@ -75,4 +78,6 @@ We have included `.devcontainer/devcontainer.json`.
 - **Port `3000` is already in use:**
   - **Fix:** Stop any other local dev server running on port 3000, or edit `ports: - "3001:3000"` in `docker-compose.yml`.
 - **Added a new dependency in `package.json` and container says module not found:**
-  - **Fix:** Run `docker compose down -v && docker compose up --build` (or `make clean && make up`) to refresh the `utare_node_modules` volume.
+  - **Fix:** Rebuild the web container non-destructively (preserving `utare_pgdata` database data): `docker compose up -d --build web`.
+- **Database missing newly added tables or columns:**
+  - **Fix:** Run `make db-migrate` (`docker compose exec -T web npm run db:migrate:strict`) to apply `supabase/additive-schema.sql` safely without touching existing data.

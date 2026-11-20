@@ -20,6 +20,7 @@ import {
   isSupabaseConfigured,
   supabase,
 } from "@/lib/supabase/client";
+import { safeSupabaseUpdate } from "@/lib/supabase/safe-write";
 import { validateEmail, validatePassword } from "@/lib/validation";
 import { UserRole } from "@/types";
 
@@ -98,13 +99,14 @@ export async function POST(req: NextRequest) {
         updateUserPassword(targetEmail, passwordHash);
       }
       if (sb) {
-        sb.from("auth_users")
-          .update({ password_hash: passwordHash, email_confirmed: true })
-          .ilike("email", targetEmail)
-          .then(
-            () => {},
-            () => {}
-          );
+        safeSupabaseUpdate(
+          sb,
+          "auth_users",
+          { password_hash: passwordHash, email_confirmed: true },
+          "email",
+          targetEmail,
+          { caseInsensitive: true }
+        ).catch(() => {});
       }
 
       return NextResponse.json({
@@ -219,13 +221,14 @@ export async function POST(req: NextRequest) {
       }
 
       if (sb) {
-        sb.from("auth_users")
-          .update({ password_hash: passwordHash, email_confirmed: true })
-          .ilike("email", targetEmail)
-          .then(
-            () => {},
-            () => {}
-          );
+        safeSupabaseUpdate(
+          sb,
+          "auth_users",
+          { password_hash: passwordHash, email_confirmed: true },
+          "email",
+          targetEmail,
+          { caseInsensitive: true }
+        ).catch(() => {});
       }
 
       return NextResponse.json({
@@ -310,13 +313,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (sb) {
-      sb.from("auth_users")
-        .update({ password_hash: passwordHash })
-        .ilike("email", userEmail)
-        .then(
-          () => {},
-          () => {}
-        );
+      safeSupabaseUpdate(
+        sb,
+        "auth_users",
+        { password_hash: passwordHash },
+        "email",
+        userEmail,
+        { caseInsensitive: true }
+      ).catch(() => {});
     }
 
     return NextResponse.json({

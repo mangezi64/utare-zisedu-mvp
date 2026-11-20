@@ -10,6 +10,7 @@ import {
   saveEmployerRegistration,
 } from "@/lib/store";
 import { getSupabaseAdmin, getSupabaseServer, isSupabaseConfigured, supabase } from "@/lib/supabase/client";
+import { isValidUuid, safeSupabaseUpsert } from "@/lib/supabase/safe-write";
 import { resolveBootstrapRole } from "@/lib/bootstrap-roles";
 import { CandidateProfile } from "@/types";
 
@@ -242,6 +243,31 @@ export async function POST(req: NextRequest) {
         verificationStatus: "pending",
       });
       employerId = empRecord.id;
+
+      const sbEmp = getSupabaseServer();
+      if (sbEmp) {
+        await safeSupabaseUpsert(
+          sbEmp,
+          "employer_registrations",
+          {
+            ...(isValidUuid(empRecord.id) ? { id: empRecord.id } : {}),
+            user_id: supabaseUserId || null,
+            company_name: empRecord.companyName,
+            contact_person: empRecord.contactPerson,
+            email: empRecord.email,
+            website: empRecord.website || "",
+            industry: empRecord.industry || "Technology & SaaS",
+            roles_interested: empRecord.rolesInterested,
+            hiring_model: empRecord.hiringModel,
+            estimated_hires: empRecord.estimatedHires,
+            timezone_overlap_needed: empRecord.timezoneOverlapNeeded,
+            additional_notes: empRecord.additionalNotes || "",
+            verification_status: empRecord.verificationStatus,
+            updated_at: new Date().toISOString(),
+          },
+          "email"
+        );
+      }
     } else {
       const city = String(body.city || "Harare");
       const highestQualification = String(
@@ -271,30 +297,30 @@ export async function POST(req: NextRequest) {
       // Sync candidate profile to live Supabase Postgres
       const sb = getSupabaseServer();
       if (sb) {
-        try {
-          await sb.from("candidate_profiles").upsert(
-            {
-              user_id: supabaseUserId,
-              full_name: fullName,
-              email: normalizedEmail,
-              phone: String(body.phone || ""),
-              city,
-              highest_qualification: highestQualification,
-              field_of_study: fieldOfStudy,
-              years_experience: Number(body.yearsExperience) || 0,
-              employment_status: "Not specified",
-              monthly_income_bracket: "Not collected",
-              has_dedicated_laptop: false,
-              primary_device: "Smartphone Only",
-              internet_access_type: "Mobile Data Bundles Only",
-              power_reliability_hours: 6,
-              has_global_payment_rail: false,
-              primary_goal: "International Remote Work",
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "email" }
-          );
-        } catch {}
+        await safeSupabaseUpsert(
+          sb,
+          "candidate_profiles",
+          {
+            user_id: supabaseUserId,
+            full_name: fullName,
+            email: normalizedEmail,
+            phone: String(body.phone || ""),
+            city,
+            highest_qualification: highestQualification,
+            field_of_study: fieldOfStudy,
+            years_experience: Number(body.yearsExperience) || 0,
+            employment_status: "Not specified",
+            monthly_income_bracket: "Not collected",
+            has_dedicated_laptop: false,
+            primary_device: "Smartphone Only",
+            internet_access_type: "Mobile Data Bundles Only",
+            power_reliability_hours: 6,
+            has_global_payment_rail: false,
+            primary_goal: "International Remote Work",
+            updated_at: new Date().toISOString(),
+          },
+          "email"
+        );
       }
     }
 
@@ -321,26 +347,26 @@ export async function POST(req: NextRequest) {
     // Sync auth user to live Supabase Postgres auth_users table
     const sbAuth = getSupabaseServer();
     if (sbAuth) {
-      try {
-        await sbAuth.from("auth_users").upsert(
-          {
-            id: supabaseUserId || authUser.id,
-            email: normalizedEmail,
-            name: fullName,
-            role: assignedRole,
-            password_hash: passwordHash,
-            email_confirmed: isAutoConfirmed,
-            confirmation_token: confirmationToken,
-            employer_id: employerId || null,
-            org_role: accountType === "employer" ? "org_admin" : null,
-            company_name: companyName || null,
-            data_policy_accepted_at: dataPolicyAcceptedAt || null,
-            data_policy_version: dataPolicyVersion || null,
-            last_active_at: authUser.lastActiveAt || new Date().toISOString(),
-          },
-          { onConflict: "email" }
-        );
-      } catch {}
+      await safeSupabaseUpsert(
+        sbAuth,
+        "auth_users",
+        {
+          id: supabaseUserId || authUser.id,
+          email: normalizedEmail,
+          name: fullName,
+          role: assignedRole,
+          password_hash: passwordHash,
+          email_confirmed: isAutoConfirmed,
+          confirmation_token: confirmationToken,
+          employer_id: employerId || null,
+          org_role: accountType === "employer" ? "org_admin" : null,
+          company_name: companyName || null,
+          data_policy_accepted_at: dataPolicyAcceptedAt || null,
+          data_policy_version: dataPolicyVersion || null,
+          last_active_at: authUser.lastActiveAt || new Date().toISOString(),
+        },
+        "email"
+      );
     }
 
     const confirmationPath = `/auth/callback?token=${encodeURIComponent(
@@ -359,8 +385,8 @@ export async function POST(req: NextRequest) {
           ? "Employer account created successfully! You can sign in immediately."
           : "Candidate account created successfully! You can sign in immediately."
         : accountType === "employer"
-        ? "Employer account created! Please confirm your email address to access your Employer Portal."
-        : "Candidate account created! Please confirm your email address before signing in.",
+        ? "Employer account created! Please check your inbox (and Spam/Junk folder) to confirm your email address and access your Employer Portal."
+        : "Candidate account created! Please check your inbox (and Spam/Junk folder) to confirm your email address before signing in.",
     });
   } catch (error) {
     console.error("[API /api/auth/signup POST Error]:", error);

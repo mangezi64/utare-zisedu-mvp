@@ -86,7 +86,8 @@ export const FAQ_ITEMS: FaqItem[] = [
     ],
     bullets: [
       "The Data Policy consent checkbox is intentionally unticked by default—you must review and tick it before registering.",
-      "After submitting, open your inbox (and check your Spam/Junk folder) and click 'Confirm email address' to activate your account.",
+      "After submitting, the signup page opens a dedicated email verification screen showing your registered address, Spam/Junk/Promotions folder tips (look for UTARE ZEM AI / utarezemai@gmail.com), and a Resend button.",
+      "Open your inbox—or check Spam/Junk/Promotions and mark the message as 'Not spam'—then click 'Confirm email address' to activate your account.",
       "When confirmation finishes on the verification page, your session activates and routes you straight to your workspace.",
     ],
     links: [
@@ -109,11 +110,12 @@ export const FAQ_ITEMS: FaqItem[] = [
     question:
       "What should I do if my verification email did not arrive or the confirmation link expired?",
     answer: [
-      "First check your Spam, Junk, or Promotions folders for the confirmation email. If you still cannot find it—or if your link says it is invalid or expired—you can request a fresh confirmation email directly inside the platform without creating a second account.",
+      "First check your Spam, Junk, or Promotions folders for a message from UTARE ZEM AI (utarezemai@gmail.com) and mark it as 'Not spam' so the verification link works cleanly. If you still cannot find it—or if your link says it is invalid or expired—you can request a fresh confirmation email directly inside the platform without creating a second account.",
       "If our cloud email service temporarily hits a sending rate limit during busy periods, UTARE automatically falls back to provisioning or guiding your confirmation safely so signups are not blocked.",
     ],
     bullets: [
-      "On Sign In (/login): if you try signing in before verifying, a 'Resend Confirmation Email' button appears directly inside the notice banner.",
+      "Right after signup (/login or /employers): use the dedicated verification card with your confirmed address, Spam folder instructions, and one-click Resend Verification Email button.",
+      "On Sign In (/login): if you try signing in before verifying, a Spam folder reminder and 'Resend Confirmation Email' button appear directly inside the notice banner.",
       "On the Verification Page (/auth/callback): if a token or link has expired, enter your email in the 'Need a fresh confirmation link?' box and click 'Resend Link'.",
       "If you are in local or demo mode, a direct one-click verification button is displayed on screen so you can verify immediately.",
     ],

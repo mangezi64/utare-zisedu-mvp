@@ -2,7 +2,7 @@
 # UTARE ZEM AI — Team Convenience Commands
 # =============================================================================
 
-.PHONY: help setup up down restart logs shell test lint typecheck ci ci-local install-hooks safe-merge clean
+.PHONY: help setup up down restart logs shell test lint typecheck ci ci-local db-migrate install-hooks safe-merge clean
 
 help:
 	@echo "Utare ZEM AI — Available Commands:"
@@ -15,11 +15,12 @@ help:
 	@echo "  make lint           - Run ESLint inside the Docker container"
 	@echo "  make typecheck      - Run TypeScript compiler checks inside the Docker container"
 	@echo "  make test           - Run Vitest unit & integration tests inside the Docker container"
+	@echo "  make db-migrate     - Run additive non-destructive database schema migration"
 	@echo "  make ci             - Run full CI suite (lint + typecheck + test + build) in container"
 	@echo "  make ci-local       - Run pre-push/pre-merge local CI verification gate"
 	@echo "  make install-hooks  - Enable automatic git pre-push local CI verification hook"
 	@echo "  make safe-merge     - Run local CI, push branch, watch GitHub CI, and merge PR only if green"
-	@echo "  make clean          - Stop containers and remove cached Docker volumes (fresh install)"
+	@echo "  make clean          - Stop containers and remove cached Docker volumes (WARNING: wipes local utare_pgdata)"
 
 setup:
 	@if [ ! -f .env.local ]; then cp .env.example .env.local && echo "Created .env.local from .env.example"; else echo ".env.local already exists"; fi
@@ -47,6 +48,9 @@ typecheck:
 
 test:
 	docker compose exec -T web npm run test:ci
+
+db-migrate:
+	docker compose exec -T web npm run db:migrate:strict
 
 ci:
 	./scripts/pre-push-ci-check.sh

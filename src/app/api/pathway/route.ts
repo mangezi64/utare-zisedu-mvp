@@ -5,6 +5,7 @@ import {
 } from "@/lib/gemini/pathway-engine";
 import { CandidateProfile } from "@/types";
 import { getSupabaseServer } from "@/lib/supabase/client";
+import { safeSupabaseUpsert } from "@/lib/supabase/safe-write";
 import {
   readStore,
   saveCandidateEndToEnd,
@@ -93,30 +94,36 @@ export async function POST(req: NextRequest) {
     const sb = getSupabaseServer();
     if (sb) {
       try {
-        const { data: candidateRow, error: candidateErr } = await sb
-          .from("candidate_profiles")
-          .upsert(
-            {
-              full_name: profile.fullName,
-              email: profile.email,
-              phone: profile.phone,
-              city: profile.city,
-              highest_qualification: profile.highestQualification,
-              field_of_study: profile.fieldOfStudy,
-              years_experience: profile.yearsExperience,
-              employment_status: profile.employmentStatus,
-              monthly_income_bracket: profile.monthlyIncomeBracket,
-              has_dedicated_laptop: profile.hasDedicatedLaptop,
-              primary_device: profile.primaryDevice,
-              internet_access_type: profile.internetAccessType,
-              power_reliability_hours: profile.powerReliabilityHours,
-              has_global_payment_rail: profile.hasGlobalPaymentRail,
-              primary_goal: profile.primaryGoal,
-            },
-            { onConflict: "email" }
-          )
-          .select("id")
-          .single();
+        const { data: candidateRow, error: candidateErr } = await safeSupabaseUpsert(
+          sb,
+          "candidate_profiles",
+          {
+            full_name: profile.fullName,
+            email: profile.email,
+            phone: profile.phone,
+            city: profile.city,
+            highest_qualification: profile.highestQualification,
+            field_of_study: profile.fieldOfStudy,
+            years_experience: profile.yearsExperience,
+            employment_status: profile.employmentStatus || "Not specified",
+            monthly_income_bracket: profile.monthlyIncomeBracket || "Not collected",
+            has_dedicated_laptop: profile.hasDedicatedLaptop,
+            primary_device: profile.primaryDevice,
+            internet_access_type: profile.internetAccessType,
+            power_reliability_hours: profile.powerReliabilityHours,
+            has_global_payment_rail: profile.hasGlobalPaymentRail,
+            primary_goal: profile.primaryGoal,
+            ...(profile.canWorkRemotely !== undefined
+              ? { can_work_remotely: profile.canWorkRemotely }
+              : {}),
+            ...(profile.hubSupportNeed !== undefined
+              ? { hub_support_need: profile.hubSupportNeed }
+              : {}),
+            updated_at: new Date().toISOString(),
+          },
+          "email",
+          { select: "id" }
+        );
 
         if (!candidateErr && candidateRow?.id) {
           savedToSupabase = true;

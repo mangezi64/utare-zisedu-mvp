@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message:
-          "If an unconfirmed account exists for this email, a fresh confirmation link has been sent to your inbox.",
+          "If an unconfirmed account exists for this email, a fresh confirmation link has been sent. Please check your inbox as well as your Spam, Junk, or Promotions folder.",
       });
     }
 

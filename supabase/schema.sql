@@ -326,6 +326,29 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
 
 CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON public.audit_logs (entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.audit_logs (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_employer_registrations_email_lookup ON public.employer_registrations (LOWER(email));
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_indexes
+    WHERE schemaname = 'public'
+      AND tablename = 'employer_registrations'
+      AND indexname = 'idx_employer_registrations_email'
+  ) THEN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM public.employer_registrations
+      GROUP BY email
+      HAVING COUNT(*) > 1
+    ) THEN
+      CREATE UNIQUE INDEX idx_employer_registrations_email ON public.employer_registrations (email);
+    END IF;
+  END IF;
+END $$;
+
+NOTIFY pgrst, 'reload schema';
 
 -- =============================================================================
 -- SEED DATA: Zimbabwe Innovation Hubs, Coaches, and Verified Remote Roles

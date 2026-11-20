@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             error:
-              "Please confirm your email address before signing in. Check your inbox for the verification link.",
+              "Please confirm your email address before signing in. Check your inbox — and your Spam, Junk, or Promotions folder — for the verification link from UTARE ZEM AI.",
             code: "EMAIL_NOT_CONFIRMED",
           },
           { status: 403 }
@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Please confirm your email address before signing in.",
+            "Please confirm your email address before signing in. Check your inbox — and your Spam, Junk, or Promotions folder — for the verification link from UTARE ZEM AI.",
           code: "EMAIL_NOT_CONFIRMED",
           confirmationPath: !isSupabaseConfigured ? confirmationPath : undefined,
         },

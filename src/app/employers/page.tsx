@@ -53,15 +53,46 @@ export default function EmployersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [confirmationPath, setConfirmationPath] = useState<string | null>(null);
+  const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
+  const [resendNotice, setResendNotice] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const pwStrength = validatePassword(formData.password);
+
+  async function handleResendConfirmation(emailToResend: string) {
+    if (!emailToResend.trim()) return;
+    setIsResending(true);
+    setResendNotice(null);
+    try {
+      const res = await fetch("/api/auth/resend-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailToResend.trim().toLowerCase() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.confirmationPath) {
+        setConfirmationPath(data.confirmationPath);
+      }
+      setResendNotice(
+        data.message ||
+          data.error ||
+          "Confirmation email dispatched. Please check your inbox, Spam, or Junk folder."
+      );
+    } catch {
+      setResendNotice("Unable to resend confirmation email right now.");
+    } finally {
+      setIsResending(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setSuccessMessage(null);
     setConfirmationPath(null);
+    setPendingConfirmationEmail(null);
+    setResendNotice(null);
     setErrorMessage(null);
 
     if (formData.password && !pwStrength.isValid) {
@@ -73,6 +104,7 @@ export default function EmployersPage() {
     }
 
     try {
+      const submittedEmail = formData.email.trim().toLowerCase();
       const res = await fetch("/api/employers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -89,6 +121,9 @@ export default function EmployersPage() {
       );
       if (data.confirmationPath) {
         setConfirmationPath(data.confirmationPath);
+      }
+      if (data.requiresEmailConfirmation && !data.confirmationPath) {
+        setPendingConfirmationEmail(data.email || submittedEmail);
       }
       setFormData({
         companyName: "",
@@ -279,6 +314,31 @@ export default function EmployersPage() {
                     Confirm Email &amp; Open Employer Portal{" "}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
+                </div>
+              )}
+              {pendingConfirmationEmail && !confirmationPath && (
+                <div className="space-y-2 pt-1">
+                  <p className="font-normal text-[#2e4a3d]">
+                    Can&apos;t see the email in your inbox? Check your{" "}
+                    <strong>Spam, Junk, or Promotions</strong> folder for a message from{" "}
+                    <strong>UTARE ZEM AI</strong> (<code>utarezemai@gmail.com</code>), mark it
+                    as &ldquo;Not spam&rdquo;, and click the confirmation link.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={isResending}
+                      onClick={() => handleResendConfirmation(pendingConfirmationEmail)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#08785f]/30 bg-white px-3 py-1.5 text-[11.5px] font-bold text-[#08785f] hover:bg-[#f2fbf7] disabled:opacity-60 transition"
+                    >
+                      {isResending ? "Sending..." : "Resend Confirmation Email"}
+                    </button>
+                    {resendNotice && (
+                      <span className="text-[11px] font-medium text-[#1b4d3e]">
+                        {resendNotice}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

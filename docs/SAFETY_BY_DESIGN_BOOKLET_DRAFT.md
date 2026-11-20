@@ -1,6 +1,6 @@
 # Kutunga Safety by Design — Complete Filled Booklet Draft (UTARE ZEM AI)
 
-Use this ready-to-paste draft to fill in the interactive **Safety by Design** PDF booklet. Every claim below is verified directly against our **UTARE User Journey & Economic Mobility Survey** (`N=23` + `Pulse Check Munashe`), our live platform store (`111` user accounts / `125` candidate profiles / `83` employer records / `195` applications), live accessibility testing (`Nyasha Gande`, Android TalkBack), and our verified codebase (`13` test suites, `71/71` passing tests).
+Use this ready-to-paste draft to fill in the interactive **Safety by Design** PDF booklet. Every claim below is verified directly against our **UTARE User Journey & Economic Mobility Survey** (`N=23` + `Pulse Check Munashe`), our live platform store (`111` user accounts / `125` candidate profiles / `83` employer records / `195` applications), live accessibility testing (`Nyasha Gande`, Android TalkBack), and our verified codebase (`14` test suites, `76/76` passing tests).
 
 ---
 
@@ -69,7 +69,7 @@ Use this ready-to-paste draft to fill in the interactive **Safety by Design** PD
 - `src/app/data-policy/page.tsx` (`/data-policy`, linked in global footer & signup)
 - `src/components/DeleteAccountPanel.tsx` & `DELETE /api/auth/account`
 - `src/app/api/jobs/report/route.ts` & `src/lib/store.ts` (`1-year` + `3-email` retention enforcement)
-- `src/__tests__/area-security.test.ts`, `area-flows.test.ts`, `area-compliance.test.ts` (`71/71` tests passing across 13 suites)
+- `src/__tests__/area-security.test.ts`, `area-flows.test.ts`, `area-compliance.test.ts`, `db-migration-and-auth-fixes.test.ts` (`76/76` tests passing across 14 suites)
 
 ---
 
@@ -88,6 +88,7 @@ Use this ready-to-paste draft to fill in the interactive **Safety by Design** PD
   1. **TalkBack Explore Opportunities & Filter Focus (`Isithunzi` / `Palaver`):** Nyasha reported: *"Paarea yekusearcher paexplore opportunities ndopanodakuzivikanwa what u have coz what i searched was not there pazobuda technology research professional pandaclicker what i wanted it failed to respond"*. **Fix shipped:** Added a `"Currently Available on UTARE"` industry summary with counts (`aria-pressed`), expanded search matching across categories/industries/payment rails, added `aria-live="polite"` result count announcements, fixed missing `industry` filter mismatches, and added dialog focus management (`tabIndex={-1}` heading focus + `Escape`/close focus restoration) plus direct `/jobs?jobId=` pre-selection.
   2. **Weak Password Missing-Rule Feedback (`Ma'at`):** Testers creating accounts with 3/4 password rules satisfied couldn't tell why the disabled button wouldn't submit → removed premature disable lock and added **red box + red missing-rule highlight** (`PasswordStrengthBox.tsx`).
   3. **Remote Job Scam Reporting (`Ma'at`):** Survey/pulse tester flagged global remote scams → built immediate off-platform **Report** flow for Superusers.
+  4. **Email Verification Clarity, Employer Signup Parity & Schema Resilience (`Bwami` / `Ubuntu`):** Users missing confirmation emails needed clear Spam/Junk folder instructions and reliable employer-page verification → added a dedicated post-signup verification view with prominent Spam/Junk/Promotions guidance (`utarezemai@gmail.com`) across `/login`, `/employers`, `/auth/callback`, and auth APIs, wired `/api/employers` to Supabase Auth confirmation, and automated additive schema sync on release (`scripts/migrate-db.mjs` + `safeSupabaseUpsert`).
 - **Beyond compliance:** Respects dignity (self-taught & vocational trades included alongside degrees; blind screen-reader users able to explore & apply independently), prevents employer over-reach, and protects inactive users with 3 warnings before deletion. Unintended consequence watched: English-only UI can exclude non-English-fluent rural youth (logged honestly on Page 13).
 
 ---
@@ -111,5 +112,5 @@ Use this ready-to-paste draft to fill in the interactive **Safety by Design** PD
 
 1. **Language Access (`Jeliya`):** The MVP is currently English-only because target international remote employers require English. *Plan to close:* Add optional Shona and Ndebele audio onboarding guides post-MVP.
 2. **Connectivity & Device Access (`Harambee`):** As a web app, UTARE runs on any internet-connected browser (including shared café PCs and low-cost phones) and routes device-constrained youth to Partner Hubs, but does not yet work offline or via SMS/WhatsApp bot. *Plan to close:* Build lightweight PWA offline caching and secure WhatsApp/USSD status notifications in a post-MVP phase, plus add a shared-computer sign-out reminder.
-3. **Automated Inactivity & Breach Email Transport (`Ubuntu`):** The 1-year + 3-email retention logic and audit logs are enforced in the database/backend, and production SMTP email dispatch (e.g., Resend/Custom SMTP) must be verified active in live hosting so all 3 automated warning emails deliver reliably.
+3. **Transactional Email Relay & Automated Retention/Breach Dispatch (`Ubuntu`):** Custom SMTP (`utarezemai@gmail.com` via `smtp.gmail.com`) is currently configured in Supabase Auth for account verification alongside prominent Spam/Junk folder guidance in the UI, while 1-year + 3-email retention tracking and audit logs run in the backend. *Plan to close:* Migrate SMTP from personal Gmail to a dedicated transactional email provider (e.g., Resend or Brevo with verified SPF/DKIM/DMARC records) so verification links and automated 1-year retention/breach notices land reliably in primary inboxes without spam filtering.
 4. **Ongoing Youth Usability Verification (`Palaver`):** Continue documenting live smartphone/mobile-data tests with young testers (and close the loop with **Nyasha Gande** on the updated `/opportunities` TalkBack flow) before Pitch Day (5 Dec).

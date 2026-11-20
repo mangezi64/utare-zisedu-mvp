@@ -46,7 +46,7 @@ Every team member has clear, measurable ownership of deliverables required befor
 
 ### B. Amanda — UI/UX Architecture & Database Setup Lead
 - [ ] **Frontend Polish & Visual Hierarchy:** Fine-tune drawer auto-scrolling, highlight rings, and card transitions across the candidate workspace and employer portal.
-- [ ] **Database Schema Audit:** Verify that all 9 tables in `supabase/schema.sql` have clean index coverage and that Row Level Security (RLS) policies protect candidate privacy.
+- [x] **Database Schema Audit & Release Auto-Migration:** Verified all 14 tables and indexes in [`supabase/schema.sql`](../supabase/schema.sql) and [`supabase/additive-schema.sql`](../supabase/additive-schema.sql), added `scripts/migrate-db.mjs` pre-build auto-migration on release, and hardened runtime writes with `safeSupabaseUpsert`. (Note: verify `SUPABASE_DB_URL` is set in Vercel to auto-sync live Supabase Cloud on every deploy and review RLS policy coverage.)
 - [ ] **Accessibility & Colorblind Mode Verification:** Test high-contrast UI modes and ensure WCAG 2.1 AAA color contrast compliance across all forms and text cards.
 - [ ] **Assistive Audio Flow Polish:** Verify smooth triggering and playback of assistive audio walkthroughs for low-literacy or visually fatigued users.
 

@@ -156,7 +156,7 @@ function AuthCallbackContent() {
       }
       setResendStatus(
         data.message ||
-          "A fresh confirmation link has been sent to your email address."
+          "A fresh confirmation link has been sent. Please check your inbox as well as your Spam, Junk, or Promotions folder."
       );
     } catch {
       setResendError("Network error while resending confirmation email.");
@@ -228,6 +228,9 @@ function AuthCallbackContent() {
                 >
                   Need a fresh confirmation link?
                 </label>
+                <p className="text-[11px] text-slate-600">
+                  Be sure to check your <strong>Spam, Junk, or Promotions</strong> folder for emails from <strong>UTARE ZEM AI</strong> (<code>utarezemai@gmail.com</code>).
+                </p>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     id="resend-email-input"

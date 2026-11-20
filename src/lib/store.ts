@@ -38,6 +38,7 @@ import {
 } from "@/lib/mock-data";
 import { query } from "@/lib/db";
 import { getSupabaseAdmin, getSupabaseServer } from "@/lib/supabase/client";
+import { isValidUuid, safeSupabaseUpsert } from "@/lib/supabase/safe-write";
 
 export interface StoredAuthUser {
   id: string;
@@ -332,33 +333,30 @@ function syncAuthUserToPostgres(user: StoredAuthUser) {
 
   const sb = getSupabaseServer();
   if (sb) {
-    sb.from("auth_users")
-      .upsert(
-        {
-          id: user.id,
-          email: user.email.toLowerCase(),
-          name: user.name,
-          role: user.role,
-          password_hash: user.passwordHash,
-          email_confirmed: user.emailConfirmed,
-          confirmation_token: user.confirmationToken || null,
-          employer_id: user.employerId || null,
-          org_role: user.orgRole || null,
-          company_name: user.companyName || null,
-          created_at: user.createdAt,
-          last_active_at: user.lastActiveAt || user.createdAt,
-          inactivity_notices_sent: user.inactivityNoticesSent ?? 0,
-          last_inactivity_notice_at: user.lastInactivityNoticeAt || null,
-          remain_confirmed_at: user.remainConfirmedAt || null,
-          data_policy_accepted_at: user.dataPolicyAcceptedAt || null,
-          data_policy_version: user.dataPolicyVersion || null,
-        },
-        { onConflict: "email" }
-      )
-      .then(
-        () => {},
-        () => {}
-      );
+    safeSupabaseUpsert(
+      sb,
+      "auth_users",
+      {
+        id: user.id,
+        email: user.email.toLowerCase(),
+        name: user.name,
+        role: user.role,
+        password_hash: user.passwordHash,
+        email_confirmed: user.emailConfirmed,
+        confirmation_token: user.confirmationToken || null,
+        employer_id: user.employerId || null,
+        org_role: user.orgRole || null,
+        company_name: user.companyName || null,
+        created_at: user.createdAt,
+        last_active_at: user.lastActiveAt || user.createdAt,
+        inactivity_notices_sent: user.inactivityNoticesSent ?? 0,
+        last_inactivity_notice_at: user.lastInactivityNoticeAt || null,
+        remain_confirmed_at: user.remainConfirmedAt || null,
+        data_policy_accepted_at: user.dataPolicyAcceptedAt || null,
+        data_policy_version: user.dataPolicyVersion || null,
+      },
+      "email"
+    ).catch(() => {});
   }
 }
 
@@ -894,32 +892,41 @@ function syncCandidateToPostgres(profile: CandidateProfile) {
 
   const sb = getSupabaseServer();
   if (sb) {
-    sb.from("candidate_profiles")
-      .upsert(
-        {
-          full_name: fullName,
-          email,
-          phone,
-          city,
-          highest_qualification: qual,
-          field_of_study: field,
-          years_experience: exp,
-          employment_status: empStatus,
-          monthly_income_bracket: income,
-          has_dedicated_laptop: hasLaptop,
-          primary_device: device,
-          internet_access_type: internet,
-          power_reliability_hours: power,
-          has_global_payment_rail: paymentRail,
-          primary_goal: goal,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "email" }
-      )
-      .then(
-        () => {},
-        () => {}
-      );
+    safeSupabaseUpsert(
+      sb,
+      "candidate_profiles",
+      {
+        full_name: fullName,
+        email,
+        phone,
+        city,
+        highest_qualification: qual,
+        field_of_study: field,
+        years_experience: exp,
+        employment_status: empStatus,
+        monthly_income_bracket: income,
+        has_dedicated_laptop: hasLaptop,
+        primary_device: device,
+        internet_access_type: internet,
+        power_reliability_hours: power,
+        has_global_payment_rail: paymentRail,
+        primary_goal: goal,
+        ...(profile.canWorkRemotely !== undefined
+          ? { can_work_remotely: profile.canWorkRemotely }
+          : {}),
+        ...(profile.hubSupportNeed !== undefined
+          ? { hub_support_need: profile.hubSupportNeed }
+          : {}),
+        ...(profile.avatarDataUrl !== undefined
+          ? { avatar_data_url: profile.avatarDataUrl }
+          : {}),
+        ...(profile.includePhotoOnCv !== undefined
+          ? { include_photo_on_cv: profile.includePhotoOnCv }
+          : {}),
+        updated_at: new Date().toISOString(),
+      },
+      "email"
+    ).catch(() => {});
   }
 }
 
@@ -980,6 +987,42 @@ function syncJobApplicationToPostgres(app: JobApplicationRecord) {
       ]
     ).catch(() => {});
   });
+
+  const sb = getSupabaseServer();
+  if (sb) {
+    safeSupabaseUpsert(
+      sb,
+      "job_applications",
+      {
+        id: app.id,
+        candidate_id: app.candidateId,
+        candidate_name: app.candidateName,
+        candidate_email: app.candidateEmail || null,
+        candidate_city: app.candidateCity || null,
+        candidate_qualification: app.candidateQualification || null,
+        candidate_field_of_study: app.candidateFieldOfStudy || null,
+        candidate_skills: app.candidateSkills || [],
+        candidate_readiness_tier: app.candidateReadinessTier || null,
+        job_id: app.jobId,
+        job_title: app.jobTitle,
+        company: app.company,
+        employer_id: app.employerId || null,
+        tailored_resume_pitch: app.tailoredResumePitch,
+        generated_cv: app.generatedCv || null,
+        generated_cover_letter: app.generatedCoverLetter || null,
+        attached_document_ids: app.attachedDocumentIds || [],
+        status: app.status || "submitted",
+        shared_with_employer: app.sharedWithEmployer !== false,
+        consent_timestamp: app.consentTimestamp || null,
+        employer_feedback_note: app.employerFeedbackNote || null,
+        updated_at: app.updatedAt || new Date().toISOString(),
+        updated_by: app.updatedBy || null,
+        status_history: app.statusHistory || [],
+        applied_at: app.appliedAt,
+      },
+      "id"
+    ).catch(() => {});
+  }
 }
 
 function syncHubToPostgres(hub: InnovationHub) {
@@ -1856,6 +1899,32 @@ export function saveEmployerRegistration(
     ]
   ).catch(() => {});
 
+  const sb = getSupabaseServer();
+  if (sb) {
+    safeSupabaseUpsert(
+      sb,
+      "employer_registrations",
+      {
+        ...(isValidUuid(record.id) ? { id: record.id } : {}),
+        user_id: record.userId || null,
+        company_name: record.companyName,
+        contact_person: record.contactPerson,
+        email: record.email,
+        website: record.website || "",
+        industry: record.industry || "Technology & SaaS",
+        roles_interested: record.rolesInterested || [],
+        hiring_model: record.hiringModel || "100% Remote Contract",
+        estimated_hires: record.estimatedHires || 1,
+        timezone_overlap_needed:
+          record.timezoneOverlapNeeded || "CAT (GMT+2) / UK-EU overlap",
+        additional_notes: record.additionalNotes || "",
+        verification_status: record.verificationStatus || "pending",
+        updated_at: new Date().toISOString(),
+      },
+      "email"
+    ).catch(() => {});
+  }
+
   return record;
 }
 
@@ -2171,31 +2240,28 @@ export async function addCandidateDocument(params: {
   // Sync to Supabase
   const sb = getSupabaseServer();
   if (sb) {
-    sb.from("candidate_documents")
-      .upsert(
-        {
-          id: record.id,
-          user_id: record.userId || null,
-          candidate_id: record.candidateId || null,
-          candidate_email: record.candidateEmail,
-          category: record.category,
-          title: record.title,
-          issuer: record.issuer || null,
-          issue_year: record.issueYear || null,
-          file_name: record.fileName,
-          mime_type: record.mimeType,
-          file_size_bytes: record.fileSizeBytes,
-          data_url: record.dataUrl,
-          version: record.version,
-          is_latest: record.isLatest,
-          created_at: record.createdAt,
-        },
-        { onConflict: "id" }
-      )
-      .then(
-        () => {},
-        () => {}
-      );
+    safeSupabaseUpsert(
+      sb,
+      "candidate_documents",
+      {
+        id: record.id,
+        user_id: record.userId || null,
+        candidate_id: record.candidateId || null,
+        candidate_email: record.candidateEmail,
+        category: record.category,
+        title: record.title,
+        issuer: record.issuer || null,
+        issue_year: record.issueYear || null,
+        file_name: record.fileName,
+        mime_type: record.mimeType,
+        file_size_bytes: record.fileSizeBytes,
+        data_url: record.dataUrl,
+        version: record.version,
+        is_latest: record.isLatest,
+        created_at: record.createdAt,
+      },
+      "id"
+    ).catch(() => {});
   }
 
   return record;
@@ -2403,30 +2469,27 @@ export async function saveCandidateCvArtifact(params: {
 
   const sb = getSupabaseServer();
   if (sb) {
-    sb.from("candidate_cv_artifacts")
-      .upsert(
-        {
-          id: artifact.id,
-          user_id: artifact.userId || null,
-          candidate_id: artifact.candidateId || null,
-          candidate_email: artifact.candidateEmail,
-          job_id: artifact.jobId || null,
-          job_title: artifact.jobTitle,
-          company: artifact.company,
-          version: artifact.version,
-          generated_cv: artifact.generatedCv,
-          generated_cover_letter: artifact.generatedCoverLetter,
-          source_details: artifact.sourceDetails || null,
-          avatar_data_url: artifact.avatarDataUrl || null,
-          include_photo: Boolean(artifact.includePhoto),
-          created_at: artifact.createdAt,
-        },
-        { onConflict: "id" }
-      )
-      .then(
-        () => {},
-        () => {}
-      );
+    safeSupabaseUpsert(
+      sb,
+      "candidate_cv_artifacts",
+      {
+        id: artifact.id,
+        user_id: artifact.userId || null,
+        candidate_id: artifact.candidateId || null,
+        candidate_email: artifact.candidateEmail,
+        job_id: artifact.jobId || null,
+        job_title: artifact.jobTitle,
+        company: artifact.company,
+        version: artifact.version,
+        generated_cv: artifact.generatedCv,
+        generated_cover_letter: artifact.generatedCoverLetter,
+        source_details: artifact.sourceDetails || null,
+        avatar_data_url: artifact.avatarDataUrl || null,
+        include_photo: Boolean(artifact.includePhoto),
+        created_at: artifact.createdAt,
+      },
+      "id"
+    ).catch(() => {});
   }
 
   return artifact;
@@ -2580,26 +2643,23 @@ export function recordAuditLog(params: {
 
   const sb = getSupabaseServer();
   if (sb) {
-    sb.from("audit_logs")
-      .upsert(
-        {
-          id: entry.id,
-          entity_type: entry.entityType,
-          entity_id: entry.entityId,
-          action: entry.action,
-          actor_email: entry.actorEmail,
-          actor_role: entry.actorRole,
-          previous_value: entry.previousValue || null,
-          new_value: entry.newValue || null,
-          summary: entry.summary,
-          created_at: entry.createdAt,
-        },
-        { onConflict: "id" }
-      )
-      .then(
-        () => {},
-        () => {}
-      );
+    safeSupabaseUpsert(
+      sb,
+      "audit_logs",
+      {
+        id: entry.id,
+        entity_type: entry.entityType,
+        entity_id: entry.entityId,
+        action: entry.action,
+        actor_email: entry.actorEmail,
+        actor_role: entry.actorRole,
+        previous_value: entry.previousValue || null,
+        new_value: entry.newValue || null,
+        summary: entry.summary,
+        created_at: entry.createdAt,
+      },
+      "id"
+    ).catch(() => {});
   }
 
   return entry;

@@ -116,15 +116,17 @@ utare-zisedu-mvp/
 │   └── pre-push                   # Automatic local 5-gate CI check before every git push
 ├── scripts/
 │   ├── manage-user.mjs            # Backend CLI to create/promote/demote admin, superuser & employer accounts
-│   ├── pre-push-ci-check.sh       # Runs ESLint, Typecheck, Vitest (22 tests) & Next.js build in Docker
+│   ├── migrate-db.mjs             # Automatic release-time & CLI additive database schema migration runner
+│   ├── pre-push-ci-check.sh       # Runs ESLint, Typecheck, Vitest (76 tests) & Next.js build in Docker
 │   └── safe-pr-merge.sh           # Runs local CI + remote GitHub Actions check before merging a PR
 ├── Dockerfile.dev                 # Development container (Node 20 LTS Alpine + hot-reload polling)
 ├── Dockerfile                     # Multi-stage production container build
 ├── docker-compose.yml             # Orchestrates web container and postgres:16-alpine db container
-├── Makefile                       # Shortcuts: make up, make ci-local, make safe-merge, make install-hooks
-├── .env.example                   # Template for Gemini AI, PostgreSQL & Auth environment variables
+├── Makefile                       # Shortcuts: make up, make db-migrate, make ci-local, make safe-merge, make install-hooks
+├── .env.example                   # Template for Gemini AI, PostgreSQL, Supabase & Auth environment variables
 ├── supabase/
-│   └── schema.sql                 # Full PostgreSQL schema with 9 tables + Zimbabwe Hubs & Coaches seed data
+│   ├── schema.sql                 # Full PostgreSQL schema (14 tables) + Zimbabwe Hubs, Courses, Coaches & Jobs seed data
+│   └── additive-schema.sql        # DDL-only non-destructive schema applied automatically on release (`npm run build`)
 ├── index.html                     # Standalone frontend walkthrough entry point
 ├── app.js                         # Walkthrough client logic connected to Next.js REST API
 ├── styles.css                     # Faith & Amanda's core CSS design system
@@ -133,7 +135,7 @@ utare-zisedu-mvp/
 ├── public/
 │   └── demo/                      # Static walkthrough hosted at /demo/index.html
 └── src/
-    ├── __tests__/                 # 5 Vitest suites (22 automated unit & integration tests)
+    ├── __tests__/                 # 14 Vitest suites (76 automated unit & integration tests)
     ├── middleware.ts              # Server-side route protection for /admin, /employer, /account, /pathway
     ├── types/
     │   └── index.ts               # Core TypeScript interfaces for all platform modules & roles
@@ -142,8 +144,13 @@ utare-zisedu-mvp/
     │   ├── auth-guard.ts          # Server-side role & admin/employer authorization guards
     │   ├── password-hash.ts       # PBKDF2-SHA256 password hashing and constant-time verification
     │   ├── validation.ts          # Email format/disposable/MX checks & password strength validator
-    │   ├── db.ts                  # PostgreSQL connection pool with graceful offline fallback
-    │   ├── store.ts               # Two-way sync: PostgreSQL DB + serverless-safe file/memory store
+    │   ├── faq-data.ts            # Searchable FAQ knowledge base & per-route quick-answers helper
+    │   ├── db-schema.ts           # Shared 14-table non-destructive additive DDL & expected table list
+    │   ├── db.ts                  # PostgreSQL connection pool (SSL-ready) & idempotent runtime schema sync
+    │   ├── supabase/
+    │   │   ├── client.ts          # Browser, server & Service-Role Supabase clients
+    │   │   └── safe-write.ts      # Schema-drift-resilient Supabase upsert/update helpers
+    │   ├── store.ts               # Two-way sync: PostgreSQL/Supabase DB + serverless-safe store
     │   ├── view-mode-context.tsx  # Global authenticated session & role state provider
     │   ├── mock-data.ts           # Empirical survey benchmarks, 6 archetypes, hubs, coaches & jobs
     │   ├── gemini/
@@ -164,6 +171,8 @@ utare-zisedu-mvp/
         ├── page.tsx               # Executive Overview with ZW radar map & empirical survey data
         ├── about/page.tsx         # About Us, "Six young people" story, values band & 6-person team
         ├── how-it-works/page.tsx  # 4-Stage Mobility Journey Walkthrough
+        ├── faq/page.tsx           # Searchable Help Center & Platform FAQ
+        ├── data-policy/page.tsx   # Zimbabwe Cyber & Data Protection Act [Chapter 12:07] Policy
         ├── opportunities/page.tsx # 4-Way Filterable Opportunities with detail modal & CV Studio links
         ├── skills/page.tsx        # Skills Development Directory with interactive lesson progress modal
         ├── employers/page.tsx     # For Employers & Partners + PostgreSQL / Portal enrolment form
@@ -182,8 +191,15 @@ utare-zisedu-mvp/
 
 ---
 
-## 5. Local CI & Safe PR Merge Workflow for Contributors
+## 5. Automatic Database Migrations & Local CI Workflow
 
+### Automatic Release-Time Database Schema Sync
+Every release (`npm run build` -> `node scripts/migrate-db.mjs && next build`) automatically runs the strictly additive DDL in [`supabase/additive-schema.sql`](supabase/additive-schema.sql) before compiling Next.js:
+- **Cloud / Vercel Releases:** Set `SUPABASE_DB_URL` (Supabase Dashboard → Connect → Session Pooler URI) or `SUPABASE_ACCESS_TOKEN` in Vercel Environment Variables so all 14 tables, new columns, indexes, and `NOTIFY pgrst, 'reload schema'` apply automatically on every deploy.
+- **Local Docker / Manual Sync:** Run `make db-migrate` (or `npm run db:migrate:strict`).
+- **Runtime Protection:** [`src/lib/db.ts`](src/lib/db.ts) auto-applies `ADDITIVE_SCHEMA_DDL` on first query with remote SSL support, while [`src/lib/supabase/safe-write.ts`](src/lib/supabase/safe-write.ts) gracefully protects live Supabase writes against schema-cache drift.
+
+### Local CI & Safe PR Merge Workflow
 To guarantee `main` never breaks on merge:
 - **Run full CI locally:**
   ```bash
@@ -216,7 +232,7 @@ To guarantee `main` never breaks on merge:
 - **[Week 6 Pitch Deck & 4-Minute Speaker Script](docs/PITCH_DECK_WEEK6.md)** — Complete 10-slide presentation deck, stopwatch timing cues, and word-for-word storyteller script.
 - **[Uniform Team FAQ & Judge Defense Guide](docs/TEAM_FAQ_UNIFORM.md)** — Standardized 30s/60s answers, judge trap rebuttals, and rapid Q&A cheat sheet.
 - **[Coach Catherine Action Items & Sprint Matrix](docs/COACH_CATHERINE_ACTION_ITEMS.md)** — Week 6 to Week 7 deliverables matrix, 7-day countdown, and risk register.
-- **[Release Notes (`v2.2.0`)](RELEASE_NOTES.md)** — Latest platform features, Zimbabwe map radar, Flow Video Walkthrough, and live DB synchronization details.
+- **[Release Notes (`v2.3.0`)](RELEASE_NOTES.md)** — Latest platform features, email verification UX & spam guidance, automatic release schema migrations, Zimbabwe map radar, and Flow Video Walkthrough.
 - **[Container & Setup Guide](docs/CONTAINER_AND_SETUP_GUIDE.md)** — How to run, debug, and manage the Docker environment on macOS, Windows (WSL2), and Linux.
 - **[Internal Role Provisioning & Test Accounts](docs/TEST_ACCOUNTS.md)** — How to provision `superuser`, `admin`, and `employer` roles via the UI or `scripts/manage-user.mjs`.
 - **[CI/CD & Branch Protection Guide](docs/CI_TESTING_AND_BRANCH_PROTECTION.md)** — Automated lint, typecheck, Vitest suites, and PR governance.

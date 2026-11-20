@@ -9,7 +9,7 @@ This document provides the complete architectural layout of `utare-zisedu-mvp`�
 ```mermaid
 flowchart TB
     subgraph Client["Client Layer (Mobile-First Android & Desktop Browsers)"]
-        UI["Next.js 14 App Router UI (16 Pages + Tailwind + Global CSS)"]
+        UI["Next.js 14 App Router UI (18 Pages + Tailwind + Global CSS)"]
         Assistive["Assistive Suite (AudioExplainer, AccessibilityControls, FlowVideoWalkthrough)"]
         LocalCache["Optimistic Session Cache (localStorage: utare_cached_session)"]
     end
@@ -74,17 +74,17 @@ DATA_DIR      = IS_SERVERLESS ? "/tmp/.data" : "<repo>/.data"
 2. **How the App Guarantees Durability on Vercel:**
    - **Service-Role Server Hydration (`getSupabaseServer()` in `src/lib/supabase/client.ts`):** All critical endpoints (`/api/auth/login`, `/api/auth/signup`, `/api/auth/session`, `/api/auth/profile`, `/api/auth/attachments`, `/api/pathway`, `/api/jobs`, `/api/hubs`, `/api/employers`, `/api/employer/portal`, `/api/admin/candidates`, `/api/admin/users`) use the **Supabase Service-Role client** (`SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_SECRET_KEY`), bypassing browser-side Row Level Security (RLS) on trusted server routes so cold-started lambdas immediately see all live records.
    - **Async DB Lookup Helpers (`findAuthUserByEmailFromDb`, `findCandidateByEmailAsync`, `findEmployerByEmailAsync`):** When a warm lambda cache (`inMemoryStore` / `/tmp/.data`) misses a user or candidate after a cold start, these helpers hydrate the record directly from Supabase Postgres and re-cache it in memory.
-   - **Two-Way Persistence Sync:** Writes update the local/warm store (`writeStore`) and sync to Supabase PostgREST and/or direct PostgreSQL (`src/lib/db.ts`).
-   - **Idempotent Auto-Migrations (`ensureDatabaseSchema()` in `src/lib/db.ts`):** When a direct Postgres connection string (`DATABASE_URL`, `POSTGRES_URL`, or `SUPABASE_DB_URL`) is configured, the first query per cold start runs non-destructive `CREATE TABLE IF NOT EXISTS` and `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` statements so newly added tables (`candidate_documents`, `candidate_cv_artifacts`, `audit_logs`) and columns are always present without manual downtime.
+   - **Two-Way Persistence Sync & Schema-Drift Protection:** Writes update the local/warm store (`writeStore`) and sync to Supabase PostgREST (via `safeSupabaseUpsert` / `safeSupabaseUpdate` in `src/lib/supabase/safe-write.ts`, which automatically strip pending migration columns on `PGRST204`/`42703` or fall back on `42P10`) and direct PostgreSQL (`src/lib/db.ts`).
+   - **Automatic Release-Time & Runtime Migrations (`scripts/migrate-db.mjs` & `ensureDatabaseSchema()` in `src/lib/db.ts`):** `npm run build` automatically executes `node scripts/migrate-db.mjs` against `supabase/additive-schema.sql` (using `SUPABASE_DB_URL` / `POSTGRES_URL` with remote SSL, or optional `SUPABASE_ACCESS_TOKEN`), creating any missing tables/columns across all 14 tables and issuing `NOTIFY pgrst, 'reload schema';`. At runtime, `src/lib/db.ts` enforces the same `ADDITIVE_SCHEMA_DDL` (`src/lib/db-schema.ts`) on first query with remote SSL auto-detection and a 60-second retry cooldown.
 
-### C. Origin Resolution & Email Confirmation on Vercel
-In `src/app/api/auth/resend-confirmation/route.ts` and `src/app/api/auth/signup/route.ts`, confirmation redirect URLs (`<origin>/auth/callback`) dynamically resolve in priority order:
+### C. Origin Resolution, Custom SMTP & Email Confirmation on Vercel
+In `src/app/api/auth/resend-confirmation/route.ts`, `src/app/api/auth/signup/route.ts`, and `src/app/api/employers/route.ts`, confirmation redirect URLs (`<origin>/auth/callback`) dynamically resolve in priority order:
 1. `origin` request header
 2. `x-forwarded-host` + `x-forwarded-proto` headers (Vercel's reverse proxy headers)
 3. `https://${process.env.VERCEL_URL}` (Vercel's built-in deployment host variable)
 4. `NEXT_PUBLIC_APP_URL` → fallback `http://localhost:3000`
 
-Additionally, if Supabase's free-tier email mailer hits its rate limit (`429` / `"rate limit"`), `/api/auth/signup` automatically falls back to `supabaseAdmin.auth.admin.createUser({ email_confirm: true })` so candidate and employer signups never stall during live demos or user testing.
+Custom SMTP is active in Supabase Auth (`utarezemai@gmail.com` via `smtp.gmail.com:587`), paired with a dedicated post-signup verification view on `/login`, `/employers`, `/auth/callback`, and backend auth APIs reminding users to check **Spam, Junk, or Promotions** folders (and mark as *"Not spam"*). For production scale and maximum inbox placement, migrating SMTP from personal Gmail to a dedicated transactional relay (e.g., Resend or Brevo) is recommended. Additionally, if Supabase's email mailer returns a rate-limit (`429`), `/api/auth/signup` and `/api/employers` automatically fall back to `supabaseAdmin.auth.admin.createUser({ email_confirm: true })` so candidate and employer signups never stall during live demos or user testing.
 
 ### D. Vercel Environment Variables Reference
 Configure these in **Vercel Dashboard → Project Settings → Environment Variables**:
@@ -94,7 +94,8 @@ Configure these in **Vercel Dashboard → Project Settings → Environment Varia
 | `NEXT_PUBLIC_SUPABASE_URL` | **Yes (Prod)** | Supabase project URL (`https://<ref>.supabase.co`) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` *(or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`)* | **Yes (Prod)** | Public anon/publishable key for Supabase Auth client |
 | `SUPABASE_SERVICE_ROLE_KEY` *(or `SUPABASE_SECRET_KEY`)* | **Yes (Prod)** | Server-only secret key for RLS-bypassed hydration & admin auth actions |
-| `DATABASE_URL` *(or `POSTGRES_URL` / `SUPABASE_DB_URL`)* | Recommended | Direct Postgres connection string for `pg` Pool (`src/lib/db.ts`) & auto-migrations |
+| `SUPABASE_DB_URL` *(or `POSTGRES_URL` / `POSTGRES_URL_NON_POOLING` / `DATABASE_URL`)* | **Recommended (Prod)** | Cloud Postgres Session Pooler / Direct URI used by `scripts/migrate-db.mjs` during `npm run build` and `src/lib/db.ts` (`ssl` auto-enabled for remote hosts) |
+| `SUPABASE_ACCESS_TOKEN` | Optional | Fallback Supabase Personal Access Token for Management API DDL sync if `SUPABASE_DB_URL` is unset |
 | `AUTH_SESSION_SECRET` | **Yes (Prod)** | Long random secret signing `utare_session` HMAC-SHA256 cookies across Edge & Node |
 | `GEMINI_API_KEY` | Recommended | Google AI Studio key (`@google/genai`); falls back to deterministic engine if unset |
 | `GEMINI_MODEL` | Optional | Defaults to `gemini-2.5-flash` (switchable to `gemini-2.5-pro` in `/admin`) |
@@ -172,13 +173,15 @@ sequenceDiagram
 
 ## 5. Complete Application Surface Map
 
-### A. Next.js App Router Pages (`src/app/*/page.tsx` — 16 Routes)
+### A. Next.js App Router Pages (`src/app/*/page.tsx` — 18 Routes)
 
 | Route | Role / Access | Primary Purpose |
 | :--- | :--- | :--- |
 | `/` | Public | Executive Overview, Zimbabwe map radar, empirical survey metrics ($N=23$), 4-stage journey, and Demo launcher |
 | `/about` | Public | *"Six young people, one shared challenge"* story, Mission/Vision/Proposal, and 6-person team roster |
 | `/how-it-works` | Public | Interactive 4-stage mobility walkthrough linking directly into live modules |
+| `/faq` | Public | Searchable, 7-category Help Center & Platform FAQ (`src/lib/faq-data.ts`) |
+| `/data-policy` | Public | Zimbabwe Cyber & Data Protection Act [Chapter 12:07] / SI 155 of 2024 Privacy & Retention Policy |
 | `/opportunities` | Public | 4-way filterable remote/hybrid/local opportunity explorer with detail modal & CV Studio handoff |
 | `/skills` | Public | Modular skills development courses with interactive lesson progress modal |
 | `/employers` | Public | Employer overview & self-registration / inquiry form |
@@ -195,11 +198,11 @@ sequenceDiagram
 
 *(Plus the preserved standalone static walkthrough at `public/demo/index.html` → `/demo/index.html` and root `index.html`.)*
 
-### B. REST API Routes (`src/app/api/*` — 22 Endpoints)
+### B. REST API Routes (`src/app/api/*` — 24 Endpoints)
 
 | Endpoint | Methods | Auth Guard | Responsibility |
 | :--- | :--- | :--- | :--- |
-| `/api/auth/signup` | `POST` | Public | Validates email + MX domain + password strength; creates user in Supabase Auth (with Admin rate-limit fallback) & local/Postgres store |
+| `/api/auth/signup` | `POST` | Public | Validates email + MX domain + password strength + Data Policy consent; creates user in Supabase Auth (with Admin rate-limit fallback) & Postgres/store |
 | `/api/auth/login` | `POST` | Public | Verifies Supabase Auth or PBKDF2 hash; resolves bootstrap role; issues signed `utare_session` cookie |
 | `/api/auth/logout` | `POST` | Session | Signs out Supabase session and clears `utare_session` cookie |
 | `/api/auth/session` | `GET` | Optional | Returns current authenticated user hydrated from candidate/employer DB tables |
@@ -208,12 +211,14 @@ sequenceDiagram
 | `/api/auth/password` | `POST` | Session / Admin / Reset | Self-service password change, forgot-password reset, or admin override |
 | `/api/auth/profile` | `GET`, `POST`, `PATCH` | Session | Reads/updates candidate profile, photo (`avatarDataUrl`), and `includePhotoOnCv` |
 | `/api/auth/attachments` | `GET`, `POST`, `DELETE` | Session | Manages versioned `candidate_documents`, `candidate_cv_artifacts`, and `audit_logs` |
+| `/api/auth/account` | `POST`, `DELETE` | Session | Self-service inactivity stay-confirmation (`POST`) and typed-`delete` full database erasure (`DELETE`) |
 | `/api/pathway` | `GET`, `POST`, `PATCH` | Optional / Session | Runs 6-factor scoring + Gemini 90-day pathway generation + milestone/coach progress updates |
 | `/api/documents` | `POST` | Public / Session | Generates grounded CV + cover letter JSON, runs anti-slop audit, saves versioned artifact, or streams `.docx` binary |
-| `/api/jobs` | `GET`, `POST` | Public (`GET`) / Session (`POST`) | Lists approved jobs (all for admins) and submits candidate job applications with AI fit scoring |
+| `/api/jobs` | `GET`, `POST`, `PATCH` | Public (`GET`) / Session (`POST`, `PATCH`) | Lists approved jobs (all for admins), submits consent-gated applications, and lets candidates pause/resume employer sharing |
+| `/api/jobs/report` | `POST`, `PATCH` | Session (`POST`) / Superuser (`PATCH`) | Immediately hides reported scam listings off-platform and lets Superusers restore or permanently delete |
 | `/api/hubs` | `GET`, `POST` | Public (`GET`) / Session (`POST`) | Lists Zimbabwe partner hubs from Supabase/store and books candidate hub desks |
 | `/api/skills` | `GET` | Public | Returns modular skills courses (`SEED_SKILLS_COURSES`) |
-| `/api/employers` | `GET`, `POST`, `PATCH` | Admin (`GET`/`PATCH`) / Public (`POST`) | Handles employer partner registrations and admin verification status updates |
+| `/api/employers` | `GET`, `POST`, `PATCH` | Admin (`GET`/`PATCH`) / Public (`POST`) | Handles employer partner registrations (with Supabase Auth confirmation + rate-limit fallback when password set) and admin verification updates |
 | `/api/employer/portal` | `GET`, `POST`, `PATCH`, `DELETE` | Employer / Admin | Scoped job posting/archiving and candidate status updates (`under_review`, `shortlisted`, `rejected`, `hired`) |
 | `/api/admin/candidates` | `GET` | Admin / Superuser | Hydrates and returns full candidate cohort, assessments, and applications |
 | `/api/admin/hubs` | `GET`, `POST`, `DELETE` | Public (`GET`) / Admin | Lists, adds, and removes partner innovation hubs |
@@ -247,7 +252,7 @@ sequenceDiagram
 | **Compute** | Single container `utare-zisedu-web` (`node:20-alpine`, `Dockerfile.dev`) | Vercel Edge Middleware + Stateless Node.js Serverless Functions |
 | **Primary Database** | `utare-zisedu-db` (`postgres:16-alpine` on port `5432`, volume `utare_pgdata`) | Cloud **Supabase PostgreSQL (EU Central - Frankfurt)** |
 | **Fallback Store** | `<repo>/.data/utare-store.json` (persistent on host disk) | `/tmp/.data/utare-store.json` + in-memory cache (**ephemeral**; Supabase required for persistence) |
-| **Schema Updates** | Initialized by `supabase/schema.sql` + additive `ensureDatabaseSchema()` | Run `supabase/schema.sql` in Supabase SQL Editor + additive `ensureDatabaseSchema()` |
+| **Schema Updates** | Initialized by `supabase/schema.sql` + `npm run db:migrate` (`supabase/additive-schema.sql`) + runtime `ensureDatabaseSchema()` | Auto-migrated on release (`npm run build` -> `scripts/migrate-db.mjs` when `SUPABASE_DB_URL` is set) + `supabase/additive-schema.sql` in SQL Editor + `safeSupabaseUpsert` fallback |
 | **Data Safety Rule** | **Never** run `docker compose down -v` (preserves `utare_pgdata`) | **Never** run `DROP`/`TRUNCATE`; use additive migrations only |
 
 ---
@@ -277,4 +282,4 @@ sequenceDiagram
    npm run lint && npm run typecheck && npm run test:ci && npm run build
    ```
    *(Or inside Docker: `make ci-local`.)*
-4. **Open a Pull Request into `main` on GitHub** (automated CI runs ESLint, `tsc --noEmit`, all 8 Vitest suites in `src/__tests__/`, and `next build`).
+4. **Open a Pull Request into `main` on GitHub** (automated CI runs ESLint, `tsc --noEmit`, all 14 Vitest suites / 76 tests in `src/__tests__/`, and `next build`).

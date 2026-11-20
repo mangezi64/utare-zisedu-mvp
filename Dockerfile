@@ -29,6 +29,8 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/scripts/migrate-db.mjs ./scripts/migrate-db.mjs
+COPY --from=builder /app/supabase/additive-schema.sql ./supabase/additive-schema.sql
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
