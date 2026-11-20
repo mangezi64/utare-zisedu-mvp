@@ -31,6 +31,9 @@ export async function GET(req: NextRequest) {
         employer?.contactPerson ||
         session.name,
       role: session.role,
+      orgRole: session.orgRole,
+      employerId: session.employerId,
+      hubId: session.hubId,
       emailConfirmed: session.emailConfirmed,
       companyName: employer?.companyName || session.companyName,
       employerVerificationStatus: employer?.verificationStatus,
@@ -48,10 +51,19 @@ export async function GET(req: NextRequest) {
   const cookieVal = req.cookies.get(SESSION_COOKIE_NAME)?.value;
   if (cookieVal) {
     const verified = await verifySessionToken(cookieVal);
-    if (verified && verified.role !== session.role) {
+    if (
+      verified &&
+      (verified.role !== session.role ||
+        verified.orgRole !== session.orgRole ||
+        verified.employerId !== session.employerId ||
+        verified.hubId !== session.hubId)
+    ) {
       const refreshedToken = await signSessionToken({
         ...verified,
         role: session.role,
+        orgRole: session.orgRole,
+        employerId: session.employerId,
+        hubId: session.hubId,
       });
       res.cookies.set(SESSION_COOKIE_NAME, refreshedToken, {
         httpOnly: true,

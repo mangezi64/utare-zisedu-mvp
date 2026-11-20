@@ -56,7 +56,7 @@ const EMPTY_CANDIDATE_PROFILE: CandidateProfile = {
 };
 
 export default function AssessmentAndPathwayPage() {
-  const { user, isAdmin } = useViewMode();
+  const { user, isAdmin, isEmployer, isHub } = useViewMode();
   const [profile, setProfile] = useState<CandidateProfile>(
     EMPTY_CANDIDATE_PROFILE
   );
@@ -94,7 +94,47 @@ export default function AssessmentAndPathwayPage() {
   // Tracks which diagnostic sliders the candidate has actually rated,
   // so a deliberate 0 is distinguishable from "not answered yet".
   const [ratedKeys, setRatedKeys] = useState<Set<string>>(new Set());
+  const [draftHydrated, setDraftHydrated] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
   const [formError, setFormError] = useState("");
+
+  // Restore locally saved draft on mount (resilient to power/data cuts)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("utare_assessment_draft_v1");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.profile) {
+          setProfile((prev) => ({ ...prev, ...parsed.profile }));
+        }
+        if (parsed.quizAnswers) {
+          setQuizAnswers((prev) => ({ ...prev, ...parsed.quizAnswers }));
+        }
+        if (Array.isArray(parsed.ratedKeys)) {
+          setRatedKeys(new Set(parsed.ratedKeys));
+        }
+        setDraftSaved(true);
+      }
+    } catch {}
+    setDraftHydrated(true);
+  }, []);
+
+  // Auto-save draft locally whenever form inputs change
+  useEffect(() => {
+    if (!draftHydrated) return;
+    try {
+      localStorage.setItem(
+        "utare_assessment_draft_v1",
+        JSON.stringify({
+          profile,
+          quizAnswers,
+          ratedKeys: Array.from(ratedKeys),
+          savedAt: new Date().toISOString(),
+        })
+      );
+      setDraftSaved(true);
+    } catch {}
+  }, [profile, quizAnswers, ratedKeys, draftHydrated]);
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{
@@ -146,6 +186,49 @@ export default function AssessmentAndPathwayPage() {
       });
     }
     setSkillInput("");
+  }
+
+  if (isEmployer || isHub) {
+    const portalHref = isEmployer ? "/employer" : "/hub-portal";
+    const portalLabel = isEmployer ? "Go to Employer Portal" : "Go to Hub Portal";
+    return (
+      <div className="w-full min-h-screen">
+        <PageBreadcrumb current="Diagnostic" />
+        <div className="mx-auto max-w-lg py-20 px-4 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-800 shadow-sm">
+            {isEmployer ? (
+              <Briefcase className="h-8 w-8 text-blue-700" />
+            ) : (
+              <Building2 className="h-8 w-8 text-teal-700" />
+            )}
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {isEmployer
+              ? "Employer Account — Candidate Diagnostic"
+              : "Partner Hub Account — Candidate Diagnostic"}
+          </h1>
+          <p className="mt-2 text-sm text-slate-600">
+            {isEmployer
+              ? "The 6-Factor Skills Diagnostic is for candidates onboarding onto UTARE. Manage your open roles and review verified candidates in the Employer Portal."
+              : "The 6-Factor Skills Diagnostic is for candidates onboarding onto UTARE. Manage your hub workstations and team in the Hub Portal."}
+          </p>
+          <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+            <Link
+              href={portalHref}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#08785f] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#06634e] transition"
+            >
+              {portalLabel} <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+            >
+              Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -227,9 +310,16 @@ export default function AssessmentAndPathwayPage() {
               <h2 className="text-lg font-bold text-slate-900">
                 1. Candidate Credentials &amp; Skills
               </h2>
-              <span className="text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5">
-                Minimal Data Only
-              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {draftSaved && (
+                  <span className="text-[11px] font-medium text-sky-800 bg-sky-50 border border-sky-200 rounded-full px-2.5 py-0.5">
+                    Draft Saved on Device
+                  </span>
+                )}
+                <span className="text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5">
+                  Minimal Data Only
+                </span>
+              </div>
             </div>
             <p className="text-xs text-slate-500">
               We only ask what is needed to match your skills and check whether you can work remotely on your own or need a Partner Hub.

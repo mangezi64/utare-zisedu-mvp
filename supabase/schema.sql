@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS public.auth_users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'candidate' CHECK (role IN ('candidate', 'employer', 'admin', 'superuser')),
+  role TEXT NOT NULL DEFAULT 'candidate' CHECK (role IN ('candidate', 'employer', 'hub', 'admin', 'superuser')),
   password_hash TEXT NOT NULL,
   email_confirmed BOOLEAN NOT NULL DEFAULT false,
   confirmation_token TEXT,
@@ -347,6 +347,16 @@ BEGIN
     END IF;
   END IF;
 END $$;
+
+ALTER TABLE public.auth_users ADD COLUMN IF NOT EXISTS reset_token TEXT;
+ALTER TABLE public.auth_users ADD COLUMN IF NOT EXISTS reset_token_expires_at TIMESTAMPTZ;
+ALTER TABLE public.auth_users ADD COLUMN IF NOT EXISTS invited_by TEXT;
+ALTER TABLE public.auth_users ADD COLUMN IF NOT EXISTS invited_at TIMESTAMPTZ;
+ALTER TABLE public.auth_users ADD COLUMN IF NOT EXISTS hub_id TEXT;
+
+ALTER TABLE public.innovation_hubs ADD COLUMN IF NOT EXISTS owner_email TEXT;
+ALTER TABLE public.innovation_hubs ADD COLUMN IF NOT EXISTS org_name TEXT;
+ALTER TABLE public.innovation_hubs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;
 
 NOTIFY pgrst, 'reload schema';
 

@@ -18,6 +18,13 @@ import {
   ShieldCheck,
   Archive,
   RefreshCw,
+  UserPlus,
+  KeyRound,
+  Copy,
+  Check,
+  Trash2,
+  Settings,
+  X,
 } from "lucide-react";
 import { useViewMode } from "@/lib/view-mode-context";
 import DeleteAccountPanel from "@/components/DeleteAccountPanel";
@@ -25,8 +32,19 @@ import {
   ApplicationStatus,
   EmployerApplicantView,
   EmployerRegistration,
+  OrgRole,
   RemoteJob,
 } from "@/types";
+
+interface TeamMemberItem {
+  id: string;
+  name: string;
+  email: string;
+  orgRole?: OrgRole;
+  isActive?: boolean;
+  invitedAt?: string;
+  invitedBy?: string;
+}
 
 const STATUS_LABELS: Record<
   ApplicationStatus,
@@ -55,7 +73,16 @@ const STATUS_LABELS: Record<
 };
 
 export default function EmployerPortalPage() {
-  const { user, loading: sessionLoading, isEmployer, isAdmin } = useViewMode();
+  const {
+    user,
+    loading: sessionLoading,
+    isEmployer,
+    isAdmin,
+    isOrgAdmin,
+    isOrgMember,
+  } = useViewMode();
+
+  const canManageOrg = isAdmin || isOrgAdmin || !isOrgMember;
 
   const [employer, setEmployer] = useState<EmployerRegistration | null>(null);
   const [jobs, setJobs] = useState<RemoteJob[]>([]);
@@ -63,6 +90,36 @@ export default function EmployerPortalPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [bannerNotice, setBannerNotice] = useState<string | null>(null);
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
+
+  // Org Management Tabs & State (org_admin / admin only)
+  const [activePortalTab, setActivePortalTab] = useState<
+    "hiring" | "team" | "profile"
+  >("hiring");
+  const [teamMembers, setTeamMembers] = useState<TeamMemberItem[]>([]);
+  const [loadingTeam, setLoadingTeam] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [addingMember, setAddingMember] = useState(false);
+  const [newMember, setNewMember] = useState({
+    fullName: "",
+    email: "",
+    orgRole: "org_member" as OrgRole,
+  });
+  const [oneTimeLinkBanner, setOneTimeLinkBanner] = useState<{
+    label: string;
+    url: string;
+  } | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // Company Profile Edit State (org_admin / admin only)
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    companyName: "",
+    contactPerson: "",
+    website: "",
+    industry: "",
+    hiringModel: "",
+    timezoneOverlapNeeded: "",
+  });
 
   // Filters & active applicant modal
   const dossierRef = useRef<HTMLElement | null>(null);
@@ -103,7 +160,17 @@ export default function EmployerPortalPage() {
       });
       if (!res.ok) return;
       const data = await res.json();
-      if (data.employer) setEmployer(data.employer);
+      if (data.employer) {
+        setEmployer(data.employer);
+        setProfileForm({
+          companyName: data.employer.companyName || "",
+          contactPerson: data.employer.contactPerson || "",
+          website: data.employer.website || "",
+          industry: data.employer.industry || "",
+          hiringModel: data.employer.hiringModel || "",
+          timezoneOverlapNeeded: data.employer.timezoneOverlapNeeded || "",
+        });
+      }
       if (data.jobs) setJobs(data.jobs);
       if (data.applicants) setApplicants(data.applicants);
     } catch {
@@ -113,13 +180,34 @@ export default function EmployerPortalPage() {
     }
   }, []);
 
+  const loadTeamMembers = useCallback(async () => {
+    if (!canManageOrg) return;
+    setLoadingTeam(true);
+    try {
+      const res = await fetch("/api/employer/team", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const data = await res.json().catch(() => ({}));
+      setTeamMembers(Array.isArray(data.members) ? data.members : []);
+    } catch {
+      // Ignore fetch error
+    } finally {
+      setLoadingTeam(false);
+    }
+  }, [canManageOrg]);
+
   useEffect(() => {
     if (isEmployer || isAdmin) {
       loadPortalData();
+      if (canManageOrg) {
+        loadTeamMembers();
+      }
     } else if (!sessionLoading) {
       setLoadingData(false);
     }
-  }, [isEmployer, isAdmin, sessionLoading, loadPortalData]);
+  }, [isEmployer, isAdmin, canManageOrg, sessionLoading, loadPortalData, loadTeamMembers]);
 
   if (!sessionLoading && !isEmployer && !isAdmin) {
     return (
@@ -249,6 +337,151 @@ export default function EmployerPortalPage() {
     } catch {}
   }
 
+  async function handleCopyOneTimeLink(url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch {}
+  }
+
+  async function handleAddTeamMember(e: React.FormEvent) {
+    e.preventDefault();
+    setAddingMember(true);
+    setErrorNotice(null);
+    setOneTimeLinkBanner(null);
+    try {
+      const res = await fetch("/api/employer/team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(newMember),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Failed to add team member.");
+      }
+      if (data.inviteUrl) {
+        setOneTimeLinkBanner({
+          label: `One-time invite link for ${newMember.fullName} (${newMember.email})`,
+          url: data.inviteUrl,
+        });
+      }
+      setBannerNotice(`Added ${newMember.fullName} to your organization.`);
+      setNewMember({ fullName: "", email: "", orgRole: "org_member" });
+      setShowAddMember(false);
+      await loadTeamMembers();
+    } catch (err: any) {
+      setErrorNotice(err?.message || "Failed to add team member.");
+    } finally {
+      setAddingMember(false);
+    }
+  }
+
+  async function handleToggleMemberRole(member: TeamMemberItem) {
+    const nextRole: OrgRole =
+      member.orgRole === "org_admin" ? "org_member" : "org_admin";
+    setErrorNotice(null);
+    try {
+      const res = await fetch("/api/employer/team", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          userId: member.id,
+          email: member.email,
+          orgRole: nextRole,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Failed to update role.");
+      }
+      setBannerNotice(`Updated ${member.name}'s role to ${nextRole === "org_admin" ? "Organization Admin" : "Team Member"}.`);
+      await loadTeamMembers();
+    } catch (err: any) {
+      setErrorNotice(err?.message || "Unable to update role.");
+    }
+  }
+
+  async function handleMemberResetLink(member: TeamMemberItem) {
+    setErrorNotice(null);
+    setOneTimeLinkBanner(null);
+    try {
+      const res = await fetch("/api/employer/team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          action: "reset_link",
+          userId: member.id,
+          email: member.email,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Failed to generate reset link.");
+      }
+      const url = data.resetUrl || data.inviteUrl;
+      if (url) {
+        setOneTimeLinkBanner({
+          label: `One-time reset link for ${member.name} (${member.email})`,
+          url,
+        });
+      }
+      setBannerNotice(`Generated one-time reset link for ${member.email}.`);
+    } catch (err: any) {
+      setErrorNotice(err?.message || "Unable to generate reset link.");
+    }
+  }
+
+  async function handleRemoveMember(member: TeamMemberItem) {
+    setErrorNotice(null);
+    try {
+      const res = await fetch("/api/employer/team", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId: member.id, email: member.email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Failed to remove team member.");
+      }
+      setBannerNotice(`Removed ${member.name} from organization access.`);
+      await loadTeamMembers();
+    } catch (err: any) {
+      setErrorNotice(err?.message || "Unable to remove team member.");
+    }
+  }
+
+  async function handleSaveCompanyProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingProfile(true);
+    setErrorNotice(null);
+    try {
+      const res = await fetch("/api/employer/portal", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          action: "update_employer_profile",
+          ...profileForm,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Failed to update company profile.");
+      }
+      if (data.employer) setEmployer(data.employer);
+      setBannerNotice("Company profile updated successfully.");
+    } catch (err: any) {
+      setErrorNotice(err?.message || "Unable to update company profile.");
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
   const isVerified = employer?.verificationStatus === "verified" || isAdmin;
   const filteredApplicants = applicants.filter((a) => {
     if (selectedJobFilter !== "all" && a.jobId !== selectedJobFilter) {
@@ -271,6 +504,16 @@ export default function EmployerPortalPage() {
             <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white">
               <Building2 className="h-3.5 w-3.5 text-emerald-400" />
               Employer Hiring Portal
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-bold ${
+                canManageOrg
+                  ? "bg-blue-50 border-blue-200 text-blue-900"
+                  : "bg-slate-100 border-slate-300 text-slate-700"
+              }`}
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              {canManageOrg ? "Organization Admin" : "Team Member"}
             </span>
             {isVerified ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-xs font-bold text-emerald-900">
@@ -352,6 +595,91 @@ export default function EmployerPortalPage() {
             className="text-xs text-rose-700 hover:text-rose-900"
           >
             ✕
+          </button>
+        </div>
+      )}
+
+      {oneTimeLinkBanner && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-bold text-blue-950">
+              {oneTimeLinkBanner.label}
+            </p>
+            <button
+              type="button"
+              onClick={() => setOneTimeLinkBanner(null)}
+              className="text-blue-700 hover:text-blue-900"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              readOnly
+              value={oneTimeLinkBanner.url}
+              className="flex-1 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-800"
+            />
+            <button
+              type="button"
+              onClick={() => handleCopyOneTimeLink(oneTimeLinkBanner.url)}
+              className="inline-flex items-center gap-1 rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-800 transition"
+            >
+              {copiedLink ? (
+                <>
+                  <Check className="h-3.5 w-3.5" /> Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" /> Copy Link
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Portal Section Tabs (Team Management & Company Profile hidden for org_member) */}
+      {canManageOrg && (
+        <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
+          <button
+            type="button"
+            onClick={() => setActivePortalTab("hiring")}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition ${
+              activePortalTab === "hiring"
+                ? "bg-slate-900 text-white"
+                : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            <Briefcase className="h-3.5 w-3.5" />
+            Hiring &amp; Applicants
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActivePortalTab("team");
+              loadTeamMembers();
+            }}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition ${
+              activePortalTab === "team"
+                ? "bg-slate-900 text-white"
+                : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            <Users className="h-3.5 w-3.5" />
+            Team Management ({teamMembers.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActivePortalTab("profile")}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition ${
+              activePortalTab === "profile"
+                ? "bg-slate-900 text-white"
+                : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            <Settings className="h-3.5 w-3.5" />
+            Company Profile
           </button>
         </div>
       )}
@@ -610,7 +938,267 @@ export default function EmployerPortalPage() {
         </section>
       )}
 
+      {/* Team Management Panel (org_admin / admin only) */}
+      {canManageOrg && activePortalTab === "team" && (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Users className="h-4 w-4 text-emerald-700" />
+                Organization Team Management
+              </h2>
+              <p className="text-xs text-slate-500">
+                Invite hiring managers or recruiters, toggle roles, issue
+                one-time reset links, or revoke access.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAddMember((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              {showAddMember ? "Cancel" : "+ Add Employee"}
+            </button>
+          </div>
+
+          {showAddMember && (
+            <form
+              onSubmit={handleAddTeamMember}
+              className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 grid gap-3 sm:grid-cols-4 items-end"
+            >
+              <label className="block text-xs font-semibold text-slate-700">
+                Full Name *
+                <input
+                  type="text"
+                  required
+                  value={newMember.fullName}
+                  onChange={(e) =>
+                    setNewMember({ ...newMember, fullName: e.target.value })
+                  }
+                  placeholder="e.g. Tariro Moyo"
+                  className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900"
+                />
+              </label>
+              <label className="block text-xs font-semibold text-slate-700">
+                Work Email *
+                <input
+                  type="email"
+                  required
+                  value={newMember.email}
+                  onChange={(e) =>
+                    setNewMember({ ...newMember, email: e.target.value })
+                  }
+                  placeholder="tariro@company.com"
+                  className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900"
+                />
+              </label>
+              <label className="block text-xs font-semibold text-slate-700">
+                Org Role
+                <select
+                  value={newMember.orgRole}
+                  onChange={(e) =>
+                    setNewMember({
+                      ...newMember,
+                      orgRole: e.target.value as OrgRole,
+                    })
+                  }
+                  className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900"
+                >
+                  <option value="org_member">Team Member</option>
+                  <option value="org_admin">Organization Admin</option>
+                </select>
+              </label>
+              <button
+                type="submit"
+                disabled={addingMember}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-50"
+              >
+                {addingMember ? "Adding..." : "Send One-Time Invite"}
+              </button>
+            </form>
+          )}
+
+          {loadingTeam ? (
+            <p className="text-xs text-slate-500 py-6 text-center">
+              Loading organization members...
+            </p>
+          ) : teamMembers.length === 0 ? (
+            <p className="text-xs text-slate-500 py-6 text-center">
+              No team members found yet. Click &ldquo;+ Add Employee&rdquo; to
+              invite your first teammate.
+            </p>
+          ) : (
+            <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl">
+              {teamMembers.map((member) => {
+                const isMemberAdmin = member.orgRole === "org_admin";
+                return (
+                  <div
+                    key={member.id}
+                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-slate-900">
+                          {member.name}
+                        </span>
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${
+                            isMemberAdmin
+                              ? "bg-blue-50 border-blue-200 text-blue-800"
+                              : "bg-slate-100 border-slate-200 text-slate-700"
+                          }`}
+                        >
+                          {isMemberAdmin ? "Organization Admin" : "Team Member"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500">{member.email}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleMemberRole(member)}
+                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Make {isMemberAdmin ? "Team Member" : "Org Admin"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMemberResetLink(member)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        <KeyRound className="h-3 w-3" />
+                        Reset Link
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMember(member)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-semibold text-rose-700 hover:bg-rose-100"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Company Profile Panel (org_admin / admin only) */}
+      {canManageOrg && activePortalTab === "profile" && (
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+          <div>
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Settings className="h-4 w-4 text-emerald-700" />
+              Company Profile Settings
+            </h2>
+            <p className="text-xs text-slate-500">
+              Update your organization&apos;s public directory details and
+              hiring preferences.
+            </p>
+          </div>
+          <form
+            onSubmit={handleSaveCompanyProfile}
+            className="grid gap-4 sm:grid-cols-2"
+          >
+            <label className="block text-xs font-semibold text-slate-700">
+              Company Name
+              <input
+                type="text"
+                required
+                value={profileForm.companyName}
+                onChange={(e) =>
+                  setProfileForm({
+                    ...profileForm,
+                    companyName: e.target.value,
+                  })
+                }
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900"
+              />
+            </label>
+            <label className="block text-xs font-semibold text-slate-700">
+              Primary Contact Person
+              <input
+                type="text"
+                required
+                value={profileForm.contactPerson}
+                onChange={(e) =>
+                  setProfileForm({
+                    ...profileForm,
+                    contactPerson: e.target.value,
+                  })
+                }
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900"
+              />
+            </label>
+            <label className="block text-xs font-semibold text-slate-700">
+              Website
+              <input
+                type="url"
+                value={profileForm.website}
+                onChange={(e) =>
+                  setProfileForm({ ...profileForm, website: e.target.value })
+                }
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900"
+              />
+            </label>
+            <label className="block text-xs font-semibold text-slate-700">
+              Industry
+              <input
+                type="text"
+                value={profileForm.industry}
+                onChange={(e) =>
+                  setProfileForm({ ...profileForm, industry: e.target.value })
+                }
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900"
+              />
+            </label>
+            <label className="block text-xs font-semibold text-slate-700">
+              Hiring Model
+              <input
+                type="text"
+                value={profileForm.hiringModel}
+                onChange={(e) =>
+                  setProfileForm({
+                    ...profileForm,
+                    hiringModel: e.target.value,
+                  })
+                }
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900"
+              />
+            </label>
+            <label className="block text-xs font-semibold text-slate-700">
+              Timezone Overlap
+              <input
+                type="text"
+                value={profileForm.timezoneOverlapNeeded}
+                onChange={(e) =>
+                  setProfileForm({
+                    ...profileForm,
+                    timezoneOverlapNeeded: e.target.value,
+                  })
+                }
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900"
+              />
+            </label>
+            <div className="sm:col-span-2 flex justify-end">
+              <button
+                type="submit"
+                disabled={savingProfile}
+                className="rounded-xl bg-emerald-700 px-5 py-2 text-xs font-bold text-white hover:bg-emerald-800 disabled:opacity-50"
+              >
+                {savingProfile ? "Saving..." : "Save Company Profile"}
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
+
       {/* Main Two-Column Grid: Posted Roles (Left) + Scoped Applicants (Right) */}
+      {(!canManageOrg || activePortalTab === "hiring") && (
       <div className="grid gap-8 lg:grid-cols-12">
         {/* Left Column: Employer's Posted Roles */}
         <div className="lg:col-span-5 space-y-4">
@@ -856,8 +1444,12 @@ export default function EmployerPortalPage() {
                             <option value="submitted">Submitted</option>
                             <option value="under_review">Under Review</option>
                             <option value="shortlisted">Shortlisted</option>
-                            <option value="hired">Hired</option>
-                            <option value="rejected">Not Selected</option>
+                            <option value="hired" disabled={!canManageOrg}>
+                              Hired{!canManageOrg ? " (Admin only)" : ""}
+                            </option>
+                            <option value="rejected" disabled={!canManageOrg}>
+                              Not Selected{!canManageOrg ? " (Admin only)" : ""}
+                            </option>
                           </select>
                         </div>
                       </div>
@@ -974,6 +1566,7 @@ export default function EmployerPortalPage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Full Application Inspection Drawer/Modal */}
       {activeApplicant && (

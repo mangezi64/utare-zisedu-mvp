@@ -6,11 +6,17 @@ import {
   Accessibility,
   Headphones,
   HelpCircle,
+  Languages,
   Pause,
   Play,
   Square,
   Video,
 } from "lucide-react";
+import {
+  LANGUAGE_OPTIONS,
+  SupportedLanguage,
+  useLanguage,
+} from "@/lib/language-context";
 
 interface AudioStateDetail {
   isPlaying: boolean;
@@ -23,6 +29,7 @@ interface AssistiveToolbarProps {
 }
 
 export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
+  const { lang, setLang, t } = useLanguage();
   const [audioState, setAudioState] = useState<AudioStateDetail>({
     isPlaying: false,
     isPaused: false,
@@ -76,20 +83,43 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
         aria-label="Guided tour and accessibility controls"
       >
         <div className="text-[11.5px] text-slate-300">
-          <span className="font-semibold text-white">Guided Tour, FAQ &amp; Accessibility</span>
+          <span className="font-semibold text-white">{t.toolbar.footerTitle}</span>
           <span className="hidden sm:inline text-slate-400">
             {" "}
-            — Read quick FAQs, listen to the audio walkthrough, watch the flow demo, or adjust display settings.
+            {t.toolbar.footerDesc}
           </span>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <div
+            role="group"
+            aria-label={t.toolbar.languageLabel}
+            className="inline-flex items-center rounded-lg border border-white/15 bg-white/5 p-0.5"
+          >
+            <Languages className="ml-1.5 mr-1 h-3.5 w-3.5 text-emerald-300 shrink-0" aria-hidden="true" />
+            {LANGUAGE_OPTIONS.map((opt) => (
+              <button
+                key={opt.code}
+                type="button"
+                onClick={() => setLang(opt.code as SupportedLanguage)}
+                aria-pressed={lang === opt.code}
+                className={`rounded-md px-2 py-1 text-[11px] font-semibold transition ${
+                  lang === opt.code
+                    ? "bg-emerald-500 text-slate-950"
+                    : "text-slate-200 hover:bg-white/10"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
           <Link
             href="/faq"
             className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-100 hover:bg-emerald-500/30 transition"
           >
             <HelpCircle className="h-3.5 w-3.5 text-emerald-300" />
-            <span>Quick Answers (FAQ)</span>
+            <span>{t.toolbar.quickFaq || "Quick Answers (FAQ)"}</span>
           </Link>
 
           <button
@@ -154,7 +184,7 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
     >
       <div className="mx-auto flex max-w-[1220px] flex-wrap items-center justify-between gap-2 px-4 py-2">
         <span className="hidden md:inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-          Need a guided walkthrough or display adjustments?
+          {t.toolbar.prompt}
         </span>
 
         <div className="flex w-full md:w-auto flex-wrap items-center justify-between sm:justify-end gap-1.5 sm:gap-2">
@@ -168,9 +198,9 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
               <span>
                 {audioState.isPlaying
                   ? audioState.isPaused
-                    ? "Audio Paused"
-                    : audioState.shortTitle || "Playing Audio"
-                  : "Audio Overview"}
+                    ? t.toolbar.audioPaused
+                    : audioState.shortTitle || t.toolbar.playingAudio
+                  : t.toolbar.audioOverview}
               </span>
               {audioState.isPlaying && !audioState.isPaused && (
                 <span className="flex items-center gap-0.5 h-2.5 ml-0.5" aria-hidden="true">
@@ -218,8 +248,32 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
               aria-label="Watch interactive platform flow demo"
             >
               <Video className="h-3.5 w-3.5 text-amber-700 shrink-0" />
-              <span>Flow Demo</span>
+              <span>{t.toolbar.flowDemo}</span>
             </button>
+          </div>
+
+          <div
+            role="group"
+            aria-label={t.toolbar.languageLabel}
+            className="inline-flex items-center rounded-full border border-slate-200 bg-white p-0.5 shadow-sm"
+          >
+            <Languages className="ml-1.5 mr-1 h-3.5 w-3.5 text-emerald-700 shrink-0" aria-hidden="true" />
+            {LANGUAGE_OPTIONS.map((opt) => (
+              <button
+                key={opt.code}
+                type="button"
+                onClick={() => setLang(opt.code as SupportedLanguage)}
+                aria-pressed={lang === opt.code}
+                title={`Switch language to ${opt.label}`}
+                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold transition ${
+                  lang === opt.code
+                    ? "bg-emerald-600 text-white"
+                    : "text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
 
           <button
@@ -229,7 +283,7 @@ export default function AssistiveToolbar({ variant }: AssistiveToolbarProps) {
             aria-label="Open Accessibility & Assistive Tech Settings"
           >
             <Accessibility className="h-3.5 w-3.5 text-emerald-700 shrink-0" />
-            <span>Accessibility</span>
+            <span>{t.toolbar.accessibility}</span>
             {hasActiveA11y && (
               <span
                 className="h-2 w-2 rounded-full bg-emerald-500"

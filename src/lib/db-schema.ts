@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS public.auth_users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'candidate' CHECK (role IN ('candidate', 'employer', 'admin', 'superuser')),
+  role TEXT NOT NULL DEFAULT 'candidate' CHECK (role IN ('candidate', 'employer', 'hub', 'admin', 'superuser')),
   password_hash TEXT NOT NULL,
   email_confirmed BOOLEAN NOT NULL DEFAULT false,
   confirmation_token TEXT,
@@ -261,6 +261,15 @@ ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS last_inactivity
 ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS remain_confirmed_at TIMESTAMPTZ;
 ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS data_policy_accepted_at TIMESTAMPTZ;
 ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS data_policy_version TEXT;
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS reset_token TEXT;
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS reset_token_expires_at TIMESTAMPTZ;
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS invited_by TEXT;
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS invited_at TIMESTAMPTZ;
+ALTER TABLE IF EXISTS public.auth_users ADD COLUMN IF NOT EXISTS hub_id TEXT;
+
+ALTER TABLE IF EXISTS public.innovation_hubs ADD COLUMN IF NOT EXISTS owner_email TEXT;
+ALTER TABLE IF EXISTS public.innovation_hubs ADD COLUMN IF NOT EXISTS org_name TEXT;
+ALTER TABLE IF EXISTS public.innovation_hubs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;
 
 ALTER TABLE IF EXISTS public.candidate_profiles ADD COLUMN IF NOT EXISTS avatar_data_url TEXT;
 ALTER TABLE IF EXISTS public.candidate_profiles ADD COLUMN IF NOT EXISTS include_photo_on_cv BOOLEAN NOT NULL DEFAULT false;

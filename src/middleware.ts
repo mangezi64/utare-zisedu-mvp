@@ -38,9 +38,29 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  if (pathname.startsWith("/hub-portal")) {
+    if (
+      session &&
+      effectiveRole !== "hub" &&
+      effectiveRole !== "admin" &&
+      effectiveRole !== "superuser"
+    ) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(url);
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/employer/:path*", "/account/:path*", "/pathway/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/employer/:path*",
+    "/hub-portal/:path*",
+    "/account/:path*",
+    "/pathway/:path*",
+  ],
 };

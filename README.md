@@ -92,10 +92,12 @@ Open `index.html` in any modern browser without needing a build step or package 
   - **Anti-AI-Slop Humanizer (`src/lib/documents/humanizer.ts`):** Strips 45+ AI clichés and scores every document from `0–100` for natural human tone.
   - **One-Click Downloads:** Export ready-to-send **Word (`.docx`)** files, **A4 Print/PDF**, or plain text.
 
-### B. Scoped Employer Portal (`/employer` — `employer` role)
-- **Self-Registration & One-Time Admin Verification (`/login?tab=register&role=employer` & `/employers`):** Employers register with email confirmation or **Continue with Google** (requiring company name and Data Policy consent). Once an admin verifies the company once, all current and future job postings from that employer auto-publish.
-- **Job Pipeline Management (`/employer`):** Post new remote/hybrid roles, archive filled roles, or delete listings.
-- **Scoped Applicant Review:** View applicants strictly for the employer's own jobs, inspect tailored resume pitches, and update applicant status (`under_review`, `shortlisted`, `rejected`, `hired`). Strict server-side scoping strips all private candidate fields (phone, income bracket, hardware deficits, and internal diagnostic scores).
+### B. Scoped Employer & Hub Portals (`/employer` & `/hub-portal` — `org_admin` / `org_member` RBAC)
+- **Self-Registration, Admin Invites & One-Time Reset Links (`/login?tab=register&role=employer`, `/employers`, `/auth/callback`):** Employers register with email confirmation, **Continue with Google**, or a one-time admin invite link. Admins can also issue single-use password reset links for locked-out employers.
+- **Organization RBAC (`org_admin` vs. `org_member`):**
+  - **`org_admin` (Company / Hub Admin):** Edits company/hub profile & pricing, makes final `hired`/`rejected` decisions, and adds or removes their own organization's employees (`/api/employer/team`, `/api/hub/team`) with last-admin protection.
+  - **`org_member` (Recruiter / Hub Staff):** Posts new jobs, marks listings closed/filled, shortlists applicants, or updates daily hub workstation & laptop loan availability (`/hub-portal`).
+- **Role-Curated `/employers`:** Logged-in employers redirect straight to `/employer`; candidates browse **Verified Employers** and click any company to view its active roles; admins manage verifications, invites, and reset links.
 
 ### C. Facilitator & Admin Operations Console (`/admin` — `admin` & `superuser` roles)
 - **Employer Verification:** Review and verify or reject registered employer accounts.

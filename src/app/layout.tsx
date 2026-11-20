@@ -4,10 +4,12 @@ import { Mail, Phone } from "lucide-react";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ViewModeProvider } from "@/lib/view-mode-context";
+import { LanguageProvider } from "@/lib/language-context";
 import AudioExplainer from "@/components/AudioExplainer";
 import AccessibilityControls from "@/components/AccessibilityControls";
 import FlowVideoWalkthrough from "@/components/FlowVideoWalkthrough";
 import AssistiveToolbar from "@/components/AssistiveToolbar";
+import NetworkStatusBanner from "@/components/NetworkStatusBanner";
 import JourneyFaqStrip from "@/components/JourneyFaqStrip";
 
 export const metadata: Metadata = {
@@ -33,8 +35,10 @@ export default function RootLayout({
         </a>
 
         <ViewModeProvider>
+          <LanguageProvider>
           <Navbar />
           <AssistiveToolbar variant="top" />
+          <NetworkStatusBanner />
           <main id="main-content" className="flex-1">
             {children}
           </main>
@@ -106,6 +110,7 @@ export default function RootLayout({
           <AudioExplainer />
           <AccessibilityControls />
           <FlowVideoWalkthrough />
+          </LanguageProvider>
         </ViewModeProvider>
       </body>
     </html>

@@ -317,5 +317,18 @@ BEGIN
   END IF;
 END $$;
 
+-- Org RBAC, Hub Ownership & One-Time Invite / Reset Token columns (v2.5.0)
+ALTER TABLE public.auth_users
+  ADD COLUMN IF NOT EXISTS reset_token TEXT,
+  ADD COLUMN IF NOT EXISTS reset_token_expires_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS invited_by TEXT,
+  ADD COLUMN IF NOT EXISTS invited_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS hub_id TEXT;
+
+ALTER TABLE public.innovation_hubs
+  ADD COLUMN IF NOT EXISTS owner_email TEXT,
+  ADD COLUMN IF NOT EXISTS org_name TEXT,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;
+
 -- Ask Supabase PostgREST to reload schema cache immediately after migration
 NOTIFY pgrst, 'reload schema';

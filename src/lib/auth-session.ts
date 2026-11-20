@@ -5,7 +5,7 @@
 // be verified in both Next.js Edge Middleware and Node.js API route handlers.
 // =============================================================================
 
-import { UserRole } from "@/types";
+import { OrgRole, UserRole } from "@/types";
 
 export const SESSION_COOKIE_NAME = "utare_session";
 export const OAUTH_INTENT_COOKIE_NAME = "utare_oauth_intent";
@@ -17,6 +17,9 @@ export interface SessionPayload {
   email: string;
   name: string;
   role: UserRole;
+  orgRole?: OrgRole;
+  employerId?: string;
+  hubId?: string;
   emailConfirmed: boolean;
   companyName?: string;
   city?: string;

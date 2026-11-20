@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import { SupportedLanguage, useLanguage } from "@/lib/language-context";
 import {
   Volume2,
   VolumeX,
@@ -60,9 +61,88 @@ export const AUDIO_CHAPTERS: AudioChapter[] = [
   },
 ];
 
+export const AUDIO_CHAPTERS_BY_LANG: Record<SupportedLanguage, AudioChapter[]> = {
+  en: AUDIO_CHAPTERS,
+  sn: [
+    {
+      id: "mission",
+      title: "1. Mauya kuUtare & Chinangwa Chedu",
+      shortTitle: "Mauya",
+      tagline: "Kubatanidza veZimbabwe nemabasa epasi rose",
+      durationEstimate: "45s",
+      text: "Mauya kuUtare. Takavaka chikuva chino muZimbabwe kuti tibatsire vechidiki nevadzidzi vane unyanzvi kuwana mabasa epasi rose. Kunyangwe magetsi kana data rikapera, zvamanyora zvinochengetwa mudhivaizi yenyu, uye maPartner Hubs edu ane solar neStarlink.",
+    },
+    {
+      id: "diagnostic",
+      title: "2. Ongororo yeNzira yeBasa",
+      shortTitle: "Ongororo",
+      tagline: "Ziva simba rako remarhizhinji",
+      durationEstimate: "40s",
+      text: "Rwendo rwako rwunotanga neOngororo yeBasa. Inoongorora unyanzvi hwako, chikoro, uye mamiriro emagetsi kana laputopu kuti ikuratidze nzira yemazuva makumi mapfumbamwe nemurairidzi wemuZimbabwe.",
+    },
+    {
+      id: "cv-studio",
+      title: "3. CV Studio Yakagadzirirwa ATS",
+      shortTitle: "CV Studio",
+      tagline: "MaCV anokuwanisa mabasa",
+      durationEstimate: "40s",
+      text: "MuCV Studio, tinoshandura zivo yako kuita CV netsamba yebasa zvakachena zvinopinda mumasisitimu emakambani epasi rose. Unogona kudhaunirodha muWord kana PDF.",
+    },
+    {
+      id: "hubs-coaching",
+      title: "4. MaSolar Hubs & Varairidzi",
+      shortTitle: "Hubs & Rubatsiro",
+      tagline: "Magetsi esolar, Starlink Wi-Fi & varairidzi",
+      durationEstimate: "45s",
+      text: "Kuburikidza nemaPartner Hubs muHarare, Bulawayo, Mutare, Gweru neMasvingo, unowana magetsi esolar, Starlink internet, uye rubatsiro rwevarairidzi kubva pakunyorera kusvika pakuwana mari.",
+    },
+  ],
+  nd: [
+    {
+      id: "mission",
+      title: "1. Siyakwamukela kuUtare",
+      shortTitle: "Siyakwamukela",
+      tagline: "Ukuxhumanisa abase-Zimbabwe lemisebenzi yomhlaba",
+      durationEstimate: "45s",
+      text: "Siyakwamukela kuUtare. Sakhe loluhlelo e-Zimbabwe ukusiza abafundileyo labalamakhono ukuthola imisebenzi ye-remote emhlabeni. Lanxa ugesi kumbe i-data iphela, okubhalileyo kuyagcinwa kudivayisi yakho.",
+    },
+    {
+      id: "diagnostic",
+      title: "2. Ukuhlolwa Kwendlela Yomsebenzi",
+      shortTitle: "Ukuhlolwa",
+      tagline: "Thola amandla akho omsebenzi",
+      durationEstimate: "40s",
+      text: "Uhambo lwakho luqala ngokuhlolwa okulula okukhangela imfundo yakho, amakhono, lesimo sogesi kumbe ikhompyutha ukuze uthole uhlelo lwensuku ezingamatshumi ayisithupha lomcebisi.",
+    },
+    {
+      id: "cv-studio",
+      title: "3. I-CV Studio ye-ATS",
+      shortTitle: "CV Studio",
+      tagline: "Ama-CV akulethela ama-interview",
+      durationEstimate: "40s",
+      text: "Ku-CV Studio, sitshintsha amakhono akho abe yi-CV lencwadi yesicelo elungele amakampani aphetsheya. Ungakhipha nge-Word kumbe nge-PDF.",
+    },
+    {
+      id: "hubs-coaching",
+      title: "4. Ama-Solar Hubs & Abacebisi",
+      shortTitle: "Hubs & Usizo",
+      tagline: "Ugesi we-solar, i-Starlink Wi-Fi labacebisi",
+      durationEstimate: "45s",
+      text: "Ngama-Partner Hubs e-Harare, Bulawayo, Mutare, Gweru le-Masvingo, uthola ugesi we-solar, i-Starlink internet, lamakhompyutha kanye losizo lwabacebisi.",
+    },
+  ],
+};
+
 const SPEECH_RATES = [0.85, 1.0, 1.25, 1.5];
 
 export default function AudioExplainer() {
+  const { lang } = useLanguage();
+  const langRef = useRef<SupportedLanguage>(lang);
+  langRef.current = lang;
+  const activeChapters = AUDIO_CHAPTERS_BY_LANG[lang] || AUDIO_CHAPTERS;
+  const activeChaptersRef = useRef<AudioChapter[]>(activeChapters);
+  activeChaptersRef.current = activeChapters;
+
   const pathname = usePathname();
   const prevPathnameRef = useRef<string>(pathname);
   const [isSupported, setIsSupported] = useState<boolean>(true);
@@ -210,7 +290,7 @@ export default function AudioExplainer() {
   // Broadcast live audio state to in-flow toolbars (top & footer)
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const chapter = AUDIO_CHAPTERS[currentChapterIndex];
+    const chapter = activeChapters[currentChapterIndex];
     window.dispatchEvent(
       new CustomEvent("utare-audio-state", {
         detail: {
@@ -220,7 +300,7 @@ export default function AudioExplainer() {
         },
       })
     );
-  }, [isPlaying, isPaused, currentChapterIndex]);
+  }, [isPlaying, isPaused, currentChapterIndex, activeChapters]);
 
   const playChapter = useCallback((index: number) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -230,10 +310,16 @@ export default function AudioExplainer() {
 
     try {
       window.speechSynthesis.cancel();
-      const chapter = AUDIO_CHAPTERS[index];
+      const chapter = activeChaptersRef.current[index];
       if (!chapter) return;
 
       const utterance = new SpeechSynthesisUtterance(chapter.text);
+      utterance.lang =
+        langRef.current === "sn"
+          ? "sn-ZW"
+          : langRef.current === "nd"
+            ? "nd-ZW"
+            : "en-ZA";
       // Gentle, relaxed conversational human cadence
       utterance.rate = Math.max(0.75, speechRateRef.current * 0.94);
       utterance.pitch = 1.02;
@@ -375,7 +461,7 @@ export default function AudioExplainer() {
     }
   };
 
-  const currentChapter = AUDIO_CHAPTERS[currentChapterIndex];
+  const currentChapter = activeChapters[currentChapterIndex] || activeChapters[0];
 
   return (
     <>
@@ -524,7 +610,7 @@ export default function AudioExplainer() {
 
           {/* Chapter Quick Tabs */}
           <div className="grid grid-cols-4 gap-1 mb-3.5">
-            {AUDIO_CHAPTERS.map((chap, idx) => {
+            {activeChapters.map((chap, idx) => {
               const isActive = idx === currentChapterIndex;
               return (
                 <button
@@ -658,7 +744,7 @@ export default function AudioExplainer() {
                 id="audio-transcript-content"
                 className="mt-2.5 max-h-48 overflow-y-auto space-y-2.5 pr-1 text-slate-300 text-xs leading-relaxed border-t border-slate-800/80 pt-2"
               >
-                {AUDIO_CHAPTERS.map((chap, idx) => {
+                {activeChapters.map((chap, idx) => {
                   const isActive = idx === currentChapterIndex;
                   return (
                     <div

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import { SEED_INNOVATION_HUBS } from "@/lib/mock-data";
 import ZimbabweCitySelect from "@/components/ZimbabweCitySelect";
@@ -13,11 +14,12 @@ import {
   MapPin,
   PlusCircle,
   CheckCircle2,
+  ArrowRight,
 } from "lucide-react";
 import { useViewMode } from "@/lib/view-mode-context";
 
 export default function HubsDirectoryPage() {
-  const { user, isAuthenticated } = useViewMode();
+  const { user, isAuthenticated, isAdmin, isHub, isCandidate } = useViewMode();
   const [hubs, setHubs] = useState<InnovationHub[]>(SEED_INNOVATION_HUBS);
   const [activeCandidate, setActiveCandidate] =
     useState<StoredCandidateRecord | null>(null);
@@ -44,14 +46,14 @@ export default function HubsDirectoryPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.hubs) setHubs(data.hubs);
-        if (data.activeCandidate) {
+        if (isCandidate && data.activeCandidate) {
           setActiveCandidate(data.activeCandidate);
         } else {
           setActiveCandidate(null);
         }
       })
       .catch(() => {});
-  }, [user, isAuthenticated]);
+  }, [user, isAuthenticated, isCandidate]);
 
   const cities = ["All", ...Array.from(new Set(hubs.map((h) => h.city)))];
   const filteredHubs =
@@ -112,16 +114,25 @@ export default function HubsDirectoryPage() {
           candidates with verified local hubs featuring solar backup, high-speed
           Starlink/Fiber, and workstation access.
         </p>
-        <div className="hero-actions">
-          <button
-            type="button"
-            onClick={() => setShowEnlistForm(!showEnlistForm)}
-            className="button button-green"
-          >
-            <PlusCircle className="h-4 w-4" />
-            {showEnlistForm ? "Close Enlistment Form" : "Enlist New Partner Hub"}
-          </button>
-        </div>
+        {(isAdmin || isHub) && (
+          <div className="hero-actions">
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setShowEnlistForm(!showEnlistForm)}
+                className="button button-green"
+              >
+                <PlusCircle className="h-4 w-4" />
+                {showEnlistForm ? "Close Enlistment Form" : "Enlist New Partner Hub"}
+              </button>
+            )}
+            {isHub && (
+              <Link href="/hub-portal" className="button button-green">
+                Manage Your Hub in Hub Portal <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
+          </div>
+        )}
       </section>
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
@@ -147,8 +158,8 @@ export default function HubsDirectoryPage() {
         </div>
       )}
 
-      {/* Enlistment Form Modal/Drawer */}
-      {showEnlistForm && (
+      {/* Enlistment Form Modal/Drawer (Admin only) */}
+      {isAdmin && showEnlistForm && (
         <form
           onSubmit={handleEnlistHub}
           className="rounded-2xl border-2 border-emerald-600/30 bg-white p-6 shadow-md space-y-4"

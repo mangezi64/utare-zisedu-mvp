@@ -15,7 +15,7 @@ import { SEED_REMOTE_JOBS } from "@/lib/mock-data";
 import { useViewMode } from "@/lib/view-mode-context";
 
 export default function OpportunitiesPage() {
-  const { user, isAuthenticated } = useViewMode();
+  const { user, isAuthenticated, isEmployer, isHub, isAdmin } = useViewMode();
   const [jobs, setJobs] = useState<RemoteJob[]>(SEED_REMOTE_JOBS);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -151,6 +151,28 @@ export default function OpportunitiesPage() {
     setSelectedArrangement("All");
   };
 
+  const isOwnEmployerJob = (job: RemoteJob) => {
+    if (!isEmployer || !user) return false;
+    if (user.employerId && job.employerId && user.employerId === job.employerId) {
+      return true;
+    }
+    if (
+      user.email &&
+      job.employerEmail &&
+      user.email.toLowerCase() === job.employerEmail.toLowerCase()
+    ) {
+      return true;
+    }
+    if (
+      user.companyName &&
+      job.company &&
+      user.companyName.trim().toLowerCase() === job.company.trim().toLowerCase()
+    ) {
+      return true;
+    }
+    return false;
+  };
+
   return (
     <div className="w-full min-h-screen">
       <PageBreadcrumb current="Opportunities" />
@@ -167,18 +189,62 @@ export default function OpportunitiesPage() {
 
         <div className="mt-5 max-w-3xl">
           {isAuthenticated && user ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-white/90 border border-[#c2e2d4] px-4 py-2.5 text-xs text-[#101a33]">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-[#08785f] shrink-0" />
-                <span>
-                  Signed in as <strong>{user.name}</strong> ({user.email}).
-                  Applications you submit link directly to your workspace.
-                </span>
+            isEmployer ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-white/90 border border-blue-200 px-4 py-2.5 text-xs text-[#101a33]">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-blue-700 shrink-0" />
+                  <span>
+                    Signed in as Employer <strong>{user.name}</strong>
+                    {user.companyName ? ` (${user.companyName})` : ""}. Manage
+                    your company listings and applicants in the Employer Portal.
+                  </span>
+                </div>
+                <Link href="/employer" className="text-link shrink-0">
+                  Employer Portal <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
-              <Link href="/account" className="text-link shrink-0">
-                My Workspace <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
+            ) : isHub ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-white/90 border border-teal-200 px-4 py-2.5 text-xs text-[#101a33]">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-teal-700 shrink-0" />
+                  <span>
+                    Hub Partner Read-Only View — browsing as{" "}
+                    <strong>{user.name}</strong>. Manage your hub workstations
+                    in the Hub Portal.
+                  </span>
+                </div>
+                <Link href="/hub-portal" className="text-link shrink-0">
+                  Hub Portal <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            ) : isAdmin ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-white/90 border border-amber-200 px-4 py-2.5 text-xs text-[#101a33]">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-amber-700 shrink-0" />
+                  <span>
+                    Admin Moderation View — signed in as{" "}
+                    <strong>{user.name}</strong>. Review, approve, or archive
+                    listings in the Admin Console.
+                  </span>
+                </div>
+                <Link href="/admin" className="text-link shrink-0">
+                  Manage in Admin Console <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-white/90 border border-[#c2e2d4] px-4 py-2.5 text-xs text-[#101a33]">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-[#08785f] shrink-0" />
+                  <span>
+                    Signed in as <strong>{user.name}</strong> ({user.email}).
+                    Applications you submit link directly to your workspace.
+                  </span>
+                </div>
+                <Link href="/account" className="text-link shrink-0">
+                  My Workspace <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            )
           ) : (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-xl bg-white/90 border border-[#e1e7ec] px-4 py-2.5 text-xs text-[#202b3c]">
               <div className="flex items-center gap-2">
@@ -405,18 +471,66 @@ export default function OpportunitiesPage() {
                     View details <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
 
-                  <Link
-                    href={`/jobs?jobId=${encodeURIComponent(job.id)}`}
-                    aria-label={`Tailor CV and apply for ${job.title} at ${job.company}`}
-                    className="button button-green"
-                    style={{
-                      minHeight: "34px",
-                      padding: "0 12px",
-                      fontSize: "11px",
-                    }}
-                  >
-                    Tailor CV &amp; Apply
-                  </Link>
+                  {isEmployer ? (
+                    isOwnEmployerJob(job) ? (
+                      <Link
+                        href="/employer"
+                        className="button button-green"
+                        style={{
+                          minHeight: "34px",
+                          padding: "0 12px",
+                          fontSize: "11px",
+                        }}
+                      >
+                        Manage in Employer Portal
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          lastTriggerRef.current = e.currentTarget;
+                          setActiveDetailJob(job);
+                        }}
+                        className="button"
+                        style={{
+                          minHeight: "34px",
+                          padding: "0 12px",
+                          fontSize: "11px",
+                        }}
+                      >
+                        View Listing
+                      </button>
+                    )
+                  ) : isAdmin ? (
+                    <Link
+                      href="/admin"
+                      className="button button-green"
+                      style={{
+                        minHeight: "34px",
+                        padding: "0 12px",
+                        fontSize: "11px",
+                      }}
+                    >
+                      Manage in Admin Console
+                    </Link>
+                  ) : isHub ? (
+                    <span className="text-[11px] font-semibold text-slate-500">
+                      Read-only Hub View
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/jobs?jobId=${encodeURIComponent(job.id)}`}
+                      aria-label={`Tailor CV and apply for ${job.title} at ${job.company}`}
+                      className="button button-green"
+                      style={{
+                        minHeight: "34px",
+                        padding: "0 12px",
+                        fontSize: "11px",
+                      }}
+                    >
+                      Tailor CV &amp; Apply
+                    </Link>
+                  )}
                 </div>
               </article>
             ))}
@@ -493,13 +607,33 @@ export default function OpportunitiesPage() {
             </dl>
 
             <div className="flex flex-wrap gap-2.5 mt-4">
-              <Link
-                href={`/jobs?jobId=${encodeURIComponent(activeDetailJob.id)}`}
-                className="button button-green"
-                style={{ flex: 1 }}
-              >
-                Tailor ATS CV &amp; Apply <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
+              {isEmployer ? (
+                isOwnEmployerJob(activeDetailJob) && (
+                  <Link
+                    href="/employer"
+                    className="button button-green"
+                    style={{ flex: 1 }}
+                  >
+                    Manage in Employer Portal <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </Link>
+                )
+              ) : isAdmin ? (
+                <Link
+                  href="/admin"
+                  className="button button-green"
+                  style={{ flex: 1 }}
+                >
+                  Manage in Admin Console <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              ) : isHub ? null : (
+                <Link
+                  href={`/jobs?jobId=${encodeURIComponent(activeDetailJob.id)}`}
+                  className="button button-green"
+                  style={{ flex: 1 }}
+                >
+                  Tailor ATS CV &amp; Apply <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              )}
               <button
                 type="button"
                 className="button"

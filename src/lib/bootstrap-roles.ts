@@ -60,6 +60,7 @@ export function resolvePostLoginDestination(
 ): string {
   const isAdminRole = role === "admin" || role === "superuser";
   const isEmployerRole = role === "employer";
+  const isHubRole = role === "hub";
 
   const isSafeRedirect =
     Boolean(redirectUrl) &&
@@ -73,9 +74,14 @@ export function resolvePostLoginDestination(
       !isAdminRole
     ) &&
     !(
+      redirectUrl!.startsWith("/hub-portal") &&
+      !isHubRole &&
+      !isAdminRole
+    ) &&
+    !(
       (redirectUrl!.startsWith("/account") ||
         redirectUrl!.startsWith("/pathway")) &&
-      isEmployerRole
+      (isEmployerRole || isHubRole)
     );
 
   if (isSafeRedirect && redirectUrl) {
@@ -83,5 +89,6 @@ export function resolvePostLoginDestination(
   }
   if (isAdminRole) return "/admin";
   if (isEmployerRole) return "/employer";
+  if (isHubRole) return "/hub-portal";
   return "/account";
 }

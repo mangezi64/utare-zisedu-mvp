@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest, adminUnauthorizedResponse } from "@/lib/auth-guard";
-import { addHubToStore, deleteHubFromStore, readStore } from "@/lib/store";
+import {
+  addHubToStore,
+  deleteHubFromStore,
+  findAuthUserByEmail,
+  readStore,
+  updateOrgMemberAccess,
+} from "@/lib/store";
 import { InnovationHub } from "@/types";
 
 
@@ -37,6 +43,8 @@ export async function POST(req: NextRequest) {
       utarePartnerSubsidized,
       contactEmail,
       operatingHours,
+      ownerEmail,
+      orgName,
     } = body;
 
     if (!name || !city || !address) {
@@ -50,6 +58,10 @@ export async function POST(req: NextRequest) {
       body.id ||
       `hub-${city.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 3)}-${Date.now().toString().slice(-4)}`;
 
+    const normalizedOwnerEmail = ownerEmail
+      ? String(ownerEmail).trim().toLowerCase()
+      : undefined;
+
     const newHub: InnovationHub = {
       id: hubId,
       name: name.trim(),
@@ -62,11 +74,25 @@ export async function POST(req: NextRequest) {
       laptopLoanAvailable: Boolean(laptopLoanAvailable ?? true),
       dailyPassUsd: Number(dailyPassUsd) || 0,
       utarePartnerSubsidized: Boolean(utarePartnerSubsidized ?? true),
-      contactEmail: (contactEmail || `${city.toLowerCase()}@utare-zem.org`).trim(),
+      contactEmail: (contactEmail || normalizedOwnerEmail || `${city.toLowerCase()}@utare-zem.org`).trim(),
       operatingHours: (operatingHours || "08:00 - 18:00 (Mon - Sat)").trim(),
+      ownerEmail: normalizedOwnerEmail || undefined,
+      orgName: orgName ? String(orgName).trim() : undefined,
+      updatedAt: new Date().toISOString(),
     };
 
     const saved = addHubToStore(newHub);
+    if (normalizedOwnerEmail) {
+      const existingOwner = findAuthUserByEmail(normalizedOwnerEmail);
+      if (existingOwner && existingOwner.role === "hub" && !existingOwner.hubId) {
+        updateOrgMemberAccess(existingOwner.id, {
+          hubId: saved.id,
+          orgRole: existingOwner.orgRole || "org_admin",
+          companyName: saved.orgName || saved.name,
+        });
+      }
+    }
+
     return NextResponse.json({
       success: true,
       hub: saved,

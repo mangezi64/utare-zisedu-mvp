@@ -681,10 +681,11 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: "accessibility-settings-and-navigation",
     category: "accessibility-navigation",
     question:
-      "What accessibility modes and navigation shortcuts are built into the web app?",
+      "What language, screen-reader, disability, and low-data/offline features are built in?",
     answer: [
-      "Click 'Accessibility' in the top or footer Assistive Toolbar to customize WCAG AAA High Contrast mode, Colorblind visual filters (Deuteranopia, Protanopia, Tritanopia, Monochrome), Larger or Extra-Large text scaling, Dyslexia-friendly spacing, Reduced Motion, and screen-reader page outline announcements. Your preferences save locally in your browser.",
-      "Across inner pages, a sticky Two-Way Breadcrumb bar keeps a high-contrast '← Back' button (returning cleanly to your previous screen or role workspace) alongside a 'Next →' shortcut so you never get lost on mobile or desktop.",
+      "UTARE supports English, ChiShona, and isiNdebele via the Language switcher in the top Assistive Toolbar and Accessibility panel, automatically updating the page's screen-reader language tag and Audio Overview transcripts.",
+      "For users with visual, motor, or cognitive disabilities, the platform is built with semantic landmarks, keyboard navigation (Tab, Enter, Escape, Skip to main content), ARIA live regions for NVDA, JAWS, VoiceOver, and Android TalkBack, plus WCAG AAA High Contrast, 4 Colorblind filters, 130% text scaling, Dyslexia-friendly spacing, and Reduced Motion.",
+      "UTARE is lightweight for smartphones on 3G/4G low-data bundles, auto-saves diagnostic drafts locally on your device if power or data cuts out, and displays an offline status banner until your connection returns.",
     ],
     links: [
       { label: "Home Overview", href: "/" },
@@ -699,6 +700,15 @@ export const FAQ_ITEMS: FaqItem[] = [
       "breadcrumb",
       "back button",
       "mobile",
+      "shona",
+      "ndebele",
+      "screen reader",
+      "nvda",
+      "talkback",
+      "voiceover",
+      "disability",
+      "low data",
+      "offline",
     ],
   },
 ];

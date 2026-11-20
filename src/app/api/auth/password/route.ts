@@ -6,13 +6,17 @@ import {
   resolveBootstrapRole,
   unauthorizedResponse,
 } from "@/lib/auth-guard";
+import { SESSION_COOKIE_NAME, signSessionToken } from "@/lib/auth-session";
+import { resolvePostLoginDestination } from "@/lib/bootstrap-roles";
 import { hashPassword, verifyPassword } from "@/lib/password-hash";
 import {
+  confirmUserEmailByAddressAsync,
   createAuthUser,
   findAuthUserByEmail,
   findAuthUserByEmailFromDb,
   findCandidateByEmailAsync,
   updateUserPassword,
+  verifyAndConsumeResetToken,
 } from "@/lib/store";
 import {
   getSupabaseAdmin,
@@ -20,7 +24,7 @@ import {
   isSupabaseConfigured,
   supabase,
 } from "@/lib/supabase/client";
-import { safeSupabaseUpdate } from "@/lib/supabase/safe-write";
+import { isValidUuid, safeSupabaseUpdate } from "@/lib/supabase/safe-write";
 import { validateEmail, validatePassword } from "@/lib/validation";
 import { UserRole } from "@/types";
 
@@ -29,7 +33,8 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const mode: "change" | "reset" | "admin-reset" = body.mode || "change";
+    const mode: "change" | "reset" | "admin-reset" | "set-password" =
+      body.mode || "change";
     const newPassword = String(body.newPassword || "");
 
     const pwCheck = validatePassword(newPassword);
@@ -113,6 +118,150 @@ export async function POST(req: NextRequest) {
         success: true,
         message: `Password for ${targetEmail} has been updated and verified.`,
       });
+    }
+
+    // -------------------------------------------------------------------------
+    // MODE 1.5: Set Password via One-Time Invite/Reset Token or Callback Session
+    // -------------------------------------------------------------------------
+    if (mode === "set-password") {
+      const resetToken = String(body.resetToken || body.token || "").trim();
+      const rawEmail = String(body.email || "").trim().toLowerCase();
+
+      let targetEmail = rawEmail;
+      let targetUser = null;
+
+      if (resetToken) {
+        if (!targetEmail || !validateEmail(targetEmail).isValid) {
+          return NextResponse.json(
+            { error: "Valid email address is required with reset token." },
+            { status: 400 }
+          );
+        }
+        targetUser = await verifyAndConsumeResetToken(targetEmail, resetToken);
+        if (!targetUser) {
+          return NextResponse.json(
+            {
+              error:
+                "Invalid or expired password setup link. Please request a new invite or reset link.",
+            },
+            { status: 400 }
+          );
+        }
+        targetEmail = targetUser.email.toLowerCase();
+      } else {
+        const session = await getSessionFromRequest(req);
+        if (!session) {
+          return unauthorizedResponse(
+            "Missing reset token or active verification session."
+          );
+        }
+        targetEmail = session.email.toLowerCase();
+        targetUser =
+          findAuthUserByEmail(targetEmail) ||
+          (await findAuthUserByEmailFromDb(targetEmail));
+        if (!targetUser) {
+          targetUser = createAuthUser({
+            id: session.sub,
+            email: targetEmail,
+            name: session.name,
+            role: session.role,
+            orgRole: session.orgRole,
+            employerId: session.employerId,
+            hubId: session.hubId,
+            companyName: session.companyName,
+            passwordHash,
+            emailConfirmed: true,
+          });
+        }
+      }
+
+      if (adminClient) {
+        try {
+          let supaUserId: string | null = isValidUuid(targetUser.id)
+            ? targetUser.id
+            : null;
+          if (!supaUserId) {
+            const { data: listData } = await adminClient.auth.admin.listUsers();
+            const su = listData?.users?.find(
+              (u) => u.email?.toLowerCase() === targetEmail
+            );
+            if (su) supaUserId = su.id;
+          }
+          if (supaUserId) {
+            await adminClient.auth.admin.updateUserById(supaUserId, {
+              password: newPassword,
+              email_confirm: true,
+            });
+          }
+        } catch (err) {
+          console.warn("[Set Password Supabase Warning]:", err);
+        }
+      }
+
+      updateUserPassword(targetEmail, passwordHash);
+      const confirmedUser =
+        (await confirmUserEmailByAddressAsync(targetEmail)) || targetUser;
+
+      if (sb) {
+        safeSupabaseUpdate(
+          sb,
+          "auth_users",
+          {
+            password_hash: passwordHash,
+            email_confirmed: true,
+            reset_token: null,
+            reset_token_expires_at: null,
+          },
+          "email",
+          targetEmail,
+          { caseInsensitive: true }
+        ).catch(() => {});
+      }
+
+      const finalRole = resolveBootstrapRole(targetEmail, confirmedUser.role);
+      const redirectTo = resolvePostLoginDestination(finalRole);
+      const sessionToken = await signSessionToken({
+        sub: confirmedUser.id,
+        email: targetEmail,
+        name: confirmedUser.name,
+        role: finalRole,
+        orgRole: confirmedUser.orgRole,
+        employerId: confirmedUser.employerId,
+        hubId: confirmedUser.hubId,
+        emailConfirmed: true,
+        companyName: confirmedUser.companyName,
+        city: confirmedUser.city,
+        qualification: confirmedUser.qualification,
+        fieldOfStudy: confirmedUser.fieldOfStudy,
+      });
+
+      const res = NextResponse.json({
+        success: true,
+        role: finalRole,
+        redirectTo,
+        message: "Password set successfully! Redirecting to your workspace...",
+        user: {
+          id: confirmedUser.id,
+          email: targetEmail,
+          name: confirmedUser.name,
+          role: finalRole,
+          orgRole: confirmedUser.orgRole,
+          employerId: confirmedUser.employerId,
+          hubId: confirmedUser.hubId,
+          emailConfirmed: true,
+          companyName: confirmedUser.companyName,
+        },
+      });
+
+      res.cookies.set(SESSION_COOKIE_NAME, sessionToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+      });
+
+      return res;
     }
 
     // -------------------------------------------------------------------------

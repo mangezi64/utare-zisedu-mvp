@@ -238,6 +238,9 @@ export interface InnovationHub {
   utarePartnerSubsidized: boolean;
   contactEmail: string;
   operatingHours: string;
+  ownerEmail?: string;
+  orgName?: string;
+  updatedAt?: string;
 }
 
 export interface CoachProfile {
@@ -322,7 +325,9 @@ export interface RemoteJob {
   updatedBy?: string;
 }
 
-export type UserRole = "candidate" | "employer" | "admin" | "superuser";
+export type UserRole = "candidate" | "employer" | "hub" | "admin" | "superuser";
+
+export type OrgRole = "org_admin" | "org_member";
 
 export type ApplicationStatus =
   | "submitted"
@@ -541,6 +546,7 @@ export interface AuditLogEntry {
     | "job"
     | "application"
     | "employer"
+    | "hub"
     | "document"
     | "cv_artifact";
   entityId: string;

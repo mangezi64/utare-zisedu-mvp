@@ -19,7 +19,7 @@ import {
   updateUserRole,
 } from "@/lib/store";
 import { getSupabaseAdmin, isSupabaseConfigured, supabase } from "@/lib/supabase/client";
-import { UserRole } from "@/types";
+import { OrgRole, UserRole } from "@/types";
 import { resolveBootstrapRole } from "@/lib/bootstrap-roles";
 export { resolveBootstrapRole, DEFAULT_BOOTSTRAP_SUPERUSERS } from "@/lib/bootstrap-roles";
 
@@ -42,6 +42,9 @@ export async function getSessionFromRequest(
       const storedUser =
         findAuthUserByEmail(verified.email) ||
         (await findAuthUserByEmailFromDb(verified.email));
+      if (storedUser && storedUser.isActive === false) {
+        return null;
+      }
       const effectiveRole = resolveBootstrapRole(
         verified.email,
         storedUser?.role || verified.role
@@ -52,6 +55,9 @@ export async function getSessionFromRequest(
       return {
         ...verified,
         role: effectiveRole,
+        orgRole: storedUser?.orgRole || verified.orgRole,
+        employerId: storedUser?.employerId || verified.employerId,
+        hubId: storedUser?.hubId || verified.hubId,
         emailConfirmed: storedUser ? storedUser.emailConfirmed : verified.emailConfirmed,
         companyName: storedUser?.companyName || verified.companyName,
       };
@@ -64,6 +70,7 @@ export async function getSessionFromRequest(
         if (!error && data?.user && data.user.email) {
           let role: UserRole =
             (data.user.app_metadata?.role as UserRole) || "candidate";
+          let appMeta = (data.user.app_metadata || {}) as Record<string, unknown>;
           const adminClient = getSupabaseAdmin();
           if (adminClient) {
             const { data: adminUser } = await adminClient.auth.admin.getUserById(
@@ -72,7 +79,19 @@ export async function getSessionFromRequest(
             if (adminUser?.user?.app_metadata?.role) {
               role = adminUser.user.app_metadata.role as UserRole;
             }
+            if (adminUser?.user?.app_metadata) {
+              appMeta = adminUser.user.app_metadata as Record<string, unknown>;
+            }
           }
+          const orgRole = (appMeta.org_role || appMeta.orgRole) as
+            | OrgRole
+            | undefined;
+          const employerId = (appMeta.employer_id || appMeta.employerId) as
+            | string
+            | undefined;
+          const hubId = (appMeta.hub_id || appMeta.hubId) as
+            | string
+            | undefined;
           role = resolveBootstrapRole(data.user.email, role);
           const now = Math.floor(Date.now() / 1000);
           return {
@@ -82,6 +101,9 @@ export async function getSessionFromRequest(
               (data.user.user_metadata?.full_name as string) ||
               data.user.email.split("@")[0],
             role,
+            orgRole,
+            employerId,
+            hubId,
             emailConfirmed: Boolean(data.user.email_confirmed_at),
             companyName: data.user.user_metadata?.company_name as
               | string

@@ -66,7 +66,7 @@ const DEFAULT_PROFILE: CandidateProfile = {
 
 export default function CandidateAccountPage() {
   const router = useRouter();
-  const { user, isAuthenticated, logout } = useViewMode();
+  const { user, isAuthenticated, isEmployer, isHub, isAdmin, logout } = useViewMode();
   const [candidate, setCandidate] = useState<StoredCandidateRecord | null>(null);
   const [profile, setProfile] = useState<CandidateProfile>(DEFAULT_PROFILE);
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
@@ -121,7 +121,7 @@ export default function CandidateAccountPage() {
   }
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || isEmployer || isHub || isAdmin) return;
 
     const url = user?.email
       ? `/api/auth/profile?email=${encodeURIComponent(user.email)}`
@@ -173,7 +173,7 @@ export default function CandidateAccountPage() {
       .catch(() => {});
 
     loadAttachments();
-  }, [user, isAuthenticated]);
+  }, [user, isAuthenticated, isEmployer, isHub, isAdmin]);
 
   if (!isAuthenticated) {
     return (
@@ -204,6 +204,58 @@ export default function CandidateAccountPage() {
           </Link>
         </div>
       </div>
+      </div>
+    );
+  }
+
+  if (isEmployer || isHub || isAdmin) {
+    const portalHref = isAdmin ? "/admin" : isEmployer ? "/employer" : "/hub-portal";
+    const portalLabel = isAdmin
+      ? "Go to Admin Console"
+      : isEmployer
+        ? "Go to Employer Portal"
+        : "Go to Hub Portal";
+    const roleTitle = isAdmin
+      ? "Admin Account — Candidate Workspace Not Applicable"
+      : isEmployer
+        ? "Employer Account — Candidate Workspace Not Applicable"
+        : "Partner Hub Account — Candidate Workspace Not Applicable";
+    const roleDesc = isAdmin
+      ? "You are signed in as a Platform Administrator. Use the Admin Console to manage verification queues, employers, partner hubs, and platform operations."
+      : isEmployer
+        ? "You are signed in as an Employer. Manage your company profile, job listings, and candidate applications in the Employer Portal."
+        : "You are signed in as a Partner Hub operator. Manage workstation availability, laptop loans, and hub team access in the Hub Portal.";
+
+    return (
+      <div className="w-full min-h-screen">
+        <PageBreadcrumb current="My Workspace" />
+        <div className="mx-auto max-w-lg py-20 px-4 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-800 shadow-sm">
+            {isAdmin ? (
+              <ShieldCheck className="h-8 w-8 text-amber-700" />
+            ) : isEmployer ? (
+              <Briefcase className="h-8 w-8 text-blue-700" />
+            ) : (
+              <Building2 className="h-8 w-8 text-teal-700" />
+            )}
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">{roleTitle}</h1>
+          <p className="mt-2 text-sm text-slate-600">{roleDesc}</p>
+          <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+            <Link
+              href={portalHref}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#08785f] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#06634e] transition"
+            >
+              {portalLabel} <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+            >
+              Back to Home
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

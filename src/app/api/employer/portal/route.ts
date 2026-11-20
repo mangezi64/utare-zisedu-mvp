@@ -11,9 +11,25 @@ import {
   updateApplicationStatus,
   updateJobStatus,
 } from "@/lib/store";
-import { ApplicationStatus, RemoteJob } from "@/types";
+import { ApplicationStatus, OrgRole, RemoteJob } from "@/types";
+import { SessionPayload } from "@/lib/auth-session";
 
 export const runtime = "nodejs";
+
+function resolveEffectiveOrgRole(session: SessionPayload): OrgRole {
+  if (session.role === "admin" || session.role === "superuser") {
+    return "org_admin";
+  }
+  return session.orgRole || "org_admin";
+}
+
+function resolveEmployerForSession(session: SessionPayload) {
+  return (
+    (session.employerId ? findEmployerById(session.employerId) : null) ||
+    findEmployerByEmail(session.email) ||
+    findEmployerById(session.sub)
+  );
+}
 
 export async function GET(req: NextRequest) {
   const session = await requireRoles(req, ["employer", "admin", "superuser"]);
@@ -21,10 +37,10 @@ export async function GET(req: NextRequest) {
     return unauthorizedResponse("Employer authentication required.");
   }
 
-  let employer =
-    findEmployerByEmail(session.email) || findEmployerById(session.sub);
+  const orgRole = resolveEffectiveOrgRole(session);
+  let employer = resolveEmployerForSession(session);
 
-  if (!employer && session.role === "employer") {
+  if (!employer && session.role === "employer" && orgRole === "org_admin") {
     employer = saveEmployerRegistration({
       userId: session.sub,
       companyName: session.companyName || `${session.name} Organization`,
@@ -40,7 +56,7 @@ export async function GET(req: NextRequest) {
   }
 
   const lookup = {
-    id: employer?.id || session.sub,
+    id: employer?.id || session.employerId || session.sub,
     email: employer?.email || session.email,
     companyName: employer?.companyName || session.companyName,
   };
@@ -53,6 +69,7 @@ export async function GET(req: NextRequest) {
     employer,
     jobs,
     applicants,
+    orgRole,
   });
 }
 
@@ -64,10 +81,19 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    let employer =
-      findEmployerByEmail(session.email) || findEmployerById(session.sub);
+    const orgRole = resolveEffectiveOrgRole(session);
+    let employer = resolveEmployerForSession(session);
 
     if (!employer) {
+      if (orgRole !== "org_admin") {
+        return NextResponse.json(
+          {
+            error:
+              "No organization profile is linked to your team member account. Please contact your Organization Admin.",
+          },
+          { status: 403 }
+        );
+      }
       employer = saveEmployerRegistration({
         userId: session.sub,
         companyName:
@@ -204,15 +230,30 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const employer =
-      findEmployerByEmail(session.email) || findEmployerById(session.sub);
+    const orgRole = resolveEffectiveOrgRole(session);
+    const employer = resolveEmployerForSession(session);
     const lookup = {
-      id: employer?.id || session.sub,
+      id: employer?.id || session.employerId || session.sub,
       email: employer?.email || session.email,
       companyName: employer?.companyName || session.companyName,
     };
 
-    if (body.action === "update_employer_profile" && employer) {
+    if (body.action === "update_employer_profile") {
+      if (orgRole !== "org_admin") {
+        return NextResponse.json(
+          {
+            error:
+              "Only Organization Admins can update company profile and settings.",
+          },
+          { status: 403 }
+        );
+      }
+      if (!employer) {
+        return NextResponse.json(
+          { error: "Employer profile not found." },
+          { status: 404 }
+        );
+      }
       const updatedEmp = saveEmployerRegistration({
         ...employer,
         website:
@@ -256,6 +297,19 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json(
           { error: "Valid applicationId and status are required." },
           { status: 400 }
+        );
+      }
+
+      if (
+        orgRole !== "org_admin" &&
+        (nextStatus === "hired" || nextStatus === "rejected")
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Only Organization Admins can make final hired or rejected decisions. Team members may move applicants to Under Review or Shortlisted.",
+          },
+          { status: 403 }
         );
       }
 

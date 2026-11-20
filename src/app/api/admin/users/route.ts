@@ -13,10 +13,12 @@ import {
   listInactivityRetentionStatus,
   purgeInactiveAccountAfterNotices,
   recordInactivityNoticeEmail,
+  updateOrgMemberAccess,
   updateUserRole,
 } from "@/lib/store";
 import { getSupabaseAdmin } from "@/lib/supabase/client";
-import { UserRole } from "@/types";
+import { isValidUuid } from "@/lib/supabase/safe-write";
+import { OrgRole, UserRole } from "@/types";
 
 export const runtime = "nodejs";
 
@@ -85,6 +87,7 @@ export async function PATCH(req: NextRequest) {
     const validRoles: UserRole[] = [
       "candidate",
       "employer",
+      "hub",
       "admin",
       "superuser",
     ];
@@ -95,6 +98,31 @@ export async function PATCH(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    const rawOrgRole = body.orgRole;
+    let orgRole: OrgRole | undefined;
+    if (rawOrgRole !== undefined && rawOrgRole !== null && rawOrgRole !== "") {
+      if (rawOrgRole !== "org_admin" && rawOrgRole !== "org_member") {
+        return NextResponse.json(
+          { error: 'Invalid orgRole. Must be "org_admin" or "org_member".' },
+          { status: 400 }
+        );
+      }
+      orgRole = rawOrgRole;
+    }
+
+    const employerId =
+      body.employerId !== undefined
+        ? String(body.employerId || "").trim()
+        : undefined;
+    const hubId =
+      body.hubId !== undefined ? String(body.hubId || "").trim() : undefined;
+    const companyName =
+      body.companyName !== undefined
+        ? String(body.companyName || "").trim()
+        : undefined;
+    const isActive =
+      typeof body.isActive === "boolean" ? body.isActive : undefined;
 
     // Hydrate target from DB or Supabase Auth if not in local store yet
     let existingTarget =
@@ -147,7 +175,7 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    const updated = updateUserRole(emailOrId, role);
+    let updated = updateUserRole(emailOrId, role);
     if (!updated) {
       return NextResponse.json(
         {
@@ -158,14 +186,75 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Also sync role to Supabase Auth app_metadata if configured
-    if (adminClient && updated.id) {
+    if (
+      orgRole !== undefined ||
+      employerId !== undefined ||
+      hubId !== undefined ||
+      companyName !== undefined ||
+      isActive !== undefined
+    ) {
+      updated =
+        updateOrgMemberAccess(emailOrId, {
+          role,
+          ...(orgRole !== undefined ? { orgRole } : {}),
+          ...(employerId !== undefined ? { employerId } : {}),
+          ...(hubId !== undefined ? { hubId } : {}),
+          ...(companyName !== undefined ? { companyName } : {}),
+          ...(isActive !== undefined ? { isActive } : {}),
+        }) || updated;
+    }
+
+    // Also sync role & org metadata to Supabase Auth app_metadata if configured
+    if (adminClient) {
       try {
-        await adminClient.auth.admin.updateUserById(updated.id, {
-          app_metadata: { role },
-        });
+        let supaUserId: string | null = isValidUuid(updated.id)
+          ? updated.id
+          : null;
+        let existingAppMeta: Record<string, unknown> = {};
+
+        if (supaUserId) {
+          const { data: userRes } = await adminClient.auth.admin.getUserById(
+            supaUserId
+          );
+          if (userRes?.user) {
+            existingAppMeta = userRes.user.app_metadata || {};
+          } else {
+            supaUserId = null;
+          }
+        }
+
+        if (!supaUserId) {
+          const { data: listData } = await adminClient.auth.admin.listUsers();
+          const su = listData?.users?.find(
+            (u) =>
+              u.email && u.email.toLowerCase() === updated!.email.toLowerCase()
+          );
+          if (su) {
+            supaUserId = su.id;
+            existingAppMeta = su.app_metadata || {};
+          }
+        }
+
+        if (supaUserId) {
+          const nextAppMeta: Record<string, unknown> = {
+            ...existingAppMeta,
+            role,
+          };
+          if (updated.orgRole !== undefined || orgRole !== undefined) {
+            nextAppMeta.org_role = updated.orgRole ?? null;
+          }
+          if (updated.employerId !== undefined || employerId !== undefined) {
+            nextAppMeta.employer_id = updated.employerId ?? null;
+          }
+          if (updated.hubId !== undefined || hubId !== undefined) {
+            nextAppMeta.hub_id = updated.hubId ?? null;
+          }
+          await adminClient.auth.admin.updateUserById(supaUserId, {
+            app_metadata: nextAppMeta,
+          });
+        }
       } catch {
-        // Non-fatal if user ID is local
+        // Non-fatal if user ID is local or Supabase lookup fails
       }
     }
 

@@ -30,7 +30,7 @@ import {
   resolveBootstrapRole,
   resolvePostLoginDestination,
 } from "@/lib/bootstrap-roles";
-import { CandidateProfile, UserRole } from "@/types";
+import { CandidateProfile, OrgRole, UserRole } from "@/types";
 
 export const runtime = "nodejs";
 
@@ -39,6 +39,7 @@ const VALID_OTP_TYPES = new Set<EmailOtpType>([
   "email",
   "magiclink",
   "recovery",
+  "invite",
   "email_change",
 ]);
 
@@ -52,6 +53,9 @@ async function buildVerifiedSessionResponse(params: {
   email: string;
   name: string;
   role: UserRole;
+  orgRole?: OrgRole;
+  employerId?: string;
+  hubId?: string;
   companyName?: string;
   city?: string;
   qualification?: string;
@@ -65,6 +69,9 @@ async function buildVerifiedSessionResponse(params: {
     email: params.email,
     name: params.name,
     role: params.role,
+    orgRole: params.orgRole,
+    employerId: params.employerId,
+    hubId: params.hubId,
     emailConfirmed: true,
     companyName: params.companyName,
     city: params.city,
@@ -75,6 +82,9 @@ async function buildVerifiedSessionResponse(params: {
   const res = NextResponse.json({
     success: true,
     role: params.role,
+    orgRole: params.orgRole,
+    employerId: params.employerId,
+    hubId: params.hubId,
     email: params.email,
     ...(params.redirectTo ? { redirectTo: params.redirectTo } : {}),
     ...(params.provider ? { provider: params.provider } : {}),
@@ -83,6 +93,9 @@ async function buildVerifiedSessionResponse(params: {
       email: params.email,
       name: params.name,
       role: params.role,
+      orgRole: params.orgRole,
+      employerId: params.employerId,
+      hubId: params.hubId,
       emailConfirmed: true,
       companyName: params.companyName,
       city: params.city,
@@ -348,6 +361,16 @@ async function finalizeSupabaseVerifiedUser(
     email: verifiedEmail,
     name: resolvedName,
     role: finalRole,
+    orgRole:
+      localUser?.orgRole ||
+      (supaUser.app_metadata?.org_role as OrgRole | undefined),
+    employerId:
+      localUser?.employerId ||
+      (supaUser.app_metadata?.employer_id as string | undefined) ||
+      employer?.id,
+    hubId:
+      localUser?.hubId ||
+      (supaUser.app_metadata?.hub_id as string | undefined),
     companyName:
       localUser?.companyName ||
       (supaUser.user_metadata?.company_name as string | undefined) ||
@@ -475,6 +498,9 @@ export async function POST(req: NextRequest) {
       email: user.email,
       name: user.name,
       role: finalRole,
+      orgRole: user.orgRole,
+      employerId: user.employerId || employer?.id,
+      hubId: user.hubId,
       companyName: user.companyName || employer?.companyName,
       city: user.city || candidate?.profile.city,
       qualification:

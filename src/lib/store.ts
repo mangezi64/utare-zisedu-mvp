@@ -24,6 +24,7 @@ import {
   GeneratedCoverLetter,
   GeneratedCv,
   InnovationHub,
+  OrgRole,
   RemoteJob,
   SkillsAssessmentResult,
   SkillsCourse,
@@ -49,10 +50,15 @@ export interface StoredAuthUser {
   emailConfirmed: boolean;
   confirmationToken?: string;
   resetToken?: string;
+  resetTokenExpiresAt?: string;
   employerId?: string;
-  /** Reserved for future multi-seat employer organization scoping ('org_admin' | 'org_member') */
-  orgRole?: "org_admin" | "org_member";
+  hubId?: string;
+  /** Multi-seat organization scoping ('org_admin' | 'org_member') */
+  orgRole?: OrgRole;
   companyName?: string;
+  invitedBy?: string;
+  invitedAt?: string;
+  isActive?: boolean;
   city?: string;
   qualification?: string;
   fieldOfStudy?: string;
@@ -290,23 +296,78 @@ export function writeStore(state: UtareDatabaseState): UtareDatabaseState {
 // Auth Users Management (Backend-Enforced Roles)
 // =============================================================================
 
+function mapRowToStoredAuthUser(
+  row: any,
+  overrides: Partial<StoredAuthUser> = {}
+): StoredAuthUser {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    role: row.role,
+    passwordHash: row.password_hash,
+    emailConfirmed: Boolean(row.email_confirmed),
+    confirmationToken: row.confirmation_token || undefined,
+    resetToken: row.reset_token || undefined,
+    resetTokenExpiresAt: row.reset_token_expires_at
+      ? new Date(row.reset_token_expires_at).toISOString()
+      : undefined,
+    employerId: row.employer_id || undefined,
+    hubId: row.hub_id || undefined,
+    orgRole: row.org_role || undefined,
+    companyName: row.company_name || undefined,
+    invitedBy: row.invited_by || undefined,
+    invitedAt: row.invited_at
+      ? new Date(row.invited_at).toISOString()
+      : undefined,
+    createdAt: row.created_at
+      ? new Date(row.created_at).toISOString()
+      : new Date().toISOString(),
+    lastActiveAt: row.last_active_at
+      ? new Date(row.last_active_at).toISOString()
+      : undefined,
+    inactivityNoticesSent:
+      typeof row.inactivity_notices_sent === "number"
+        ? row.inactivity_notices_sent
+        : undefined,
+    lastInactivityNoticeAt: row.last_inactivity_notice_at
+      ? new Date(row.last_inactivity_notice_at).toISOString()
+      : undefined,
+    remainConfirmedAt: row.remain_confirmed_at
+      ? new Date(row.remain_confirmed_at).toISOString()
+      : undefined,
+    dataPolicyAcceptedAt: row.data_policy_accepted_at
+      ? new Date(row.data_policy_accepted_at).toISOString()
+      : undefined,
+    dataPolicyVersion: row.data_policy_version || undefined,
+    ...overrides,
+  };
+}
+
 function syncAuthUserToPostgres(user: StoredAuthUser) {
   query(
     `INSERT INTO public.auth_users (
        id, email, name, role, password_hash, email_confirmed,
-       confirmation_token, employer_id, org_role, company_name, created_at,
+       confirmation_token, reset_token, reset_token_expires_at,
+       employer_id, hub_id, org_role, company_name,
+       invited_by, invited_at, created_at,
        last_active_at, inactivity_notices_sent, last_inactivity_notice_at,
        remain_confirmed_at, data_policy_accepted_at, data_policy_version
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
      ON CONFLICT (email) DO UPDATE SET
        name = EXCLUDED.name,
        role = EXCLUDED.role,
        password_hash = EXCLUDED.password_hash,
        email_confirmed = EXCLUDED.email_confirmed,
        confirmation_token = EXCLUDED.confirmation_token,
+       reset_token = EXCLUDED.reset_token,
+       reset_token_expires_at = EXCLUDED.reset_token_expires_at,
        employer_id = EXCLUDED.employer_id,
+       hub_id = EXCLUDED.hub_id,
        org_role = EXCLUDED.org_role,
        company_name = EXCLUDED.company_name,
+       invited_by = COALESCE(EXCLUDED.invited_by, public.auth_users.invited_by),
+       invited_at = COALESCE(EXCLUDED.invited_at, public.auth_users.invited_at),
        last_active_at = COALESCE(EXCLUDED.last_active_at, public.auth_users.last_active_at),
        data_policy_accepted_at = COALESCE(EXCLUDED.data_policy_accepted_at, public.auth_users.data_policy_accepted_at),
        data_policy_version = COALESCE(EXCLUDED.data_policy_version, public.auth_users.data_policy_version);`,
@@ -318,9 +379,14 @@ function syncAuthUserToPostgres(user: StoredAuthUser) {
       user.passwordHash,
       user.emailConfirmed,
       user.confirmationToken || null,
+      user.resetToken || null,
+      user.resetTokenExpiresAt || null,
       user.employerId || null,
+      user.hubId || null,
       user.orgRole || null,
       user.companyName || null,
+      user.invitedBy || null,
+      user.invitedAt || null,
       user.createdAt,
       user.lastActiveAt || user.createdAt,
       user.inactivityNoticesSent ?? 0,
@@ -344,9 +410,14 @@ function syncAuthUserToPostgres(user: StoredAuthUser) {
         password_hash: user.passwordHash,
         email_confirmed: user.emailConfirmed,
         confirmation_token: user.confirmationToken || null,
+        reset_token: user.resetToken || null,
+        reset_token_expires_at: user.resetTokenExpiresAt || null,
         employer_id: user.employerId || null,
+        hub_id: user.hubId || null,
         org_role: user.orgRole || null,
         company_name: user.companyName || null,
+        invited_by: user.invitedBy || null,
+        invited_at: user.invitedAt || null,
         created_at: user.createdAt,
         last_active_at: user.lastActiveAt || user.createdAt,
         inactivity_notices_sent: user.inactivityNoticesSent ?? 0,
@@ -375,7 +446,9 @@ export async function findAuthUserByEmailFromDb(
   try {
     const res = await query<any>(
       `SELECT id, email, name, role, password_hash, email_confirmed,
-              confirmation_token, employer_id, org_role, company_name, created_at,
+              confirmation_token, reset_token, reset_token_expires_at,
+              employer_id, hub_id, org_role, company_name,
+              invited_by, invited_at, created_at,
               last_active_at, inactivity_notices_sent, last_inactivity_notice_at,
               remain_confirmed_at, data_policy_accepted_at, data_policy_version
        FROM public.auth_users
@@ -384,39 +457,7 @@ export async function findAuthUserByEmailFromDb(
       [normalized]
     );
     if (res && res.rows && res.rows.length > 0) {
-      const row = res.rows[0];
-      const user: StoredAuthUser = {
-        id: row.id,
-        email: row.email,
-        name: row.name,
-        role: row.role,
-        passwordHash: row.password_hash,
-        emailConfirmed: Boolean(row.email_confirmed),
-        confirmationToken: row.confirmation_token || undefined,
-        employerId: row.employer_id || undefined,
-        orgRole: row.org_role || undefined,
-        companyName: row.company_name || undefined,
-        createdAt: row.created_at
-          ? new Date(row.created_at).toISOString()
-          : new Date().toISOString(),
-        lastActiveAt: row.last_active_at
-          ? new Date(row.last_active_at).toISOString()
-          : undefined,
-        inactivityNoticesSent:
-          typeof row.inactivity_notices_sent === "number"
-            ? row.inactivity_notices_sent
-            : undefined,
-        lastInactivityNoticeAt: row.last_inactivity_notice_at
-          ? new Date(row.last_inactivity_notice_at).toISOString()
-          : undefined,
-        remainConfirmedAt: row.remain_confirmed_at
-          ? new Date(row.remain_confirmed_at).toISOString()
-          : undefined,
-        dataPolicyAcceptedAt: row.data_policy_accepted_at
-          ? new Date(row.data_policy_accepted_at).toISOString()
-          : undefined,
-        dataPolicyVersion: row.data_policy_version || undefined,
-      };
+      const user = mapRowToStoredAuthUser(res.rows[0]);
       const state = readStore();
       const idx = state.users.findIndex(
         (u) => u.email.trim().toLowerCase() === normalized
@@ -444,38 +485,7 @@ export async function findAuthUserByEmailFromDb(
         .maybeSingle();
 
       if (!error && row) {
-        const user: StoredAuthUser = {
-          id: row.id,
-          email: row.email,
-          name: row.name,
-          role: row.role,
-          passwordHash: row.password_hash,
-          emailConfirmed: Boolean(row.email_confirmed),
-          confirmationToken: row.confirmation_token || undefined,
-          employerId: row.employer_id || undefined,
-          orgRole: row.org_role || undefined,
-          companyName: row.company_name || undefined,
-          createdAt: row.created_at
-            ? new Date(row.created_at).toISOString()
-            : new Date().toISOString(),
-          lastActiveAt: row.last_active_at
-            ? new Date(row.last_active_at).toISOString()
-            : undefined,
-          inactivityNoticesSent:
-            typeof row.inactivity_notices_sent === "number"
-              ? row.inactivity_notices_sent
-              : undefined,
-          lastInactivityNoticeAt: row.last_inactivity_notice_at
-            ? new Date(row.last_inactivity_notice_at).toISOString()
-            : undefined,
-          remainConfirmedAt: row.remain_confirmed_at
-            ? new Date(row.remain_confirmed_at).toISOString()
-            : undefined,
-          dataPolicyAcceptedAt: row.data_policy_accepted_at
-            ? new Date(row.data_policy_accepted_at).toISOString()
-            : undefined,
-          dataPolicyVersion: row.data_policy_version || undefined,
-        };
+        const user = mapRowToStoredAuthUser(row);
         const state = readStore();
         const idx = state.users.findIndex(
           (u) => u.email.trim().toLowerCase() === normalized
@@ -510,8 +520,12 @@ export function createAuthUser(params: {
   emailConfirmed?: boolean;
   confirmationToken?: string;
   employerId?: string;
-  orgRole?: "org_admin" | "org_member";
+  hubId?: string;
+  orgRole?: OrgRole;
   companyName?: string;
+  invitedBy?: string;
+  invitedAt?: string;
+  isActive?: boolean;
   city?: string;
   qualification?: string;
   fieldOfStudy?: string;
@@ -537,8 +551,12 @@ export function createAuthUser(params: {
     emailConfirmed: params.emailConfirmed ?? false,
     confirmationToken: params.confirmationToken,
     employerId: params.employerId,
+    hubId: params.hubId,
     orgRole: params.orgRole,
     companyName: params.companyName,
+    invitedBy: params.invitedBy,
+    invitedAt: params.invitedAt,
+    isActive: params.isActive,
     city: params.city,
     qualification: params.qualification,
     fieldOfStudy: params.fieldOfStudy,
@@ -666,29 +684,19 @@ export async function verifyUserEmailByTokenAsync(
   try {
     const res = await query<any>(
       `SELECT id, email, name, role, password_hash, email_confirmed,
-              confirmation_token, employer_id, org_role, company_name, created_at
+              confirmation_token, reset_token, reset_token_expires_at,
+              employer_id, hub_id, org_role, company_name,
+              invited_by, invited_at, created_at
        FROM public.auth_users
        WHERE confirmation_token = $1
        LIMIT 1;`,
       [token]
     );
     if (res && res.rows && res.rows.length > 0) {
-      const row = res.rows[0];
-      const user: StoredAuthUser = {
-        id: row.id,
-        email: row.email,
-        name: row.name,
-        role: row.role,
-        passwordHash: row.password_hash,
+      const user = mapRowToStoredAuthUser(res.rows[0], {
         emailConfirmed: true,
         confirmationToken: undefined,
-        employerId: row.employer_id || undefined,
-        orgRole: row.org_role || undefined,
-        companyName: row.company_name || undefined,
-        createdAt: row.created_at
-          ? new Date(row.created_at).toISOString()
-          : new Date().toISOString(),
-      };
+      });
       const state = readStore();
       const idx = state.users.findIndex(
         (u) => u.email.trim().toLowerCase() === user.email.toLowerCase()
@@ -719,38 +727,10 @@ export async function verifyUserEmailByTokenAsync(
         .maybeSingle();
 
       if (!error && row) {
-        const user: StoredAuthUser = {
-          id: row.id,
-          email: row.email,
-          name: row.name,
-          role: row.role,
-          passwordHash: row.password_hash,
+        const user = mapRowToStoredAuthUser(row, {
           emailConfirmed: true,
           confirmationToken: undefined,
-          employerId: row.employer_id || undefined,
-          orgRole: row.org_role || undefined,
-          companyName: row.company_name || undefined,
-          createdAt: row.created_at
-            ? new Date(row.created_at).toISOString()
-            : new Date().toISOString(),
-          lastActiveAt: row.last_active_at
-            ? new Date(row.last_active_at).toISOString()
-            : undefined,
-          inactivityNoticesSent:
-            typeof row.inactivity_notices_sent === "number"
-              ? row.inactivity_notices_sent
-              : undefined,
-          lastInactivityNoticeAt: row.last_inactivity_notice_at
-            ? new Date(row.last_inactivity_notice_at).toISOString()
-            : undefined,
-          remainConfirmedAt: row.remain_confirmed_at
-            ? new Date(row.remain_confirmed_at).toISOString()
-            : undefined,
-          dataPolicyAcceptedAt: row.data_policy_accepted_at
-            ? new Date(row.data_policy_accepted_at).toISOString()
-            : undefined,
-          dataPolicyVersion: row.data_policy_version || undefined,
-        };
+        });
         const state = readStore();
         const idx = state.users.findIndex(
           (u) => u.email.trim().toLowerCase() === user.email.toLowerCase()
@@ -795,6 +775,163 @@ export function updateUserPassword(emailOrId: string, passwordHash: string): Sto
   if (!user) return null;
   user.passwordHash = passwordHash;
   user.resetToken = undefined;
+  user.resetTokenExpiresAt = undefined;
+  writeStore(state);
+  syncAuthUserToPostgres(user);
+  return user;
+}
+
+export async function setUserResetToken(
+  emailOrId: string,
+  token: string,
+  expiresAtIso: string
+): Promise<StoredAuthUser | null> {
+  const key = emailOrId.trim().toLowerCase();
+  if (!key || !token) return null;
+
+  let user = findAuthUserByEmail(emailOrId) || findAuthUserById(emailOrId);
+  if (!user && emailOrId.includes("@")) {
+    user = await findAuthUserByEmailFromDb(emailOrId);
+  }
+  if (!user) return null;
+
+  const state = readStore();
+  const target = state.users.find(
+    (u) => u.id === user!.id || u.email.toLowerCase() === user!.email.toLowerCase()
+  );
+  if (!target) return null;
+
+  target.resetToken = token;
+  target.resetTokenExpiresAt = expiresAtIso;
+  writeStore(state);
+  syncAuthUserToPostgres(target);
+
+  try {
+    await query(
+      `UPDATE public.auth_users
+       SET reset_token = $2, reset_token_expires_at = $3
+       WHERE LOWER(email) = $1;`,
+      [target.email.toLowerCase(), token, expiresAtIso]
+    );
+  } catch {}
+
+  const sb = getSupabaseServer();
+  if (sb) {
+    try {
+      await sb
+        .from("auth_users")
+        .update({ reset_token: token, reset_token_expires_at: expiresAtIso })
+        .ilike("email", target.email.toLowerCase());
+    } catch {}
+  }
+
+  return target;
+}
+
+export async function verifyAndConsumeResetToken(
+  email: string,
+  token: string
+): Promise<StoredAuthUser | null> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized || !token) return null;
+
+  let user = findAuthUserByEmail(normalized);
+  if (!user) {
+    user = await findAuthUserByEmailFromDb(normalized);
+  }
+  if (!user || !user.resetToken || user.resetToken !== token) {
+    return null;
+  }
+
+  if (user.resetTokenExpiresAt) {
+    const expiresMs = new Date(user.resetTokenExpiresAt).getTime();
+    if (Number.isNaN(expiresMs) || expiresMs < Date.now()) {
+      return null;
+    }
+  }
+
+  const state = readStore();
+  const target = state.users.find((u) => u.email.toLowerCase() === normalized);
+  if (!target) return null;
+
+  target.resetToken = undefined;
+  target.resetTokenExpiresAt = undefined;
+  writeStore(state);
+  syncAuthUserToPostgres(target);
+
+  try {
+    await query(
+      `UPDATE public.auth_users
+       SET reset_token = NULL, reset_token_expires_at = NULL
+       WHERE LOWER(email) = $1;`,
+      [normalized]
+    );
+  } catch {}
+
+  const sb = getSupabaseServer();
+  if (sb) {
+    try {
+      await sb
+        .from("auth_users")
+        .update({ reset_token: null, reset_token_expires_at: null })
+        .ilike("email", normalized);
+    } catch {}
+  }
+
+  return target;
+}
+
+export function listOrgMembers(filter: {
+  employerId?: string;
+  hubId?: string;
+}): Omit<StoredAuthUser, "passwordHash" | "confirmationToken" | "resetToken">[] {
+  if (!filter.employerId && !filter.hubId) return [];
+  const state = readStore();
+  return state.users
+    .filter((u) => {
+      if (filter.employerId && u.employerId === filter.employerId) return true;
+      if (filter.hubId && u.hubId === filter.hubId) return true;
+      return false;
+    })
+    .map(
+      ({ passwordHash: _p, confirmationToken: _c, resetToken: _r, ...rest }) =>
+        rest
+    );
+}
+
+export function updateOrgMemberAccess(
+  userIdOrEmail: string,
+  updates: {
+    role?: UserRole;
+    orgRole?: OrgRole;
+    employerId?: string;
+    hubId?: string;
+    companyName?: string;
+    invitedBy?: string;
+    invitedAt?: string;
+    isActive?: boolean;
+  }
+): StoredAuthUser | null {
+  const state = readStore();
+  const key = userIdOrEmail.trim().toLowerCase();
+  const user = state.users.find(
+    (u) => u.id === userIdOrEmail || u.email.toLowerCase() === key
+  );
+  if (!user) return null;
+
+  if (updates.role !== undefined) user.role = updates.role;
+  if (updates.orgRole !== undefined) user.orgRole = updates.orgRole;
+  if (updates.employerId !== undefined)
+    user.employerId = updates.employerId || undefined;
+  if (updates.hubId !== undefined) user.hubId = updates.hubId || undefined;
+  if (updates.companyName !== undefined)
+    user.companyName = updates.companyName || undefined;
+  if (updates.invitedBy !== undefined)
+    user.invitedBy = updates.invitedBy || undefined;
+  if (updates.invitedAt !== undefined)
+    user.invitedAt = updates.invitedAt || undefined;
+  if (updates.isActive !== undefined) user.isActive = updates.isActive;
+
   writeStore(state);
   syncAuthUserToPostgres(user);
   return user;
@@ -1026,26 +1163,82 @@ function syncJobApplicationToPostgres(app: JobApplicationRecord) {
 }
 
 function syncHubToPostgres(hub: InnovationHub) {
-  query(
-    `INSERT INTO public.innovation_hubs (name, city, address, has_solar_backup, internet_provider, avg_speed_mbps, available_workstations, laptop_loan_available, daily_pass_usd, utare_partner_subsidized, contact_email)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-     ON CONFLICT DO NOTHING`,
-    [
-      hub.name,
-      hub.city,
-      hub.address,
-      hub.hasSolarBackup,
-      hub.internetProvider,
-      hub.avgSpeedMbps,
-      hub.availableWorkstations,
-      hub.laptopLoanAvailable,
-      hub.dailyPassUsd,
-      hub.utarePartnerSubsidized,
-      hub.contactEmail,
-    ]
-  ).catch((err: any) => {
-    console.warn("[PostgreSQL Hub Sync Warning]:", err?.message);
-  });
+  const updatedAt = hub.updatedAt || new Date().toISOString();
+  if (isValidUuid(hub.id)) {
+    query(
+      `INSERT INTO public.innovation_hubs (
+         id, name, city, address, has_solar_backup, internet_provider,
+         avg_speed_mbps, available_workstations, laptop_loan_available,
+         daily_pass_usd, utare_partner_subsidized, contact_email,
+         operating_hours, owner_email, org_name, updated_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+       ON CONFLICT (id) DO UPDATE SET
+         name = EXCLUDED.name,
+         city = EXCLUDED.city,
+         address = EXCLUDED.address,
+         has_solar_backup = EXCLUDED.has_solar_backup,
+         internet_provider = EXCLUDED.internet_provider,
+         avg_speed_mbps = EXCLUDED.avg_speed_mbps,
+         available_workstations = EXCLUDED.available_workstations,
+         laptop_loan_available = EXCLUDED.laptop_loan_available,
+         daily_pass_usd = EXCLUDED.daily_pass_usd,
+         utare_partner_subsidized = EXCLUDED.utare_partner_subsidized,
+         contact_email = EXCLUDED.contact_email,
+         operating_hours = EXCLUDED.operating_hours,
+         owner_email = COALESCE(EXCLUDED.owner_email, public.innovation_hubs.owner_email),
+         org_name = COALESCE(EXCLUDED.org_name, public.innovation_hubs.org_name),
+         updated_at = EXCLUDED.updated_at`,
+      [
+        hub.id,
+        hub.name,
+        hub.city,
+        hub.address,
+        hub.hasSolarBackup,
+        hub.internetProvider,
+        hub.avgSpeedMbps,
+        hub.availableWorkstations,
+        hub.laptopLoanAvailable,
+        hub.dailyPassUsd,
+        hub.utarePartnerSubsidized,
+        hub.contactEmail,
+        hub.operatingHours,
+        hub.ownerEmail || null,
+        hub.orgName || null,
+        updatedAt,
+      ]
+    ).catch((err: any) => {
+      console.warn("[PostgreSQL Hub Sync Warning]:", err?.message);
+    });
+  } else {
+    query(
+      `INSERT INTO public.innovation_hubs (
+         name, city, address, has_solar_backup, internet_provider,
+         avg_speed_mbps, available_workstations, laptop_loan_available,
+         daily_pass_usd, utare_partner_subsidized, contact_email,
+         operating_hours, owner_email, org_name, updated_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+       ON CONFLICT DO NOTHING`,
+      [
+        hub.name,
+        hub.city,
+        hub.address,
+        hub.hasSolarBackup,
+        hub.internetProvider,
+        hub.avgSpeedMbps,
+        hub.availableWorkstations,
+        hub.laptopLoanAvailable,
+        hub.dailyPassUsd,
+        hub.utarePartnerSubsidized,
+        hub.contactEmail,
+        hub.operatingHours,
+        hub.ownerEmail || null,
+        hub.orgName || null,
+        updatedAt,
+      ]
+    ).catch((err: any) => {
+      console.warn("[PostgreSQL Hub Sync Warning]:", err?.message);
+    });
+  }
 }
 
 function syncJobToPostgres(job: RemoteJob) {
@@ -1185,6 +1378,46 @@ export function deleteHubFromStore(hubId: string): boolean {
     return true;
   }
   return false;
+}
+
+export function findHubById(id?: string | null): InnovationHub | null {
+  if (!id) return null;
+  const state = readStore();
+  return state.hubs.find((h) => h.id === id) || null;
+}
+
+export function findHubByOwnerEmail(email?: string | null): InnovationHub | null {
+  if (!email) return null;
+  const normalized = email.trim().toLowerCase();
+  const state = readStore();
+  return (
+    state.hubs.find(
+      (h) => h.ownerEmail?.trim().toLowerCase() === normalized
+    ) ||
+    state.hubs.find(
+      (h) => h.contactEmail?.trim().toLowerCase() === normalized
+    ) ||
+    null
+  );
+}
+
+export function updateHubInStore(
+  id: string,
+  patch: Partial<Omit<InnovationHub, "id">>
+): InnovationHub | null {
+  const state = readStore();
+  const idx = state.hubs.findIndex((h) => h.id === id);
+  if (idx < 0) return null;
+  const updated: InnovationHub = {
+    ...state.hubs[idx],
+    ...patch,
+    id,
+    updatedAt: new Date().toISOString(),
+  };
+  state.hubs[idx] = updated;
+  writeStore(state);
+  syncHubToPostgres(updated);
+  return updated;
 }
 
 export function addJobToStore(job: RemoteJob): RemoteJob {

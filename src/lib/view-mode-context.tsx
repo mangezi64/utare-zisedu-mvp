@@ -1,13 +1,16 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { EmployerVerificationStatus, UserRole } from "@/types";
+import { EmployerVerificationStatus, OrgRole, UserRole } from "@/types";
 
 export interface AuthUser {
   id: string;
   name: string;
   email: string;
   role: UserRole;
+  orgRole?: OrgRole;
+  employerId?: string;
+  hubId?: string;
   emailConfirmed?: boolean;
   companyName?: string;
   employerVerificationStatus?: EmployerVerificationStatus;
@@ -49,6 +52,9 @@ export function cacheSessionUser(user: AuthUser | null): void {
         name: user.name,
         email: user.email,
         role: user.role,
+        orgRole: user.orgRole,
+        employerId: user.employerId,
+        hubId: user.hubId,
         emailConfirmed: user.emailConfirmed,
         companyName: user.companyName,
         employerVerificationStatus: user.employerVerificationStatus,
@@ -65,14 +71,17 @@ export function cacheSessionUser(user: AuthUser | null): void {
   } catch {}
 }
 
-interface ViewModeContextType {
+export interface ViewModeContextType {
   user: AuthUser | null;
   loading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isSuperuser: boolean;
   isEmployer: boolean;
+  isHub: boolean;
   isCandidate: boolean;
+  isOrgAdmin: boolean;
+  isOrgMember: boolean;
   setSessionUser: (user: AuthUser | null) => void;
   refreshSession: () => Promise<AuthUser | null>;
   logout: () => Promise<void>;
@@ -85,7 +94,10 @@ const ViewModeContext = createContext<ViewModeContextType>({
   isAdmin: false,
   isSuperuser: false,
   isEmployer: false,
+  isHub: false,
   isCandidate: false,
+  isOrgAdmin: false,
+  isOrgMember: false,
   setSessionUser: () => {},
   refreshSession: async () => null,
   logout: async () => {},
@@ -189,7 +201,10 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
   const isAdmin = user?.role === "admin" || user?.role === "superuser";
   const isSuperuser = user?.role === "superuser";
   const isEmployer = user?.role === "employer";
+  const isHub = user?.role === "hub";
   const isCandidate = user?.role === "candidate";
+  const isOrgAdmin = user?.orgRole === "org_admin";
+  const isOrgMember = user?.orgRole === "org_member";
   const isAuthenticated = user !== null;
 
   return (
@@ -201,7 +216,10 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
         isAdmin,
         isSuperuser,
         isEmployer,
+        isHub,
         isCandidate,
+        isOrgAdmin,
+        isOrgMember,
         setSessionUser,
         refreshSession,
         logout,

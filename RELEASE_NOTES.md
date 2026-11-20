@@ -1,7 +1,23 @@
 # UTARE ZEM AI — Release Notes
 
-**Latest Release (`v2.4.0`):** November 20, 2026 (Google Sign-In via Supabase OAuth & Shared Zimbabwe Radar Visual)  
+**Latest Release (`v2.5.0`):** November 20, 2026 (Role-Curated Portals, Organization RBAC for Employers & Hubs, One-Time Invite & Reset Links)  
 **Target Environments:** Vercel Production (`utare-zisedu-mvp.vercel.app`), Supabase Cloud PostgreSQL (`stzsuwwmeiqdhsoghmrj`), and Containerized Local PostgreSQL (`utare-zisedu-db`)
+
+---
+
+## 11. Release v2.5.0 — Role-Curated Portals, Organization RBAC & One-Time Invite / Reset Links (November 20, 2026)
+* **Role-Curated Experience Across All Pages (`src/app/employers/page.tsx`, `src/components/Navbar.tsx`, `src/components/RoleOverviewBanner.tsx`, `/opportunities`, `/hubs`, `/account`, `/pathway`, `/jobs`, `/assessment`):**
+  - `/employers` now adapts to the signed-in role: **Employers** redirect directly to `/employer` (never seeing competitor employers or public sales pitches); **Candidates** browse a **Verified Employers Directory** (`GET /api/employers?directory=1`) with an interactive slide-over drawer showing each verified company's active roles; **Admins** see **Employer Operations & Directory** with status filters, **+ Invite Employer**, **Send / Copy Reset Link**, and verify/reject controls; **Public visitors** retain the partner pitch and self-serve registration form.
+  - Added `<RoleOverviewBanner />` on `/` and role-curated banners/actions on `/opportunities` and `/hubs` (restricting *"Enlist New Partner Hub"* to `admin` / `superuser` only), and redirected `employer` / `hub` accounts away from candidate-only workspaces (`/account`, `/pathway`, `/jobs`, `/assessment`).
+* **Organization-Scoped RBAC (`org_admin` vs. `org_member`) for Employers & Hub Owners (`/employer`, `/hub-portal`, `/api/employer/team`, `/api/hub/portal`, `/api/hub/team`):**
+  - Propagated `orgRole`, `employerId`, and `hubId` through `SessionPayload` (`src/lib/auth-session.ts`), `getSessionFromRequest` (`src/lib/auth-guard.ts`), `/api/auth/session`, `useViewMode()`, `resolvePostLoginDestination()`, and `src/middleware.ts` (protecting `/hub-portal`).
+  - **Employer Teams (`/employer` & `/api/employer/team`):** `org_admin` users manage company profile settings, make final `hired`/`rejected` decisions, and self-serve add (invite) or remove their own employees (`org_member` / `org_admin`) with last-admin and self-removal protection. `org_member` users can post jobs, mark listings closed/filled, and shortlist applicants.
+  - **Hub Owner Portals (`/hub-portal` & `/api/hub/portal`, `/api/hub/team`):** Added `"hub"` platform role (`HUB_NAV_ITEMS`). `org_member` staff can update daily `availableWorkstations` and `laptopLoanAvailable`; `org_admin` owners can also edit hub specs/pricing/hours and manage hub staff.
+* **Admin One-Time Invite & Password Reset Links + Supabase `app_metadata` Sync (`/api/admin/employers/invite`, `/api/admin/employers/reset-link`, `/api/admin/users`, `/auth/callback`, `/api/auth/password`):**
+  - Added additive `auth_users` columns (`reset_token`, `reset_token_expires_at`, `invited_by`, `invited_at`, `hub_id`) and `innovation_hubs` columns (`owner_email`, `org_name`, `updated_at`) across `supabase/schema.sql`, `supabase/additive-schema.sql`, and `src/lib/db-schema.ts`.
+  - Admins can issue single-use, time-limited invite (24h) and password reset (1h) links (via Supabase when configured + copyable fallback URL) consumed via `POST /api/auth/password` (`mode: "set-password"`) on `/auth/callback`.
+  - Updated `PATCH /api/admin/users` to sync `{ role, org_role, employer_id, hub_id }` into Supabase `app_metadata` (resolving non-UUID local IDs by email).
+  - Added [`src/__tests__/org-rbac-and-invites.test.ts`](src/__tests__/org-rbac-and-invites.test.ts) covering one-time invite/reset tokens, employer & hub `org_admin`/`org_member` boundaries, and verified directory scoping.
 
 ---
 

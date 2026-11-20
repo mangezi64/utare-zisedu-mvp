@@ -9,7 +9,9 @@ import {
   Sparkles,
   ArrowRight,
   Mail,
+  Lock,
 } from "lucide-react";
+import { resolvePostLoginDestination } from "@/lib/bootstrap-roles";
 import { useViewMode } from "@/lib/view-mode-context";
 
 function AuthCallbackContent() {
@@ -17,11 +19,19 @@ function AuthCallbackContent() {
   const searchParams = useSearchParams();
   const { refreshSession } = useViewMode();
 
-  const [status, setStatus] = useState<"verifying" | "success" | "error">(
-    "verifying"
-  );
+  const [status, setStatus] = useState<
+    "verifying" | "set-password" | "success" | "error"
+  >("verifying");
   const [message, setMessage] = useState("Completing sign-in & verifying your account...");
   const [targetHref, setTargetHref] = useState("/account");
+
+  const [resetToken, setResetToken] = useState("");
+  const [setupEmail, setSetupEmail] = useState("");
+  const [linkType, setLinkType] = useState<"invite" | "recovery" | "">("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isSettingPassword, setIsSettingPassword] = useState(false);
 
   const [resendEmail, setResendEmail] = useState("");
   const [resendStatus, setResendStatus] = useState<string | null>(null);
@@ -34,6 +44,7 @@ function AuthCallbackContent() {
     if (hasStartedRef.current) return;
 
     const token = searchParams.get("token") || "";
+    const urlResetToken = searchParams.get("reset_token") || "";
     const code = searchParams.get("code") || "";
     const tokenHash = searchParams.get("token_hash") || "";
     const queryType = searchParams.get("type") || "";
@@ -54,6 +65,21 @@ function AuthCallbackContent() {
 
     if (email) {
       setResendEmail(email);
+      setSetupEmail(email);
+    }
+
+    const effectiveType = (queryType || hashType || "").toLowerCase();
+    if (urlResetToken) {
+      hasStartedRef.current = true;
+      setResetToken(urlResetToken);
+      setLinkType(effectiveType === "invite" ? "invite" : "recovery");
+      setStatus("set-password");
+      setMessage(
+        effectiveType === "invite"
+          ? "Welcome! Set a password to activate your organization account."
+          : "Choose a new password for your account."
+      );
+      return;
     }
 
     const authError = hashError || queryError;
@@ -115,6 +141,17 @@ function AuthCallbackContent() {
           return;
         }
         await refreshSession();
+        if (effectiveType === "invite" || effectiveType === "recovery") {
+          setSetupEmail(data.email || email || "");
+          setLinkType(effectiveType === "invite" ? "invite" : "recovery");
+          setStatus("set-password");
+          setMessage(
+            effectiveType === "invite"
+              ? "Welcome! Set a password to activate your organization account."
+              : "Choose a new password for your account."
+          );
+          return;
+        }
         const role = data.role || "candidate";
         const safeRedirect =
           typeof data.redirectTo === "string" &&
@@ -123,12 +160,7 @@ function AuthCallbackContent() {
             ? data.redirectTo
             : null;
         const destination =
-          safeRedirect ||
-          (role === "employer"
-            ? "/employer"
-            : role === "admin" || role === "superuser"
-            ? "/admin"
-            : "/assessment");
+          safeRedirect || resolvePostLoginDestination(role);
         setTargetHref(destination);
         setStatus("success");
         setMessage("Signed in! Redirecting you to your workspace...");
@@ -141,6 +173,60 @@ function AuthCallbackContent() {
         setMessage("Failed to reach verification server. Please try again.");
       });
   }, [searchParams, router, refreshSession]);
+
+  const handleSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+
+    if (resetToken && !setupEmail.trim()) {
+      setPasswordError("Email address is required.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+
+    setIsSettingPassword(true);
+    try {
+      const res = await fetch("/api/auth/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          mode: "set-password",
+          email: setupEmail.trim().toLowerCase(),
+          resetToken: resetToken || undefined,
+          newPassword,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        setPasswordError(
+          data.error || "Could not set password. Please check your link and try again."
+        );
+        return;
+      }
+
+      await refreshSession();
+      const role = data.role || "candidate";
+      const destination = resolvePostLoginDestination(role, data.redirectTo);
+      setTargetHref(destination);
+      setStatus("success");
+      setMessage("Password set! Redirecting you to your workspace...");
+      setTimeout(() => {
+        router.push(destination);
+      }, 1200);
+    } catch {
+      setPasswordError("Network error while setting password. Please try again.");
+    } finally {
+      setIsSettingPassword(false);
+    }
+  };
 
   const handleResend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,6 +276,94 @@ function AuthCallbackContent() {
               Completing Sign-In
             </h1>
             <p className="text-sm text-slate-600">{message}</p>
+          </>
+        )}
+
+        {status === "set-password" && (
+          <>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+              <Lock className="h-6 w-6" />
+            </div>
+            <h1 className="text-xl font-bold text-slate-900">
+              {linkType === "invite"
+                ? "Set Your Password"
+                : "Reset Your Password"}
+            </h1>
+            <p className="text-sm text-slate-600">{message}</p>
+
+            <form
+              onSubmit={handleSetPassword}
+              className="mt-4 space-y-3 text-left"
+            >
+              <div>
+                <label
+                  htmlFor="setup-email"
+                  className="block text-xs font-semibold text-slate-700 mb-1"
+                >
+                  Account Email
+                </label>
+                <input
+                  id="setup-email"
+                  type="email"
+                  value={setupEmail}
+                  onChange={(e) => setSetupEmail(e.target.value)}
+                  readOnly={Boolean(searchParams.get("email"))}
+                  placeholder="you@company.com"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="new-password"
+                  className="block text-xs font-semibold text-slate-700 mb-1"
+                >
+                  New Password
+                </label>
+                <input
+                  id="new-password"
+                  type="password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimum 8 chars (upper, lower, number)"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="confirm-password"
+                  className="block text-xs font-semibold text-slate-700 mb-1"
+                >
+                  Confirm Password
+                </label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter your password"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                />
+              </div>
+
+              {passwordError && (
+                <p className="text-xs text-red-700 font-medium">
+                  {passwordError}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSettingPassword}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60 transition"
+              >
+                {isSettingPassword ? "Saving Password..." : "Set Password & Continue"}
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </form>
           </>
         )}
 

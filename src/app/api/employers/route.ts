@@ -4,6 +4,7 @@ import {
   findAuthUserByEmail,
   findAuthUserByEmailFromDb,
   findEmployerByEmail,
+  getEmployerJobs,
   getEmployerRegistrations,
   saveEmployerRegistration,
   updateEmployerVerificationStatus,
@@ -44,7 +45,13 @@ function resolveOrigin(req: NextRequest): string {
 }
 
 export async function GET(req: NextRequest) {
-  if (!(await isAdminRequest(req))) {
+  const session = await getSessionFromRequest(req);
+  const isAdmin =
+    session?.role === "admin" || session?.role === "superuser";
+  const isCandidate = session?.role === "candidate";
+  const wantsDirectory = req.nextUrl.searchParams.get("directory") === "1";
+
+  if (!isAdmin && !(isCandidate && wantsDirectory)) {
     return adminUnauthorizedResponse();
   }
 
@@ -71,6 +78,7 @@ export async function GET(req: NextRequest) {
               contactPerson: emp.contact_person,
               email: emp.email,
               website: emp.website || "",
+              careerPageUrl: emp.career_page_url || undefined,
               industry: emp.industry || "Technology & SaaS",
               rolesInterested: Array.isArray(emp.roles_interested)
                 ? emp.roles_interested
@@ -90,6 +98,40 @@ export async function GET(req: NextRequest) {
     } catch (err) {
       console.warn("[Employers Supabase Fetch Warning]:", err);
     }
+  }
+
+  if (isCandidate && !isAdmin) {
+    const verifiedPublicEmployers = employers
+      .filter((emp) => emp.verificationStatus === "verified")
+      .map((emp) => {
+        const activeJobsCount = getEmployerJobs({
+          id: emp.id,
+          email: emp.email,
+          companyName: emp.companyName,
+        }).filter((j) => j.status === "approved").length;
+
+        return {
+          id: emp.id,
+          companyName: emp.companyName,
+          website: emp.website,
+          careerPageUrl: emp.careerPageUrl,
+          sharedDocuments: emp.sharedDocuments,
+          industry: emp.industry,
+          rolesInterested: emp.rolesInterested,
+          hiringModel: emp.hiringModel,
+          estimatedHires: emp.estimatedHires,
+          timezoneOverlapNeeded: emp.timezoneOverlapNeeded,
+          verificationStatus: emp.verificationStatus,
+          verifiedAt: emp.verifiedAt,
+          createdAt: emp.createdAt,
+          activeJobsCount,
+        };
+      });
+
+    return NextResponse.json({
+      total: verifiedPublicEmployers.length,
+      employers: verifiedPublicEmployers,
+    });
   }
 
   return NextResponse.json({ total: employers.length, employers });

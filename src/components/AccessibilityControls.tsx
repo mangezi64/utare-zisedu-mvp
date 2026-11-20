@@ -17,7 +17,13 @@ import {
   FileText,
   Activity,
   Video,
+  Languages,
 } from "lucide-react";
+import {
+  LANGUAGE_OPTIONS,
+  SupportedLanguage,
+  useLanguage,
+} from "@/lib/language-context";
 
 export type ColorblindMode = "none" | "deuteranopia" | "protanopia" | "tritanopia" | "monochrome";
 export type FontSizeOption = "normal" | "large" | "xl";
@@ -43,6 +49,7 @@ const DEFAULT_PREFERENCES: AccessibilityPreferences = {
 const STORAGE_KEY = "utare_a11y_prefs";
 
 export default function AccessibilityControls() {
+  const { lang, setLang, t } = useLanguage();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [prefs, setPrefs] = useState<AccessibilityPreferences>(DEFAULT_PREFERENCES);
   const [isMounted, setIsMounted] = useState<boolean>(false);
@@ -299,6 +306,46 @@ export default function AccessibilityControls() {
             </div>
 
             <div className="space-y-4">
+              {/* 0. Language & Regional Inclusion */}
+              <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="p-2 rounded-lg bg-slate-700/60 text-emerald-400">
+                    <Languages className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-xs font-bold text-white">
+                      {t.a11yPanel.languageSectionTitle}
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      {t.a11yPanel.languageSectionDesc}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2.5">
+                  {LANGUAGE_OPTIONS.map((opt) => {
+                    const isSelected = lang === opt.code;
+                    return (
+                      <button
+                        key={opt.code}
+                        type="button"
+                        onClick={() => {
+                          setLang(opt.code as SupportedLanguage);
+                          setAnnouncement(`Language changed to ${opt.label}.`);
+                        }}
+                        aria-pressed={isSelected}
+                        className={`p-2 rounded-xl text-center text-xs font-bold transition-all border ${
+                          isSelected
+                            ? "bg-emerald-500 text-slate-950 border-emerald-400 shadow-sm"
+                            : "bg-slate-900/60 border-slate-700/70 text-slate-300 hover:bg-slate-800 hover:text-white"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* 1. High Contrast Mode Toggle */}
               <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80">
                 <div className="flex items-center justify-between gap-3">
@@ -502,18 +549,31 @@ export default function AccessibilityControls() {
                 </div>
               </div>
 
-              {/* 5. Screen Reader Helper Tools */}
+              {/* 5. Screen Reader & Disability Support */}
               <div className="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="p-2 rounded-lg bg-slate-700/60 text-emerald-400">
                     <Activity className="w-4 h-4" />
                   </span>
                   <div>
-                    <h3 className="text-xs font-bold text-white">Screen Reader Helper</h3>
+                    <h3 className="text-xs font-bold text-white">
+                      {t.a11yPanel.screenReaderSectionTitle}
+                    </h3>
                     <p className="text-[11px] text-slate-400">
-                      Live region announcements &amp; page navigation summaries.
+                      {t.a11yPanel.screenReaderSectionDesc}
                     </p>
                   </div>
+                </div>
+
+                <div className="mt-2 mb-3 rounded-lg bg-slate-900/70 border border-slate-700/60 p-2.5 space-y-1">
+                  <p className="text-[11px] font-semibold text-emerald-300">
+                    {t.a11yPanel.disabilitySupportTitle}
+                  </p>
+                  <ul className="space-y-1 text-[10.5px] text-slate-300 list-disc pl-4">
+                    {t.a11yPanel.disabilitySupportBullets.map((b) => (
+                      <li key={b}>{b}</li>
+                    ))}
+                  </ul>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-2 mt-2">

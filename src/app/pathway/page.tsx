@@ -20,13 +20,13 @@ import {
 } from "lucide-react";
 
 export default function PathwayStudioPage() {
-  const { user, isAuthenticated } = useViewMode();
+  const { user, isAuthenticated, isEmployer, isHub, isAdmin } = useViewMode();
   const [record, setRecord] = useState<StoredCandidateRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || isEmployer || isHub || isAdmin) {
       setLoading(false);
       return;
     }
@@ -45,7 +45,7 @@ export default function PathwayStudioPage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [user, isAuthenticated]);
+  }, [user, isAuthenticated, isEmployer, isHub, isAdmin]);
 
   async function handleToggleMilestone(phase: string) {
     if (!record) return;
@@ -139,6 +139,52 @@ export default function PathwayStudioPage() {
               className="text-xs font-semibold text-emerald-700 hover:underline"
             >
               ← Or take the 6-Factor Skills Diagnostic first
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isEmployer || isHub || isAdmin) {
+    const portalHref = isAdmin ? "/admin" : isEmployer ? "/employer" : "/hub-portal";
+    const portalLabel = isAdmin
+      ? "Go to Admin Console"
+      : isEmployer
+        ? "Go to Employer Portal"
+        : "Go to Hub Portal";
+    const roleTitle = isAdmin
+      ? "Admin Account — Candidate Pathway Studio"
+      : isEmployer
+        ? "Employer Account — Candidate Pathway Studio"
+        : "Partner Hub Account — Candidate Pathway Studio";
+    const roleDesc = isAdmin
+      ? "The AI Career Pathway Studio is designed for candidate upskilling roadmaps. Use the Admin Console to oversee platform operations or the Intake Simulator to test candidate pathways."
+      : isEmployer
+        ? "The AI Career Pathway Studio is a candidate-only workspace. Manage your open roles and review matched applicants in the Employer Portal."
+        : "The AI Career Pathway Studio is a candidate-only workspace. Manage your hub workstations and team in the Hub Portal.";
+
+    return (
+      <div className="w-full min-h-screen">
+        <PageBreadcrumb current="Pathway" />
+        <div className="mx-auto max-w-lg py-20 px-4 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-800 shadow-sm">
+            <Building2 className="h-8 w-8 text-[#08785f]" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">{roleTitle}</h1>
+          <p className="mt-2 text-sm text-slate-600">{roleDesc}</p>
+          <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+            <Link
+              href={portalHref}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#08785f] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#06634e] transition"
+            >
+              {portalLabel} <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+            >
+              Back to Home
             </Link>
           </div>
         </div>

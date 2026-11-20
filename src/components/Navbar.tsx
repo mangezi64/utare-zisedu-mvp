@@ -41,6 +41,7 @@ const CANDIDATE_NAV_ITEMS = [
   { href: "/assessment", label: "Diagnostic", icon: Cpu },
   { href: "/pathway", label: "Pathway", icon: Route },
   { href: "/opportunities", label: "Opportunities", icon: Globe },
+  { href: "/employers", label: "Employers", icon: Globe },
   { href: "/hubs", label: "Hubs", icon: Building2 },
 ];
 
@@ -49,6 +50,13 @@ const EMPLOYER_NAV_ITEMS = [
   { href: "/employer", label: "Employer Portal", icon: Globe },
   { href: "/opportunities", label: "Opportunities", icon: Briefcase },
   { href: "/hubs", label: "Partner Hubs", icon: Building2 },
+];
+
+const HUB_NAV_ITEMS = [
+  { href: "/", label: "Overview", icon: Compass },
+  { href: "/hub-portal", label: "Hub Portal", icon: Building2 },
+  { href: "/hubs", label: "Partner Hubs", icon: Globe },
+  { href: "/opportunities", label: "Opportunities", icon: Briefcase },
 ];
 
 const ADMIN_NAV_ITEMS = [
@@ -73,6 +81,7 @@ export default function Navbar() {
     isAdmin,
     isSuperuser,
     isEmployer,
+    isHub,
     logout,
   } = useViewMode();
 
@@ -116,6 +125,8 @@ export default function Navbar() {
     ? ADMIN_NAV_ITEMS
     : isEmployer
     ? EMPLOYER_NAV_ITEMS
+    : isHub
+    ? HUB_NAV_ITEMS
     : isAuthenticated
     ? CANDIDATE_NAV_ITEMS
     : PUBLIC_NAV_ITEMS;
@@ -132,12 +143,16 @@ export default function Navbar() {
     ? "Facilitator & Admin · Console Active"
     : isEmployer
     ? "Employer Partner Portal"
+    : isHub
+    ? "Hub Partner Portal"
     : "Candidate Workspace";
 
   const roleSubtitle = isAdmin
     ? "Employer verification, hub enlistment, job moderation & oversight"
     : isEmployer
     ? user?.companyName || "Verified Hiring Partner"
+    : isHub
+    ? user?.companyName || "Innovation Hub Operations"
     : user?.city
     ? `${user.city}${user.qualification ? ` · ${user.qualification}` : ""}`
     : user?.qualification || "Economic Mobility Pathway";
@@ -146,18 +161,24 @@ export default function Navbar() {
     ? "/admin"
     : isEmployer
     ? "/employer"
+    : isHub
+    ? "/hub-portal"
     : "/account";
 
   const primaryLabel = isAdmin
     ? "Open Admin Console"
     : isEmployer
     ? "Open Employer Portal"
+    : isHub
+    ? "Open Hub Portal"
     : "Open My Workspace";
 
   const avatarToneClass = isAdmin
     ? "border-amber-400 bg-amber-100 text-amber-950"
     : isEmployer
     ? "border-blue-300 bg-blue-100 text-blue-950"
+    : isHub
+    ? "border-teal-300 bg-teal-100 text-teal-950"
     : "border-emerald-300 bg-emerald-100 text-emerald-950";
 
   return (
@@ -238,12 +259,14 @@ export default function Navbar() {
                       ? "bg-amber-600 hover:bg-amber-700"
                       : isEmployer
                       ? "bg-slate-900 hover:bg-slate-800"
+                      : isHub
+                      ? "bg-teal-700 hover:bg-teal-800"
                       : "bg-emerald-700 hover:bg-emerald-800"
                   }`}
                 >
                   {isAdmin ? (
                     <Shield className="h-4 w-4" />
-                  ) : isEmployer ? (
+                  ) : isEmployer || isHub ? (
                     <Building2 className="h-4 w-4" />
                   ) : (
                     <User className="h-4 w-4" />
@@ -323,6 +346,13 @@ export default function Navbar() {
                     >
                       <Building2 className="h-2.5 w-2.5" />
                     </span>
+                  ) : isHub ? (
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-teal-600 text-white shadow"
+                      title="Hub Partner"
+                    >
+                      <Building2 className="h-2.5 w-2.5" />
+                    </span>
                   ) : (
                     <span
                       className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 shadow"
@@ -374,6 +404,8 @@ export default function Navbar() {
                         <Shield className="h-3.5 w-3.5 text-amber-600 shrink-0" />
                       ) : isEmployer ? (
                         <Building2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                      ) : isHub ? (
+                        <Building2 className="h-3.5 w-3.5 text-teal-600 shrink-0" />
                       ) : (
                         <User className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                       )}
@@ -383,6 +415,8 @@ export default function Navbar() {
                             ? "text-amber-900"
                             : isEmployer
                             ? "text-blue-900"
+                            : isHub
+                            ? "text-teal-900"
                             : "text-emerald-900"
                         }`}
                       >
@@ -404,6 +438,8 @@ export default function Navbar() {
                           ? "bg-amber-600 hover:bg-amber-700"
                           : isEmployer
                           ? "bg-slate-900 hover:bg-slate-800"
+                          : isHub
+                          ? "bg-teal-700 hover:bg-teal-800"
                           : "bg-emerald-700 hover:bg-emerald-800"
                       }`}
                     >
@@ -411,7 +447,7 @@ export default function Navbar() {
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
 
-                    {!isAdmin && !isEmployer && (
+                    {!isAdmin && !isEmployer && !isHub && (
                       <Link
                         href="/assessment"
                         role="menuitem"

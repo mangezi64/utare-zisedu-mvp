@@ -31,6 +31,9 @@ import {
   Lock,
   Flag,
   AlertTriangle,
+  ArrowRight,
+  Briefcase,
+  Building2,
 } from "lucide-react";
 
 const FALLBACK_CANDIDATE_PROFILE: CandidateProfile = {
@@ -58,7 +61,7 @@ const FALLBACK_CANDIDATE_PROFILE: CandidateProfile = {
 };
 
 export default function RemoteJobsPage() {
-  const { user, isAuthenticated, isAdmin } = useViewMode();
+  const { user, isAuthenticated, isAdmin, isEmployer, isHub } = useViewMode();
   const [jobs, setJobs] = useState<RemoteJob[]>(SEED_REMOTE_JOBS);
   const [applications, setApplications] = useState<JobApplicationRecord[]>([]);
   const [activeCandidate, setActiveCandidate] =
@@ -443,6 +446,49 @@ export default function RemoteJobsPage() {
             r.toLowerCase().includes(selectedRail.toLowerCase())
           )
         );
+
+  if (isEmployer || isHub) {
+    const portalHref = isEmployer ? "/employer" : "/hub-portal";
+    const portalLabel = isEmployer ? "Go to Employer Portal" : "Go to Hub Portal";
+    return (
+      <div className="w-full min-h-screen">
+        <PageBreadcrumb current="ATS CV & Application Studio" />
+        <div className="mx-auto max-w-lg py-20 px-4 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-800 shadow-sm">
+            {isEmployer ? (
+              <Briefcase className="h-8 w-8 text-blue-700" />
+            ) : (
+              <Building2 className="h-8 w-8 text-teal-700" />
+            )}
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {isEmployer
+              ? "Employer Account — Candidate CV Studio"
+              : "Partner Hub Account — Candidate CV Studio"}
+          </h1>
+          <p className="mt-2 text-sm text-slate-600">
+            {isEmployer
+              ? "The ATS CV & Application Studio is for candidates preparing applications. Manage your job listings and review incoming candidate applications in the Employer Portal."
+              : "The ATS CV & Application Studio is for candidates preparing applications. Manage your hub workstations and team in the Hub Portal."}
+          </p>
+          <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+            <Link
+              href={portalHref}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#08785f] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#06634e] transition"
+            >
+              {portalLabel} <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/opportunities"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+            >
+              Browse Opportunities
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen">
