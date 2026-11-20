@@ -1900,6 +1900,13 @@ html.font-size-xl .header-inner {
   row-gap: 8px;
 }
 
+html.font-size-large .main-nav,
+html.font-size-xl .main-nav {
+  flex-wrap: wrap;
+  overflow-x: visible;
+  justify-content: center;
+}
+
 html.font-size-large .button,
 html.font-size-xl .button,
 html.font-size-large .signin-link,
