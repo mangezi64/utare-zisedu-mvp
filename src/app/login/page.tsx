@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -69,8 +69,21 @@ function LoginForm() {
   const [registerSuccess, setRegisterSuccess] = useState("");
   const [confirmationPath, setConfirmationPath] = useState<string | null>(null);
   const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState<string | null>(null);
+  const [signupAwaitingVerification, setSignupAwaitingVerification] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
   const [resendNotice, setResendNotice] = useState("");
+  const emailValidationRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (tab === "register" && signupAwaitingVerification) {
+      emailValidationRef.current?.focus();
+      emailValidationRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [tab, signupAwaitingVerification]);
 
   const handleResendConfirmation = async (emailToResend: string) => {
     if (!emailToResend.trim()) return;
@@ -302,6 +315,11 @@ function LoginForm() {
         return;
       }
 
+      const confirmedAddress = (data.email || regEmail.trim()).toLowerCase();
+      const needsEmailValidation = data.requiresEmailConfirmation !== false;
+
+      setRegisteredEmail(confirmedAddress);
+      setLoginEmail(confirmedAddress);
       setRegisterSuccess(
         data.message ||
           "Account created! Please confirm your email address to sign in."
@@ -309,10 +327,13 @@ function LoginForm() {
       if (data.confirmationPath) {
         setConfirmationPath(data.confirmationPath);
       }
-      if (data.requiresEmailConfirmation && !data.confirmationPath) {
-        setPendingConfirmationEmail(regEmail.trim().toLowerCase());
+      if (needsEmailValidation) {
+        setPendingConfirmationEmail(confirmedAddress);
+        setSignupAwaitingVerification(true);
+        setResendNotice("");
       } else {
         setPendingConfirmationEmail(null);
+        setSignupAwaitingVerification(false);
       }
     } catch {
       setLoginError(
@@ -415,6 +436,7 @@ function LoginForm() {
                 setTab("login");
                 setLoginError("");
                 setRegisterSuccess("");
+                setSignupAwaitingVerification(false);
               }}
               className={`button ${tab === "login" ? "button-green" : ""}`}
               style={{
@@ -434,7 +456,9 @@ function LoginForm() {
               onClick={() => {
                 setTab("register");
                 setLoginError("");
-                setRegisterSuccess("");
+                if (!signupAwaitingVerification) {
+                  setRegisterSuccess("");
+                }
               }}
               className={`button ${tab === "register" ? "button-green" : ""}`}
               style={{
@@ -454,6 +478,8 @@ function LoginForm() {
           <span className="eyebrow">
             {tab === "login"
               ? "WELCOME TO YOUR NEXT STEP"
+              : signupAwaitingVerification
+              ? "EMAIL VALIDATION REQUIRED"
               : accountType === "employer"
               ? "START YOUR EMPLOYER PARTNERSHIP"
               : "START YOUR CANDIDATE BRIDGE"}
@@ -461,6 +487,8 @@ function LoginForm() {
           <h2>
             {tab === "login"
               ? "Sign in to continue"
+              : signupAwaitingVerification
+              ? "Check your email"
               : accountType === "employer"
               ? "Create employer account"
               : "Create your account"}
@@ -468,6 +496,8 @@ function LoginForm() {
           <p className="login-intro">
             {tab === "login"
               ? "Access your candidate diagnostic, AI career roadmap, employer portal, or facilitator console."
+              : signupAwaitingVerification
+              ? "Validate your email address to activate your account and sign in."
               : accountType === "employer"
               ? "Register your organisation to post remote roles and review verified applicants."
               : "Register to save your profile, take the readiness diagnostic, and apply for remote work."}
@@ -510,15 +540,24 @@ function LoginForm() {
             </div>
           )}
 
-          {registerSuccess && (
-            <div className="mb-5 rounded-lg bg-[#eaf5f0] p-4 text-xs text-[#101a33] border border-[#c2e2d4] space-y-3">
+          {registerSuccess && !signupAwaitingVerification && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="mb-5 rounded-lg bg-[#eaf5f0] p-4 text-xs text-[#101a33] border border-[#c2e2d4] space-y-3"
+            >
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-[#08785f] mt-0.5" />
                 <div>
                   <p className="font-bold">{registerSuccess}</p>
-                  <p className="mt-1 text-[#2e4a3d]">
-                    Check your inbox (and spam folder) and click &ldquo;Confirm email address&rdquo; to activate your account and sign in automatically.
-                  </p>
+                  {registeredEmail && (
+                    <p className="mt-1 text-[#1b4d3e]">
+                      Registered email:{" "}
+                      <strong className="font-mono break-all">
+                        {registeredEmail}
+                      </strong>
+                    </p>
+                  )}
                 </div>
               </div>
               {confirmationPath && (
@@ -535,23 +574,6 @@ function LoginForm() {
                     Verify Email &amp; Continue{" "}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
-                </div>
-              )}
-              {pendingConfirmationEmail && !confirmationPath && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={isResendingConfirmation}
-                    onClick={() => handleResendConfirmation(pendingConfirmationEmail)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#08785f]/30 bg-white px-3 py-1.5 text-[11.5px] font-bold text-[#08785f] hover:bg-[#f2fbf7] disabled:opacity-60 transition"
-                  >
-                    {isResendingConfirmation ? "Sending..." : "Resend Confirmation Email"}
-                  </button>
-                  {resendNotice && (
-                    <span className="text-[11px] font-medium text-[#1b4d3e]">
-                      {resendNotice}
-                    </span>
-                  )}
                 </div>
               )}
             </div>
@@ -704,8 +726,119 @@ function LoginForm() {
             </div>
           )}
 
-          {/* TAB 2: Create Account (Candidate or Employer) */}
-          {tab === "register" && (
+          {/* TAB 2A: Email Validation Required Screen (replaces form after signup) */}
+          {tab === "register" && signupAwaitingVerification ? (
+            <div
+              ref={emailValidationRef}
+              tabIndex={-1}
+              role="status"
+              aria-live="polite"
+              aria-labelledby="signup-email-validation-heading"
+              className="rounded-2xl border border-[#c2e2d4] bg-[#f4fbf7] p-6 space-y-5 outline-none focus:ring-2 focus:ring-[#08785f]"
+            >
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[#08785f] text-white">
+                  <Mail className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <span className="inline-flex items-center rounded-full bg-[#e0f3ea] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[#08785f]">
+                    Email Verification Pending
+                  </span>
+                  <h3
+                    id="signup-email-validation-heading"
+                    className="mt-1.5 text-lg font-bold text-[#101a33]"
+                  >
+                    Check your email to validate your account
+                  </h3>
+                  <p className="mt-1 text-xs leading-relaxed text-[#2e4a3d]">
+                    {registerSuccess ||
+                      "We sent a confirmation email so you can verify your address before signing in."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[#c2e2d4] bg-white p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#667085]">
+                  Confirmation email sent to
+                </p>
+                <p className="mt-1 font-mono text-sm font-bold text-[#08785f] break-all">
+                  {registeredEmail || pendingConfirmationEmail || regEmail.trim().toLowerCase()}
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-[#475467]">
+                  Open your inbox (and check your Spam or Promotions folder) and click{" "}
+                  <strong>&ldquo;Confirm email address&rdquo;</strong> to finish validating your account.
+                </p>
+              </div>
+
+              <div className="space-y-2.5">
+                {confirmationPath && (
+                  <Link
+                    href={confirmationPath}
+                    className="button button-wide button-green"
+                  >
+                    Verify Email &amp; Continue
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                )}
+
+                {!confirmationPath && (pendingConfirmationEmail || registeredEmail) && (
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      disabled={isResendingConfirmation}
+                      onClick={() =>
+                        handleResendConfirmation(
+                          pendingConfirmationEmail || registeredEmail
+                        )
+                      }
+                      className="button button-wide button-green disabled:opacity-60"
+                    >
+                      {isResendingConfirmation
+                        ? "Resending verification email..."
+                        : "Resend Verification Email"}
+                    </button>
+                    {resendNotice && (
+                      <p
+                        role="status"
+                        className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-[#1b4d3e] border border-[#c2e2d4]"
+                      >
+                        {resendNotice}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#d8ece2]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTab("login");
+                      setLoginError("");
+                      setSignupAwaitingVerification(false);
+                      setRegisterSuccess("");
+                    }}
+                    className="text-xs font-bold text-[#08785f] hover:underline"
+                  >
+                    Already verified? Go to Sign In &rarr;
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignupAwaitingVerification(false);
+                      setRegisterSuccess("");
+                      setConfirmationPath(null);
+                      setPendingConfirmationEmail(null);
+                      setResendNotice("");
+                      setLoginError("");
+                    }}
+                    className="text-xs font-semibold text-[#475467] hover:text-[#101a33] hover:underline"
+                  >
+                    Use a different email
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : tab === "register" ? (
             <form onSubmit={handleRegister} className="form-stack">
               {/* Role selector: Candidate vs Employer */}
               <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1 text-xs font-semibold">
@@ -977,7 +1110,7 @@ function LoginForm() {
                 </button>
               </p>
             </form>
-          )}
+          ) : null}
 
           <p className="mt-5 text-center text-xs text-[#667085]">
             Want to browse without logging in?{" "}

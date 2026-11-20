@@ -130,6 +130,7 @@ describe("UTARE ZEM AI — End-to-End Route Flows", () => {
     expect(signupRes.status).toBe(200);
     expect(signupData.success).toBe(true);
     expect(signupData.requiresEmailConfirmation).toBe(true);
+    expect(signupData.email).toBe(email);
     expect(signupData.confirmationPath).toContain("/auth/callback?token=");
 
     // 1c. Login before email confirmation is blocked (403)
